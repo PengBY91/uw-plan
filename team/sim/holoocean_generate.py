@@ -77,8 +77,18 @@ def main():
 
     wall0 = time.time()
     with holoocean.make(scenario_cfg=cfg, show_viewport=False, verbose=False) as env:
+        for prop in route.get('props', []):
+            env.spawn_prop(prop['type'], location=prop['location'], rotation=prop.get('rotation', [0, 0, 0]),
+                           scale=prop['scale'], material=prop.get('material', ''))
+        fog = sorted(route.get('fog', []), key=lambda f: f['t'])
+        for _ in range(route.get('pre_ticks', 20)):  # let props and fog settle; not recorded, sim clock restarts below
+            env.act('auv0', setpoint(route['waypoints'], 0.0))
+            env.tick()
         for tick in range(int(round(duration*tps)) + 1):
             t = tick/tps
+            while fog and fog[0]['t'] <= t:
+                f = fog.pop(0)
+                env.water_fog(f['density'], f.get('depth', 3.0))
             env.act('auv0', setpoint(route['waypoints'], t))
             s = env.tick()
             T_imu = np.asarray(s['Pose_imu'], float)
