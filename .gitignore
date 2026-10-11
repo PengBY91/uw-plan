@@ -31,3 +31,5 @@
 !reports/w1/v101-calibration-check.json
 
 !.gitattributes
+
+!reports/w1/replay-fix-summary.json

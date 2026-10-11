@@ -1,0 +1,2159 @@
+{
+  "scope": "Audited V1_01 1x engineering regression; not underwater or hardware real-time validation",
+  "accepted_runs": [
+    "w1_v101_a0_r09",
+    "w1_v101_a0_r10"
+  ],
+  "patch_reconstruction": {
+    "source_commit": "ac543cd427ba880b00582abac45e01dbc51cc23b",
+    "matched_files": [
+      "ov_msckf/launch/subscribe.launch.py",
+      "ov_msckf/src/ros/ROS2Visualizer.cpp",
+      "ov_msckf/src/ros/ROS2Visualizer.h",
+      "ov_msckf/src/ros/ROSVisualizerHelper.h",
+      "ov_msckf/src/run_subscribe_msckf.cpp"
+    ],
+    "patch_sha256": "d714cd150479ad16b5a353fd20daa4537f1a7123ff1e390164de025fee9d2f9f",
+    "passed": true
+  },
+  "runs": [
+    {
+      "run_id": "w1_v101_a0_r05",
+      "run": {
+        "run_id": "w1_v101_a0_r05",
+        "start_utc": "2026-10-11T05:15:32.252707+00:00",
+        "rate": 1.0,
+        "imu_history_depth": 5,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "7ee30460612bc6b16a851deb8cf2f1b203afb386",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false",
+            "imu_history_depth:=5"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r05/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "1.0",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "openvins_libraries_sha256": {
+          "libov_msckf_lib.so": "9599b392777ab198e429b9d72fb3076194d9a0df7131dd319318cf785c732b81"
+        },
+        "openvins_commit": "ad0c0a4f95ec9fd3f0faf95378c2507407dd5193",
+        "openvins_binary_sha256": "9794901746f4a353994f272300da63f12c0219a1063954ebf13409d5a76e09fe",
+        "udp_rmem_max": "16777216",
+        "communication_config_sha256": "a83e6dd60575e26422ffd61e948db34d1220e0bd0279774e59b824872eddcd79",
+        "playback_start_utc": "2026-10-11T05:15:34.351014+00:00",
+        "playback_wall_seconds": 148.02980994000018,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T05:18:08.010993+00:00",
+        "estimator_child_exit_codes": [],
+        "shutdown_warnings": false,
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "input_audit": {
+        "imu": {
+          "expected_count": 29120,
+          "received_count": 16354,
+          "missing_count": 12766,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.055,
+          "received_fraction": 0.5616071428571429,
+          "ordered_complete": false
+        },
+        "cam0": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam1": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "stereo_mismatched_pairs": 0,
+        "updates": {
+          "count": 2912,
+          "unique_input_pairs_processed": 2912,
+          "non_increasing_count": 0,
+          "unmatched_stamps": [],
+          "callback_to_update_wait_s": {
+            "median": 0.0005703845,
+            "p95": 0.026797161299999987,
+            "max": 0.076215041
+          }
+        },
+        "interpretation": "Estimator callback receipt and camera update entry, not a separate observer; queue wait excludes update compute time.",
+        "complete_input": false
+      },
+      "metrics": {
+        "status": "scored",
+        "outputs": {
+          "/ov_msckf/poseimu": {
+            "count": 2800,
+            "first_timestamp_ns": 1403715278870826006,
+            "last_timestamp_ns": 1403715418813198090,
+            "median_interval_s": 0.049999952,
+            "max_interval_s": 0.051409245,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          },
+          "/ov_msckf/odomimu": {
+            "count": 14644,
+            "first_timestamp_ns": 1403715278937143087,
+            "last_timestamp_ns": 1403715418857142925,
+            "median_interval_s": 0.005000114,
+            "max_interval_s": 0.089999914,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          }
+        },
+        "coverage": {
+          "input_stereo_pair_count": 2912,
+          "estimate_count": 2800,
+          "camera_slots_with_estimate": 2800,
+          "camera_slot_coverage": 0.9615384615384616,
+          "camera_match_tolerance_s": 0.025,
+          "first_estimate_delay_s": 5.608683109283447,
+          "last_estimate_tail_s": -0.001055002212524414,
+          "post_start_gaps_above_75ms": [],
+          "interpretation": "output-message coverage; not an accuracy-gated localization availability metric"
+        },
+        "protocol": {
+          "ape_alignment": "full matched trajectory SE3, no scale",
+          "association_tolerance_s": 0.01,
+          "timestamp_offset_s": 0.0,
+          "primary_reference": "OpenVINS corrected V1_01_easy",
+          "secondary_reference": "ETH original ASL state_groundtruth_estimate0",
+          "rpe_engine": "evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale"
+        },
+        "references": {
+          "corrected": {
+            "reference_poses": 2895,
+            "matched_estimate_count": 2783,
+            "estimate_match_fraction": 0.9939285714285714,
+            "max_timestamp_difference_s": 0.008682966232299805,
+            "ape_translation_m": {
+              "count": 2783,
+              "rmse": 150.8715590889437,
+              "mean": 122.36528852083849,
+              "median": 91.07678253422091,
+              "p95": 352.3111273836885,
+              "max": 438.4254869446884
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2763,
+                "rmse": 6.410042610441503,
+                "mean": 4.100131533426941,
+                "median": 1.1863539872351168,
+                "p95": 12.334855295351648,
+                "max": 14.33884235005745
+              },
+              "rotation_deg": {
+                "count": 2763,
+                "rmse": 0.48045037768457594,
+                "mean": 0.3709784040530247,
+                "median": 0.2916772082936139,
+                "p95": 1.0342395592061344,
+                "max": 3.040216958932835
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9945154190063477,
+                1.0046520233154297
+              ],
+              "actual_ref_interval_s": [
+                1.0,
+                1.0
+              ],
+              "eligible_start_count": 2763,
+              "selected_pair_count": 2763
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2683,
+                "rmse": 31.148547153302417,
+                "mean": 19.896540740246284,
+                "median": 6.462763801644473,
+                "p95": 60.116205112189434,
+                "max": 64.14208023999961
+              },
+              "rotation_deg": {
+                "count": 2683,
+                "rmse": 1.0145739669756026,
+                "mean": 0.8276938455727944,
+                "median": 0.6645226891873512,
+                "p95": 1.9884016725463851,
+                "max": 4.704322283914211
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.9927544593811035,
+                5.000742435455322
+              ],
+              "actual_ref_interval_s": [
+                5.0,
+                5.0
+              ],
+              "eligible_start_count": 2683,
+              "selected_pair_count": 2683
+            }
+          },
+          "original": {
+            "reference_poses": 28712,
+            "matched_estimate_count": 2781,
+            "estimate_match_fraction": 0.9932142857142857,
+            "max_timestamp_difference_s": 0.006055116653442383,
+            "ape_translation_m": {
+              "count": 2781,
+              "rmse": 150.472150857931,
+              "mean": 122.01058491200381,
+              "median": 90.7974782774504,
+              "p95": 351.5035463955624,
+              "max": 437.4579852264324
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2761,
+                "rmse": 6.402789107748481,
+                "mean": 4.099532102665083,
+                "median": 1.2145271195592962,
+                "p95": 12.322886757234654,
+                "max": 14.319031705632547
+              },
+              "rotation_deg": {
+                "count": 2761,
+                "rmse": 0.6829486125467907,
+                "mean": 0.5519311329655741,
+                "median": 0.45680860971059173,
+                "p95": 1.3560086778155187,
+                "max": 2.7947284689179783
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9945154190063477,
+                1.0046520233154297
+              ],
+              "actual_ref_interval_s": [
+                0.994999885559082,
+                1.005000114440918
+              ],
+              "eligible_start_count": 2761,
+              "selected_pair_count": 2761
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2681,
+                "rmse": 31.110398684575085,
+                "mean": 19.889181064824218,
+                "median": 6.503842613673499,
+                "p95": 60.23223467893046,
+                "max": 64.04756711455894
+              },
+              "rotation_deg": {
+                "count": 2681,
+                "rmse": 2.338712966360046,
+                "mean": 1.9977391661542883,
+                "median": 1.7181840936085016,
+                "p95": 4.344078020121439,
+                "max": 7.312503518299752
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.9927544593811035,
+                5.000742435455322
+              ],
+              "actual_ref_interval_s": [
+                4.990000009536743,
+                5.0
+              ],
+              "eligible_start_count": 2681,
+              "selected_pair_count": 2681
+            }
+          }
+        }
+      },
+      "acceptance": {
+        "protocol": "reports/w1/replay-fix-protocol.md",
+        "checks": {
+          "run_completed": true,
+          "one_x": true,
+          "complete_input": false,
+          "pose_coverage": true,
+          "valid_outputs": true,
+          "no_gaps": true,
+          "ape": false,
+          "rpe_1s": false,
+          "clean_shutdown": true
+        },
+        "passed": false
+      },
+      "evidence_sha256": {
+        "run.json": "b808e21a601e7da6840ebbf307566cbc39ea028c3fc0bc1855b567342e781b9e",
+        "input-trace.csv": "31bc3a8c30a72e4d38a3b5c89ba200d62cb2e89064d75a7d45d7712f83231ee0",
+        "input-audit.json": "efb3de28d953fd846669651bfb6baf27127430dae97ac3b77f6fa2746a250a69",
+        "regression-acceptance.json": "b608ba603d1d1d16a08bc929a6b2624b9395d0daf1032fe67c8d5e0b5e05110e",
+        "estimator.log": "829cfff9e887c8b402e345316e9cbe5cadeb2657f133cdf7a449e2955989824c",
+        "recorder.log": "7081893d58be98b15545d7aa013b22ad99d0722a0136981b224d050d492c80f1",
+        "player.log": "12045afc5cf8e2c4a9e57c844d440302f2dc8532a5c7f626719b1da41020748c",
+        "imu-qos.txt": "e3927e42c67fad904d655a46d19eb5d9edab0ae328f4a34e92c4c0f037d3afd0",
+        "evaluation/metrics.json": "6bae01960cdb30cef0e00c0f6d5fda85fece45dbd454622fd933ca0773bc2165",
+        "evaluation/trajectory_ape.png": "68092d15ec216af6fd7b5524fdf1e5e32fc42423290ff56033ef0935978ce12a",
+        "estimate_bag/metadata.yaml": "cf73b2d1cd4bfd5130d4d3f95ca642bc6fbbf652310d1159904846959023eeef",
+        "estimate_bag/estimate_bag_0.mcap": "7b610fb3bdd21edb3cbd8740775812c26758bc9789aa92ab03c90643fb4837e8"
+      }
+    },
+    {
+      "run_id": "w1_v101_a0_r06",
+      "run": {
+        "run_id": "w1_v101_a0_r06",
+        "start_utc": "2026-10-11T05:18:41.363637+00:00",
+        "rate": 1.0,
+        "imu_history_depth": 1000,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "7ee30460612bc6b16a851deb8cf2f1b203afb386",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false",
+            "imu_history_depth:=1000"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r06/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "1.0",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "openvins_libraries_sha256": {
+          "libov_msckf_lib.so": "9599b392777ab198e429b9d72fb3076194d9a0df7131dd319318cf785c732b81"
+        },
+        "openvins_commit": "ad0c0a4f95ec9fd3f0faf95378c2507407dd5193",
+        "openvins_binary_sha256": "9794901746f4a353994f272300da63f12c0219a1063954ebf13409d5a76e09fe",
+        "udp_rmem_max": "16777216",
+        "communication_config_sha256": "a83e6dd60575e26422ffd61e948db34d1220e0bd0279774e59b824872eddcd79",
+        "playback_start_utc": "2026-10-11T05:18:43.797136+00:00",
+        "playback_wall_seconds": 149.02597047400013,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T05:21:18.352229+00:00",
+        "estimator_child_exit_codes": [],
+        "shutdown_warnings": false,
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "input_audit": {
+        "imu": {
+          "expected_count": 29120,
+          "received_count": 29075,
+          "missing_count": 45,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.035,
+          "received_fraction": 0.9984546703296703,
+          "ordered_complete": false
+        },
+        "cam0": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam1": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "stereo_mismatched_pairs": 0,
+        "updates": {
+          "count": 2912,
+          "unique_input_pairs_processed": 2912,
+          "non_increasing_count": 0,
+          "unmatched_stamps": [],
+          "callback_to_update_wait_s": {
+            "median": 0.0440556755,
+            "p95": 0.0587029133,
+            "max": 0.097138821
+          }
+        },
+        "interpretation": "Estimator callback receipt and camera update entry, not a separate observer; queue wait excludes update compute time.",
+        "complete_input": false
+      },
+      "metrics": {
+        "status": "scored",
+        "outputs": {
+          "/ov_msckf/poseimu": {
+            "count": 2800,
+            "first_timestamp_ns": 1403715278862816811,
+            "last_timestamp_ns": 1403715418812191725,
+            "median_interval_s": 0.049999952,
+            "max_interval_s": 0.050443888,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          },
+          "/ov_msckf/odomimu": {
+            "count": 26782,
+            "first_timestamp_ns": 1403715278912142992,
+            "last_timestamp_ns": 1403715418857142925,
+            "median_interval_s": 0.005000114,
+            "max_interval_s": 0.055000066,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          }
+        },
+        "coverage": {
+          "input_stereo_pair_count": 2912,
+          "estimate_count": 2800,
+          "camera_slots_with_estimate": 2800,
+          "camera_slot_coverage": 0.9615384615384616,
+          "camera_match_tolerance_s": 0.025,
+          "first_estimate_delay_s": 5.6006739139556885,
+          "last_estimate_tail_s": -4.863739013671875e-05,
+          "post_start_gaps_above_75ms": [],
+          "interpretation": "output-message coverage; not an accuracy-gated localization availability metric"
+        },
+        "protocol": {
+          "ape_alignment": "full matched trajectory SE3, no scale",
+          "association_tolerance_s": 0.01,
+          "timestamp_offset_s": 0.0,
+          "primary_reference": "OpenVINS corrected V1_01_easy",
+          "secondary_reference": "ETH original ASL state_groundtruth_estimate0",
+          "rpe_engine": "evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale"
+        },
+        "references": {
+          "corrected": {
+            "reference_poses": 2895,
+            "matched_estimate_count": 2783,
+            "estimate_match_fraction": 0.9939285714285714,
+            "max_timestamp_difference_s": 0.0013277530670166016,
+            "ape_translation_m": {
+              "count": 2783,
+              "rmse": 0.04412999370485909,
+              "mean": 0.040404042556034796,
+              "median": 0.03808509180563967,
+              "p95": 0.07054950730610407,
+              "max": 0.08768938379934967
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2763,
+                "rmse": 0.013804896745873855,
+                "mean": 0.012471135255818397,
+                "median": 0.011766475661818508,
+                "p95": 0.023261247503158982,
+                "max": 0.05153784333743659
+              },
+              "rotation_deg": {
+                "count": 2763,
+                "rmse": 0.17635132260550399,
+                "mean": 0.1548572132386948,
+                "median": 0.13807309554952193,
+                "p95": 0.305031173509192,
+                "max": 0.6106196996745906
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9988391399383545,
+                1.0016076564788818
+              ],
+              "actual_ref_interval_s": [
+                1.0,
+                1.0
+              ],
+              "eligible_start_count": 2763,
+              "selected_pair_count": 2763
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2683,
+                "rmse": 0.04362100096654768,
+                "mean": 0.03912124492588114,
+                "median": 0.03686573779455137,
+                "p95": 0.07433403354833504,
+                "max": 0.10161496772586849
+              },
+              "rotation_deg": {
+                "count": 2683,
+                "rmse": 0.44822953100359797,
+                "mean": 0.3983036790746747,
+                "median": 0.3600202714454543,
+                "p95": 0.7561764341749395,
+                "max": 1.040988211821116
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.999405860900879,
+                5.001539945602417
+              ],
+              "actual_ref_interval_s": [
+                5.0,
+                5.0
+              ],
+              "eligible_start_count": 2683,
+              "selected_pair_count": 2683
+            }
+          },
+          "original": {
+            "reference_poses": 28712,
+            "matched_estimate_count": 2781,
+            "estimate_match_fraction": 0.9932142857142857,
+            "max_timestamp_difference_s": 0.0050487518310546875,
+            "ape_translation_m": {
+              "count": 2781,
+              "rmse": 0.05408619106986103,
+              "mean": 0.04974401209264505,
+              "median": 0.05041000766044485,
+              "p95": 0.08475912691704604,
+              "max": 0.10270023204787306
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2761,
+                "rmse": 0.04435176429344457,
+                "mean": 0.03977625044711336,
+                "median": 0.03861357557768952,
+                "p95": 0.07562718883540684,
+                "max": 0.09491615968126038
+              },
+              "rotation_deg": {
+                "count": 2761,
+                "rmse": 0.47021098118408955,
+                "mean": 0.4035269643130907,
+                "median": 0.35961931083282805,
+                "p95": 0.8529459616194335,
+                "max": 1.3600398822820656
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9988391399383545,
+                1.0016076564788818
+              ],
+              "actual_ref_interval_s": [
+                0.994999885559082,
+                1.0
+              ],
+              "eligible_start_count": 2761,
+              "selected_pair_count": 2761
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2681,
+                "rmse": 0.16869435028910182,
+                "mean": 0.15063117179367413,
+                "median": 0.13958540407421127,
+                "p95": 0.3004100811501647,
+                "max": 0.32025946378469
+              },
+              "rotation_deg": {
+                "count": 2681,
+                "rmse": 2.0166628919905807,
+                "mean": 1.7822917119620825,
+                "median": 1.6592718726274667,
+                "p95": 3.4380871018769157,
+                "max": 3.9556807969973784
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.999405860900879,
+                5.001539945602417
+              ],
+              "actual_ref_interval_s": [
+                4.994999885559082,
+                5.0
+              ],
+              "eligible_start_count": 2681,
+              "selected_pair_count": 2681
+            }
+          }
+        }
+      },
+      "acceptance": {
+        "protocol": "reports/w1/replay-fix-protocol.md",
+        "checks": {
+          "run_completed": true,
+          "one_x": true,
+          "complete_input": false,
+          "pose_coverage": true,
+          "valid_outputs": true,
+          "no_gaps": true,
+          "ape": true,
+          "rpe_1s": true,
+          "clean_shutdown": true
+        },
+        "passed": false
+      },
+      "evidence_sha256": {
+        "run.json": "b6a4183831f5b2b34c007ae1ccc276e11273bc16c7dd90bc9081e6daa08d8652",
+        "input-trace.csv": "49bbc2495b1670a15686333788bcee08b9ff285ba9c816f2f7532205c705734e",
+        "input-audit.json": "86b9715f87b6d107c8d5225a7ad05874779593f513a13f909436f7468bab3c8b",
+        "regression-acceptance.json": "3531fc457a4cb875b5a56855b475d432d2ce086a038a1a69226890bcd3052bf6",
+        "estimator.log": "96858b7d01d24b09bf8a47cb6d72c44d52ad2743756c4678dbbdd9d11a9a8c16",
+        "recorder.log": "794a6d5ad6c8c8e95e005881652f3ea96a27322e178522cc6a215523af465fea",
+        "player.log": "54816882988d6e28b87e1d28cbc966eb29ac32adc27c4fbc75b09c49c00d1c91",
+        "imu-qos.txt": "5fc678586bad7851ea5cedbc07466f0b98b55f195e2f1c09de38248683f6fe80",
+        "evaluation/metrics.json": "2163eea741422e0ac00c0ce641963b28858cb0c681af47187d9736925ee5eee5",
+        "evaluation/trajectory_ape.png": "be1798ab3789da7d8ba541c64b8a47fc7f19aaa88e54809a5ff20b077ce2334b",
+        "estimate_bag/metadata.yaml": "55184345b3ae53fdca913e3e3b576263ba2e7893a35e81e0b42ec198dcb7bc80",
+        "estimate_bag/estimate_bag_0.mcap": "3fc95fcced128258fbf1ad68881acc0b397f63b050ee20ff720ca25371123b7c"
+      }
+    },
+    {
+      "run_id": "w1_v101_a0_r07",
+      "run": {
+        "run_id": "w1_v101_a0_r07",
+        "start_utc": "2026-10-11T05:27:23.717637+00:00",
+        "rate": 1.0,
+        "imu_reliability": "reliable",
+        "imu_history_depth": 1000,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "040afac7bf9f28b077c21ede67982eddad000523",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false",
+            "imu_history_depth:=1000",
+            "imu_reliable:=true"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r07/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "1.0",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "openvins_libraries_sha256": {
+          "libov_msckf_lib.so": "c949fc2ed62d964767ad46e0efb537b9610aeaee940f5b627765943b0b754946"
+        },
+        "openvins_commit": "3a7a754c570c1e2a810c57f98b91f2a89f3b9412",
+        "openvins_binary_sha256": "9794901746f4a353994f272300da63f12c0219a1063954ebf13409d5a76e09fe",
+        "udp_rmem_max": "16777216",
+        "communication_config_sha256": "a83e6dd60575e26422ffd61e948db34d1220e0bd0279774e59b824872eddcd79",
+        "playback_start_utc": "2026-10-11T05:27:25.679611+00:00",
+        "playback_wall_seconds": 148.02397773799976,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T05:29:59.232992+00:00",
+        "estimator_child_exit_codes": [],
+        "shutdown_warnings": false,
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "input_audit": {
+        "imu": {
+          "expected_count": 29120,
+          "received_count": 29120,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.005,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam0": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam1": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "stereo_mismatched_pairs": 0,
+        "updates": {
+          "count": 2911,
+          "unique_input_pairs_processed": 2911,
+          "non_increasing_count": 0,
+          "unmatched_stamps": [],
+          "callback_to_update_wait_s": {
+            "median": 0.04716518,
+            "p95": 0.055209204,
+            "max": 0.088553799
+          }
+        },
+        "interpretation": "Estimator callback receipt and camera update entry, not a separate observer; queue wait excludes update compute time.",
+        "complete_input": false
+      },
+      "metrics": {
+        "status": "scored",
+        "outputs": {
+          "/ov_msckf/poseimu": {
+            "count": 2799,
+            "first_timestamp_ns": 1403715278862890959,
+            "last_timestamp_ns": 1403715418762198210,
+            "median_interval_s": 0.049999952,
+            "max_interval_s": 0.050441503,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          },
+          "/ov_msckf/odomimu": {
+            "count": 27065,
+            "first_timestamp_ns": 1403715278962142944,
+            "last_timestamp_ns": 1403715418857142925,
+            "median_interval_s": 0.005000114,
+            "max_interval_s": 0.044999838,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          }
+        },
+        "coverage": {
+          "input_stereo_pair_count": 2912,
+          "estimate_count": 2799,
+          "camera_slots_with_estimate": 2799,
+          "camera_slot_coverage": 0.961195054945055,
+          "camera_match_tolerance_s": 0.025,
+          "first_estimate_delay_s": 5.600748062133789,
+          "last_estimate_tail_s": 0.04994487762451172,
+          "post_start_gaps_above_75ms": [],
+          "interpretation": "output-message coverage; not an accuracy-gated localization availability metric"
+        },
+        "protocol": {
+          "ape_alignment": "full matched trajectory SE3, no scale",
+          "association_tolerance_s": 0.01,
+          "timestamp_offset_s": 0.0,
+          "primary_reference": "OpenVINS corrected V1_01_easy",
+          "secondary_reference": "ETH original ASL state_groundtruth_estimate0",
+          "rpe_engine": "evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale"
+        },
+        "references": {
+          "corrected": {
+            "reference_poses": 2895,
+            "matched_estimate_count": 2783,
+            "estimate_match_fraction": 0.9942836727402644,
+            "max_timestamp_difference_s": 0.001201629638671875,
+            "ape_translation_m": {
+              "count": 2783,
+              "rmse": 0.05124276596615466,
+              "mean": 0.046587810533468804,
+              "median": 0.041209323818403455,
+              "p95": 0.08230335046742676,
+              "max": 0.11196923265007042
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2763,
+                "rmse": 0.012808803407262957,
+                "mean": 0.011637255312532598,
+                "median": 0.01125304531565695,
+                "p95": 0.02090501183234328,
+                "max": 0.04753074892358331
+              },
+              "rotation_deg": {
+                "count": 2763,
+                "rmse": 0.17928522045790019,
+                "mean": 0.1568683624398034,
+                "median": 0.14306735161409778,
+                "p95": 0.3122684173472867,
+                "max": 0.6055203018657185
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9986660480499268,
+                1.001476764678955
+              ],
+              "actual_ref_interval_s": [
+                1.0,
+                1.0
+              ],
+              "eligible_start_count": 2763,
+              "selected_pair_count": 2763
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2683,
+                "rmse": 0.038354567555239506,
+                "mean": 0.034789347620031275,
+                "median": 0.03396623875865596,
+                "p95": 0.06437358195600587,
+                "max": 0.08156121104113319
+              },
+              "rotation_deg": {
+                "count": 2683,
+                "rmse": 0.45207079768377495,
+                "mean": 0.40381004486562827,
+                "median": 0.3697887118342791,
+                "p95": 0.8086864944145834,
+                "max": 1.0250223666597498
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.999286651611328,
+                5.00132942199707
+              ],
+              "actual_ref_interval_s": [
+                5.0,
+                5.0
+              ],
+              "eligible_start_count": 2683,
+              "selected_pair_count": 2683
+            }
+          },
+          "original": {
+            "reference_poses": 28712,
+            "matched_estimate_count": 2781,
+            "estimate_match_fraction": 0.9935691318327974,
+            "max_timestamp_difference_s": 0.005055665969848633,
+            "ape_translation_m": {
+              "count": 2781,
+              "rmse": 0.06136517698858375,
+              "mean": 0.057598300212764145,
+              "median": 0.06007666784902993,
+              "p95": 0.08982923655041523,
+              "max": 0.11873676246415506
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2761,
+                "rmse": 0.04410479395999364,
+                "mean": 0.03961322015621331,
+                "median": 0.03845439572032988,
+                "p95": 0.07496033234426099,
+                "max": 0.09521354838746984
+              },
+              "rotation_deg": {
+                "count": 2761,
+                "rmse": 0.4666337814109605,
+                "mean": 0.39973764953114627,
+                "median": 0.3586110728481113,
+                "p95": 0.8463128549460527,
+                "max": 1.3528246229176717
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9986660480499268,
+                1.001476764678955
+              ],
+              "actual_ref_interval_s": [
+                0.994999885559082,
+                1.0
+              ],
+              "eligible_start_count": 2761,
+              "selected_pair_count": 2761
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2681,
+                "rmse": 0.1678178887356389,
+                "mean": 0.15056847567857443,
+                "median": 0.1395064922941112,
+                "p95": 0.28480348163906566,
+                "max": 0.32959873246857274
+              },
+              "rotation_deg": {
+                "count": 2681,
+                "rmse": 2.0059786253967076,
+                "mean": 1.7693300743551907,
+                "median": 1.6796320360849375,
+                "p95": 3.386613955561935,
+                "max": 3.962115082512717
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.999286651611328,
+                5.00132942199707
+              ],
+              "actual_ref_interval_s": [
+                4.994999885559082,
+                5.0
+              ],
+              "eligible_start_count": 2681,
+              "selected_pair_count": 2681
+            }
+          }
+        }
+      },
+      "acceptance": {
+        "protocol": "reports/w1/replay-fix-protocol.md",
+        "checks": {
+          "run_completed": true,
+          "one_x": true,
+          "complete_input": false,
+          "pose_coverage": true,
+          "valid_outputs": true,
+          "no_gaps": true,
+          "ape": true,
+          "rpe_1s": true,
+          "clean_shutdown": true
+        },
+        "passed": false
+      },
+      "evidence_sha256": {
+        "run.json": "383e654fbeea890b4e385ec413b422c4e3bdc20cce6768b94c0ffc0895db18ab",
+        "input-trace.csv": "377aeb7fdc2b6207d9a80980e838f25ca3031e6b6c6ce373bd274dc79cb740bb",
+        "input-audit.json": "40431ae77d24ecf33a726366b9bdb959b4134c2c837b7166e4b849971c733d25",
+        "regression-acceptance.json": "3531fc457a4cb875b5a56855b475d432d2ce086a038a1a69226890bcd3052bf6",
+        "estimator.log": "0183c4afdbeb976589850a73ad980aa3b57f7869b88d7e5e8c7dad26c7576ccf",
+        "recorder.log": "575ccccf157ad4022062f09e6236cd5cdb81c65c3148190fdab3022eadf27bc4",
+        "player.log": "91d58abef1fc3eee9c159165f6dcb54fb323bba19388c4a2d0bd24040bc23e55",
+        "imu-qos.txt": "a4f2458f786923bf865ace23a27e18e4bacde81dc800018ac6e9434bedc93db0",
+        "evaluation/metrics.json": "f7507441a7626106df84169b2ce088a6c2e18eedb7d213d2e0b6c8b18e455f67",
+        "evaluation/trajectory_ape.png": "61618c130ccde4a18e5d9eb3ff6d074273172528ce09d6a801b51610ee3af171",
+        "estimate_bag/metadata.yaml": "53caab7d3bcd586704377151621b4a710ca0423cf1e82dd29547e75f887e6ed6",
+        "estimate_bag/estimate_bag_0.mcap": "43c14272bf30e980ccb96b9a58885a9830d1b18cd553cbb7ba051493be1bf5f9"
+      }
+    },
+    {
+      "run_id": "w1_v101_a0_r08",
+      "run": {
+        "run_id": "w1_v101_a0_r08",
+        "start_utc": "2026-10-11T05:34:44.124062+00:00",
+        "rate": 1.0,
+        "imu_reliability": "reliable",
+        "imu_history_depth": 1000,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "106f520295f3707e0b0be2957bf0aa3fa27b2cc5",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false",
+            "imu_history_depth:=1000",
+            "imu_reliable:=true"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r08/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "1.0",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "openvins_libraries_sha256": {
+          "libov_msckf_lib.so": "6e9e05dab25ac87815e70d993e5b75d8a11073558839a2494bb66da4ec2cc5b3"
+        },
+        "openvins_commit": "cb2fb7f713c96ed19f4e27b4e4b84a25d81ee62a",
+        "openvins_binary_sha256": "7d818283286c108321372c239db027bb3e1e299c5b0e30aaa4c807d4ec1109f2",
+        "udp_rmem_max": "16777216",
+        "communication_config_sha256": "a83e6dd60575e26422ffd61e948db34d1220e0bd0279774e59b824872eddcd79",
+        "playback_start_utc": "2026-10-11T05:34:46.063056+00:00",
+        "playback_wall_seconds": 148.02239117599993,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T05:37:19.614677+00:00",
+        "estimator_child_exit_codes": [],
+        "shutdown_warnings": false,
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "input_audit": {
+        "imu": {
+          "expected_count": 29120,
+          "received_count": 29120,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.005,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam0": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam1": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "stereo_mismatched_pairs": 0,
+        "updates": {
+          "count": 2911,
+          "unique_input_pairs_processed": 2911,
+          "non_increasing_count": 0,
+          "unmatched_stamps": [],
+          "callback_to_update_wait_s": {
+            "median": 0.000997422,
+            "p95": 0.048123906,
+            "max": 0.065012811
+          }
+        },
+        "interpretation": "Estimator callback receipt and camera update entry, not a separate observer; queue wait excludes update compute time.",
+        "complete_input": false
+      },
+      "metrics": {
+        "status": "scored",
+        "outputs": {
+          "/ov_msckf/poseimu": {
+            "count": 2799,
+            "first_timestamp_ns": 1403715278863017321,
+            "last_timestamp_ns": 1403715418762211084,
+            "median_interval_s": 0.049999952,
+            "max_interval_s": 0.050421238,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          },
+          "/ov_msckf/odomimu": {
+            "count": 26915,
+            "first_timestamp_ns": 1403715278912142992,
+            "last_timestamp_ns": 1403715418857142925,
+            "median_interval_s": 0.005000114,
+            "max_interval_s": 0.045000076,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          }
+        },
+        "coverage": {
+          "input_stereo_pair_count": 2912,
+          "estimate_count": 2799,
+          "camera_slots_with_estimate": 2799,
+          "camera_slot_coverage": 0.961195054945055,
+          "camera_match_tolerance_s": 0.025,
+          "first_estimate_delay_s": 5.600874423980713,
+          "last_estimate_tail_s": 0.049932003021240234,
+          "post_start_gaps_above_75ms": [],
+          "interpretation": "output-message coverage; not an accuracy-gated localization availability metric"
+        },
+        "protocol": {
+          "ape_alignment": "full matched trajectory SE3, no scale",
+          "association_tolerance_s": 0.01,
+          "timestamp_offset_s": 0.0,
+          "primary_reference": "OpenVINS corrected V1_01_easy",
+          "secondary_reference": "ETH original ASL state_groundtruth_estimate0",
+          "rpe_engine": "evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale"
+        },
+        "references": {
+          "corrected": {
+            "reference_poses": 2895,
+            "matched_estimate_count": 2783,
+            "estimate_match_fraction": 0.9942836727402644,
+            "max_timestamp_difference_s": 0.0011944770812988281,
+            "ape_translation_m": {
+              "count": 2783,
+              "rmse": 0.04436736200915218,
+              "mean": 0.04109697814377104,
+              "median": 0.03966863618142775,
+              "p95": 0.0692635018115532,
+              "max": 0.09298605851806808
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2763,
+                "rmse": 0.01252679571675234,
+                "mean": 0.011283398307104675,
+                "median": 0.01067807766246603,
+                "p95": 0.021606364152507374,
+                "max": 0.04875187309343446
+              },
+              "rotation_deg": {
+                "count": 2763,
+                "rmse": 0.17663551099585384,
+                "mean": 0.15531104443874102,
+                "median": 0.14312229757423459,
+                "p95": 0.29875513717202046,
+                "max": 0.6065961053876204
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9986913204193115,
+                1.0014407634735107
+              ],
+              "actual_ref_interval_s": [
+                1.0,
+                1.0
+              ],
+              "eligible_start_count": 2763,
+              "selected_pair_count": 2763
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2683,
+                "rmse": 0.03725307394838087,
+                "mean": 0.0337940930026007,
+                "median": 0.03239020416159022,
+                "p95": 0.06440831297642095,
+                "max": 0.08163298625419332
+              },
+              "rotation_deg": {
+                "count": 2683,
+                "rmse": 0.4521177421613621,
+                "mean": 0.4054304321321951,
+                "median": 0.3853894104665289,
+                "p95": 0.8001196672485811,
+                "max": 1.0387621820250073
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.99917459487915,
+                5.001376628875732
+              ],
+              "actual_ref_interval_s": [
+                5.0,
+                5.0
+              ],
+              "eligible_start_count": 2683,
+              "selected_pair_count": 2683
+            }
+          },
+          "original": {
+            "reference_poses": 28712,
+            "matched_estimate_count": 2781,
+            "estimate_match_fraction": 0.9935691318327974,
+            "max_timestamp_difference_s": 0.005068302154541016,
+            "ape_translation_m": {
+              "count": 2781,
+              "rmse": 0.05510268832546589,
+              "mean": 0.05065684052042377,
+              "median": 0.046963922017407934,
+              "p95": 0.08655107215411273,
+              "max": 0.10200632397426299
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2761,
+                "rmse": 0.04415101829314283,
+                "mean": 0.0394857007612229,
+                "median": 0.038199172160502025,
+                "p95": 0.07610519356698504,
+                "max": 0.09468354932930895
+              },
+              "rotation_deg": {
+                "count": 2761,
+                "rmse": 0.4709719847811872,
+                "mean": 0.40516444549491964,
+                "median": 0.3611647152197234,
+                "p95": 0.8515246199628258,
+                "max": 1.358782110723707
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9986913204193115,
+                1.0014407634735107
+              ],
+              "actual_ref_interval_s": [
+                0.994999885559082,
+                1.0
+              ],
+              "eligible_start_count": 2761,
+              "selected_pair_count": 2761
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2681,
+                "rmse": 0.16727115670595852,
+                "mean": 0.14973577981976607,
+                "median": 0.13759870353388895,
+                "p95": 0.29049876602221353,
+                "max": 0.3349904728706931
+              },
+              "rotation_deg": {
+                "count": 2681,
+                "rmse": 2.02033565346348,
+                "mean": 1.7883240299582015,
+                "median": 1.6613280602005052,
+                "p95": 3.430541535821589,
+                "max": 4.044870127178779
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.99917459487915,
+                5.001376628875732
+              ],
+              "actual_ref_interval_s": [
+                4.994999885559082,
+                5.0
+              ],
+              "eligible_start_count": 2681,
+              "selected_pair_count": 2681
+            }
+          }
+        }
+      },
+      "acceptance": {
+        "protocol": "reports/w1/replay-fix-protocol.md",
+        "checks": {
+          "run_completed": true,
+          "one_x": true,
+          "complete_input": false,
+          "pose_coverage": true,
+          "valid_outputs": true,
+          "no_gaps": true,
+          "ape": true,
+          "rpe_1s": true,
+          "clean_shutdown": true
+        },
+        "passed": false
+      },
+      "evidence_sha256": {
+        "run.json": "a4a04c04b240cead5d787ae59bb01a96b0d72949374be3de2c64fc151461710f",
+        "input-trace.csv": "b74b81321c44694661ae9ebbbbced40fcce49dfbdc3dba6c930f61b8bc59d7c3",
+        "input-audit.json": "10defc8ccc1b74413c3a236cfb931d6b5c211857d772f1bed7859e01542f2eff",
+        "regression-acceptance.json": "3531fc457a4cb875b5a56855b475d432d2ce086a038a1a69226890bcd3052bf6",
+        "estimator.log": "5db634c2a17530efbb0c0f322804cf35d10e21602743b0ff4dcc6752da93f5a1",
+        "recorder.log": "2576593f274390c1f8af43777c67fc495792abc2463874f8241ed464e162c9ce",
+        "player.log": "b2e98153e97fda3a4bb57946e778b17496824a1d417b3bba7134cd25b1cfe355",
+        "imu-qos.txt": "ebf9a42b4da6b3f281421ea5ebb1debbf5e8d9ca703de5b7e2c245349525d414",
+        "evaluation/metrics.json": "13766a93ee20553440600633b6425972a7446f48e1d34793115041a1f3171102",
+        "evaluation/trajectory_ape.png": "3af8b4cb9567b9603e72988ed6b426470483a281d146631e2973d0ea3d8d6322",
+        "estimate_bag/metadata.yaml": "7d9212dc506251cd0ee9798acf25b56ccc6a51b95be7f6af0c4676f0c207e7ba",
+        "estimate_bag/estimate_bag_0.mcap": "68f0fbb84a8b530a60f161f97ed8f5723437b0f79e36e8263e4ee7debea1de95"
+      }
+    },
+    {
+      "run_id": "w1_v101_a0_r09",
+      "run": {
+        "run_id": "w1_v101_a0_r09",
+        "start_utc": "2026-10-11T05:42:44.620396+00:00",
+        "rate": 1.0,
+        "imu_reliability": "reliable",
+        "imu_history_depth": 1000,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "f8116d608064745d3148f3b16e15b05118028afa",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false",
+            "imu_history_depth:=1000",
+            "imu_reliable:=true"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r09/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "1.0",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "openvins_libraries_sha256": {
+          "libov_msckf_lib.so": "03d27cebbe38cc94a7a2bd92237fd86128e6ad2b67621fd9d8454806156a4a39"
+        },
+        "openvins_commit": "ac543cd427ba880b00582abac45e01dbc51cc23b",
+        "openvins_binary_sha256": "b881468aae8be3ff4744a7968d87cc01aff8f6c2ed064f4ce9fcac9a05066a8a",
+        "udp_rmem_max": "16777216",
+        "communication_config_sha256": "a83e6dd60575e26422ffd61e948db34d1220e0bd0279774e59b824872eddcd79",
+        "playback_start_utc": "2026-10-11T05:42:46.577167+00:00",
+        "playback_wall_seconds": 148.02381751400026,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T05:45:20.130864+00:00",
+        "estimator_child_exit_codes": [],
+        "shutdown_warnings": false,
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "input_audit": {
+        "imu": {
+          "expected_count": 29120,
+          "received_count": 29120,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.005,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam0": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam1": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "stereo_mismatched_pairs": 0,
+        "updates": {
+          "count": 2912,
+          "unique_input_pairs_processed": 2912,
+          "non_increasing_count": 0,
+          "unmatched_stamps": [],
+          "callback_to_update_wait_s": {
+            "median": 0.0007673735,
+            "p95": 0.004452298249999998,
+            "max": 0.033575044
+          }
+        },
+        "interpretation": "Estimator callback receipt and camera update entry, not a separate observer; queue wait excludes update compute time.",
+        "complete_input": true
+      },
+      "metrics": {
+        "status": "scored",
+        "outputs": {
+          "/ov_msckf/poseimu": {
+            "count": 2800,
+            "first_timestamp_ns": 1403715278863017321,
+            "last_timestamp_ns": 1403715418812211275,
+            "median_interval_s": 0.049999952,
+            "max_interval_s": 0.050421238,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          },
+          "/ov_msckf/odomimu": {
+            "count": 26755,
+            "first_timestamp_ns": 1403715278912142992,
+            "last_timestamp_ns": 1403715418857142925,
+            "median_interval_s": 0.005000114,
+            "max_interval_s": 0.045000077,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          }
+        },
+        "coverage": {
+          "input_stereo_pair_count": 2912,
+          "estimate_count": 2800,
+          "camera_slots_with_estimate": 2800,
+          "camera_slot_coverage": 0.9615384615384616,
+          "camera_match_tolerance_s": 0.025,
+          "first_estimate_delay_s": 5.600874423980713,
+          "last_estimate_tail_s": -6.818771362304688e-05,
+          "post_start_gaps_above_75ms": [],
+          "interpretation": "output-message coverage; not an accuracy-gated localization availability metric"
+        },
+        "protocol": {
+          "ape_alignment": "full matched trajectory SE3, no scale",
+          "association_tolerance_s": 0.01,
+          "timestamp_offset_s": 0.0,
+          "primary_reference": "OpenVINS corrected V1_01_easy",
+          "secondary_reference": "ETH original ASL state_groundtruth_estimate0",
+          "rpe_engine": "evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale"
+        },
+        "references": {
+          "corrected": {
+            "reference_poses": 2895,
+            "matched_estimate_count": 2783,
+            "estimate_match_fraction": 0.9939285714285714,
+            "max_timestamp_difference_s": 0.0011944770812988281,
+            "ape_translation_m": {
+              "count": 2783,
+              "rmse": 0.04436736200915218,
+              "mean": 0.04109697814377104,
+              "median": 0.03966863618142775,
+              "p95": 0.0692635018115532,
+              "max": 0.09298605851806808
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2763,
+                "rmse": 0.01252679571675234,
+                "mean": 0.011283398307104675,
+                "median": 0.01067807766246603,
+                "p95": 0.021606364152507374,
+                "max": 0.04875187309343446
+              },
+              "rotation_deg": {
+                "count": 2763,
+                "rmse": 0.17663551099585384,
+                "mean": 0.15531104443874102,
+                "median": 0.14312229757423459,
+                "p95": 0.29875513717202046,
+                "max": 0.6065961053876204
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9986913204193115,
+                1.0014407634735107
+              ],
+              "actual_ref_interval_s": [
+                1.0,
+                1.0
+              ],
+              "eligible_start_count": 2763,
+              "selected_pair_count": 2763
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2683,
+                "rmse": 0.03725307394838087,
+                "mean": 0.0337940930026007,
+                "median": 0.03239020416159022,
+                "p95": 0.06440831297642095,
+                "max": 0.08163298625419332
+              },
+              "rotation_deg": {
+                "count": 2683,
+                "rmse": 0.4521177421613621,
+                "mean": 0.4054304321321951,
+                "median": 0.3853894104665289,
+                "p95": 0.8001196672485811,
+                "max": 1.0387621820250073
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.99917459487915,
+                5.001376628875732
+              ],
+              "actual_ref_interval_s": [
+                5.0,
+                5.0
+              ],
+              "eligible_start_count": 2683,
+              "selected_pair_count": 2683
+            }
+          },
+          "original": {
+            "reference_poses": 28712,
+            "matched_estimate_count": 2781,
+            "estimate_match_fraction": 0.9932142857142857,
+            "max_timestamp_difference_s": 0.005068302154541016,
+            "ape_translation_m": {
+              "count": 2781,
+              "rmse": 0.05510268832546589,
+              "mean": 0.05065684052042377,
+              "median": 0.046963922017407934,
+              "p95": 0.08655107215411273,
+              "max": 0.10200632397426299
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2761,
+                "rmse": 0.04415101829314283,
+                "mean": 0.0394857007612229,
+                "median": 0.038199172160502025,
+                "p95": 0.07610519356698504,
+                "max": 0.09468354932930895
+              },
+              "rotation_deg": {
+                "count": 2761,
+                "rmse": 0.4709719847811872,
+                "mean": 0.40516444549491964,
+                "median": 0.3611647152197234,
+                "p95": 0.8515246199628258,
+                "max": 1.358782110723707
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9986913204193115,
+                1.0014407634735107
+              ],
+              "actual_ref_interval_s": [
+                0.994999885559082,
+                1.0
+              ],
+              "eligible_start_count": 2761,
+              "selected_pair_count": 2761
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2681,
+                "rmse": 0.16727115670595852,
+                "mean": 0.14973577981976607,
+                "median": 0.13759870353388895,
+                "p95": 0.29049876602221353,
+                "max": 0.3349904728706931
+              },
+              "rotation_deg": {
+                "count": 2681,
+                "rmse": 2.02033565346348,
+                "mean": 1.7883240299582015,
+                "median": 1.6613280602005052,
+                "p95": 3.430541535821589,
+                "max": 4.044870127178779
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.99917459487915,
+                5.001376628875732
+              ],
+              "actual_ref_interval_s": [
+                4.994999885559082,
+                5.0
+              ],
+              "eligible_start_count": 2681,
+              "selected_pair_count": 2681
+            }
+          }
+        }
+      },
+      "acceptance": {
+        "protocol": "reports/w1/replay-fix-protocol.md",
+        "checks": {
+          "run_completed": true,
+          "one_x": true,
+          "complete_input": true,
+          "pose_coverage": true,
+          "valid_outputs": true,
+          "no_gaps": true,
+          "ape": true,
+          "rpe_1s": true,
+          "clean_shutdown": true
+        },
+        "passed": true
+      },
+      "evidence_sha256": {
+        "run.json": "24031e3e267b3125491d21e629d95976560f38c74bc2bd6370a1719983d06e7a",
+        "input-trace.csv": "6b9b0c91a3e79ebb428446eae3270548d32dc163d8afdefa832cd4281adfbc47",
+        "input-audit.json": "7a3000c385e3a068eaf25060ac0ebc9b3e2cc9768150929833864ed118823212",
+        "regression-acceptance.json": "12ab4adc7faa629b9e3fedfa91745804d77bf57d32fb694d7ac92dd4b0f53078",
+        "estimator.log": "4532e210b000c488d58cc76b0016ef20c61eabd9f2c4d771b2c0b087ba7c8bcf",
+        "recorder.log": "e0addf636306ac58c23c2545c0865c0eaf307f01bfc1727bdd5c71e62f2d2a16",
+        "player.log": "548a38f3034ca15251e73d65552c0a679d96978ce428dc36de33bb14e0c8471e",
+        "imu-qos.txt": "eeb4c34d29b619b3c37e26f152dfe4d6604731b9680c4817464b7513a187b46f",
+        "evaluation/metrics.json": "b9a9b7395fc70bfb3749fa14080e25d62afcd5cf56fe11ff7f53c13090048e18",
+        "evaluation/trajectory_ape.png": "3af8b4cb9567b9603e72988ed6b426470483a281d146631e2973d0ea3d8d6322",
+        "estimate_bag/metadata.yaml": "a5faa6ef9ddffa5effbd8adf376ace527ced62881e83b9d7ad11e08993862844",
+        "estimate_bag/estimate_bag_0.mcap": "572583b8d689e7c92e04b3282b2f09a6ebbc298885abdefbb88e1cb1ce1f195e"
+      }
+    },
+    {
+      "run_id": "w1_v101_a0_r10",
+      "run": {
+        "run_id": "w1_v101_a0_r10",
+        "start_utc": "2026-10-11T05:45:26.902356+00:00",
+        "rate": 1.0,
+        "imu_reliability": "reliable",
+        "imu_history_depth": 1000,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "f8116d608064745d3148f3b16e15b05118028afa",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false",
+            "imu_history_depth:=1000",
+            "imu_reliable:=true"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r10/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "1.0",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "openvins_libraries_sha256": {
+          "libov_msckf_lib.so": "03d27cebbe38cc94a7a2bd92237fd86128e6ad2b67621fd9d8454806156a4a39"
+        },
+        "openvins_commit": "ac543cd427ba880b00582abac45e01dbc51cc23b",
+        "openvins_binary_sha256": "b881468aae8be3ff4744a7968d87cc01aff8f6c2ed064f4ce9fcac9a05066a8a",
+        "udp_rmem_max": "16777216",
+        "communication_config_sha256": "a83e6dd60575e26422ffd61e948db34d1220e0bd0279774e59b824872eddcd79",
+        "playback_start_utc": "2026-10-11T05:45:28.893039+00:00",
+        "playback_wall_seconds": 148.02542382999945,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T05:48:02.498136+00:00",
+        "estimator_child_exit_codes": [],
+        "shutdown_warnings": false,
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "input_audit": {
+        "imu": {
+          "expected_count": 29120,
+          "received_count": 29120,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.005,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam0": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "cam1": {
+          "expected_count": 2912,
+          "received_count": 2912,
+          "missing_count": 0,
+          "unexpected_count": 0,
+          "duplicate_count": 0,
+          "non_increasing_count": 0,
+          "max_sample_gap_s": 0.05,
+          "received_fraction": 1.0,
+          "ordered_complete": true
+        },
+        "stereo_mismatched_pairs": 0,
+        "updates": {
+          "count": 2912,
+          "unique_input_pairs_processed": 2912,
+          "non_increasing_count": 0,
+          "unmatched_stamps": [],
+          "callback_to_update_wait_s": {
+            "median": 0.0007371719999999999,
+            "p95": 0.005200630599999993,
+            "max": 0.034429165
+          }
+        },
+        "interpretation": "Estimator callback receipt and camera update entry, not a separate observer; queue wait excludes update compute time.",
+        "complete_input": true
+      },
+      "metrics": {
+        "status": "scored",
+        "outputs": {
+          "/ov_msckf/poseimu": {
+            "count": 2800,
+            "first_timestamp_ns": 1403715278863017321,
+            "last_timestamp_ns": 1403715418812211275,
+            "median_interval_s": 0.049999952,
+            "max_interval_s": 0.050421238,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          },
+          "/ov_msckf/odomimu": {
+            "count": 27108,
+            "first_timestamp_ns": 1403715278912142992,
+            "last_timestamp_ns": 1403715418857142925,
+            "median_interval_s": 0.005000114,
+            "max_interval_s": 0.045000076,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          }
+        },
+        "coverage": {
+          "input_stereo_pair_count": 2912,
+          "estimate_count": 2800,
+          "camera_slots_with_estimate": 2800,
+          "camera_slot_coverage": 0.9615384615384616,
+          "camera_match_tolerance_s": 0.025,
+          "first_estimate_delay_s": 5.600874423980713,
+          "last_estimate_tail_s": -6.818771362304688e-05,
+          "post_start_gaps_above_75ms": [],
+          "interpretation": "output-message coverage; not an accuracy-gated localization availability metric"
+        },
+        "protocol": {
+          "ape_alignment": "full matched trajectory SE3, no scale",
+          "association_tolerance_s": 0.01,
+          "timestamp_offset_s": 0.0,
+          "primary_reference": "OpenVINS corrected V1_01_easy",
+          "secondary_reference": "ETH original ASL state_groundtruth_estimate0",
+          "rpe_engine": "evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale"
+        },
+        "references": {
+          "corrected": {
+            "reference_poses": 2895,
+            "matched_estimate_count": 2783,
+            "estimate_match_fraction": 0.9939285714285714,
+            "max_timestamp_difference_s": 0.0011944770812988281,
+            "ape_translation_m": {
+              "count": 2783,
+              "rmse": 0.04436736200915218,
+              "mean": 0.04109697814377104,
+              "median": 0.03966863618142775,
+              "p95": 0.0692635018115532,
+              "max": 0.09298605851806808
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2763,
+                "rmse": 0.01252679571675234,
+                "mean": 0.011283398307104675,
+                "median": 0.01067807766246603,
+                "p95": 0.021606364152507374,
+                "max": 0.04875187309343446
+              },
+              "rotation_deg": {
+                "count": 2763,
+                "rmse": 0.17663551099585384,
+                "mean": 0.15531104443874102,
+                "median": 0.14312229757423459,
+                "p95": 0.29875513717202046,
+                "max": 0.6065961053876204
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9986913204193115,
+                1.0014407634735107
+              ],
+              "actual_ref_interval_s": [
+                1.0,
+                1.0
+              ],
+              "eligible_start_count": 2763,
+              "selected_pair_count": 2763
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2683,
+                "rmse": 0.03725307394838087,
+                "mean": 0.0337940930026007,
+                "median": 0.03239020416159022,
+                "p95": 0.06440831297642095,
+                "max": 0.08163298625419332
+              },
+              "rotation_deg": {
+                "count": 2683,
+                "rmse": 0.4521177421613621,
+                "mean": 0.4054304321321951,
+                "median": 0.3853894104665289,
+                "p95": 0.8001196672485811,
+                "max": 1.0387621820250073
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.99917459487915,
+                5.001376628875732
+              ],
+              "actual_ref_interval_s": [
+                5.0,
+                5.0
+              ],
+              "eligible_start_count": 2683,
+              "selected_pair_count": 2683
+            }
+          },
+          "original": {
+            "reference_poses": 28712,
+            "matched_estimate_count": 2781,
+            "estimate_match_fraction": 0.9932142857142857,
+            "max_timestamp_difference_s": 0.005068302154541016,
+            "ape_translation_m": {
+              "count": 2781,
+              "rmse": 0.05510268832546589,
+              "mean": 0.05065684052042377,
+              "median": 0.046963922017407934,
+              "p95": 0.08655107215411273,
+              "max": 0.10200632397426299
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2761,
+                "rmse": 0.04415101829314283,
+                "mean": 0.0394857007612229,
+                "median": 0.038199172160502025,
+                "p95": 0.07610519356698504,
+                "max": 0.09468354932930895
+              },
+              "rotation_deg": {
+                "count": 2761,
+                "rmse": 0.4709719847811872,
+                "mean": 0.40516444549491964,
+                "median": 0.3611647152197234,
+                "p95": 0.8515246199628258,
+                "max": 1.358782110723707
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9986913204193115,
+                1.0014407634735107
+              ],
+              "actual_ref_interval_s": [
+                0.994999885559082,
+                1.0
+              ],
+              "eligible_start_count": 2761,
+              "selected_pair_count": 2761
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2681,
+                "rmse": 0.16727115670595852,
+                "mean": 0.14973577981976607,
+                "median": 0.13759870353388895,
+                "p95": 0.29049876602221353,
+                "max": 0.3349904728706931
+              },
+              "rotation_deg": {
+                "count": 2681,
+                "rmse": 2.02033565346348,
+                "mean": 1.7883240299582015,
+                "median": 1.6613280602005052,
+                "p95": 3.430541535821589,
+                "max": 4.044870127178779
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.99917459487915,
+                5.001376628875732
+              ],
+              "actual_ref_interval_s": [
+                4.994999885559082,
+                5.0
+              ],
+              "eligible_start_count": 2681,
+              "selected_pair_count": 2681
+            }
+          }
+        }
+      },
+      "acceptance": {
+        "protocol": "reports/w1/replay-fix-protocol.md",
+        "checks": {
+          "run_completed": true,
+          "one_x": true,
+          "complete_input": true,
+          "pose_coverage": true,
+          "valid_outputs": true,
+          "no_gaps": true,
+          "ape": true,
+          "rpe_1s": true,
+          "clean_shutdown": true
+        },
+        "passed": true
+      },
+      "evidence_sha256": {
+        "run.json": "491203bac1821fd25ce4b798f0f172aed4cb77b5216ef77bc9d9d4a6b3b20914",
+        "input-trace.csv": "a81a3e28d3d9a4c66795eed89ffa99cc4c898048e8aa065bc80ce5750f42efba",
+        "input-audit.json": "b54c2ae1003976029288578f2a869d02ef89ebab8c5e6c46393d2ba4d9e07f01",
+        "regression-acceptance.json": "12ab4adc7faa629b9e3fedfa91745804d77bf57d32fb694d7ac92dd4b0f53078",
+        "estimator.log": "6f62032dd2a422608dbc78d802227646ecdd31ec977c6d2a867b5c1dcec33f4e",
+        "recorder.log": "1d6e0c2857c34add3d435039ad70480dcb06d2bce65ccd79c952ac75b3122174",
+        "player.log": "591e41b56637048d895f356bf71d2e5a9145fadfbe1ffd52050aacd778c48872",
+        "imu-qos.txt": "feec1746c28021d6192fab6bf36a7f21dfb2ee78a13813c625d02209416c4c0f",
+        "evaluation/metrics.json": "d65aba04f669b9c8d4df35b2842ca40d6651f5ce8f6fc426b7c1ba6a31311145",
+        "evaluation/trajectory_ape.png": "3af8b4cb9567b9603e72988ed6b426470483a281d146631e2973d0ea3d8d6322",
+        "estimate_bag/metadata.yaml": "1668e1a7f2aaa63903fb65846b02fce937af16cfb877fe268dd62d7386b160d5",
+        "estimate_bag/estimate_bag_0.mcap": "56f0a61696d9d3b2a6a1ef8c4415b254fe188e711c0201aab9a284deb6ab6764"
+      }
+    }
+  ]
+}

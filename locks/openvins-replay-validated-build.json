@@ -1,0 +1,18 @@
+{
+  "openvins_commit": "ac543cd427ba880b00582abac45e01dbc51cc23b",
+  "openvins_binary_sha256": "b881468aae8be3ff4744a7968d87cc01aff8f6c2ed064f4ce9fcac9a05066a8a",
+  "openvins_libraries_sha256": {
+    "libov_msckf_lib.so": "03d27cebbe38cc94a7a2bd92237fd86128e6ad2b67621fd9d8454806156a4a39"
+  },
+  "config_hashes": {
+    "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+    "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+    "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+  },
+  "build_log_sha256": "239fe568a87dbd8d386ef6cf4033ab9762445f749f0a4e86de45e0ae1035249a",
+  "validated_runs": [
+    "w1_v101_a0_r09",
+    "w1_v101_a0_r10"
+  ],
+  "build": "ov_msckf RelWithDebInfo, DISABLE_MATPLOTLIB=ON, sequential packages, -j2"
+}

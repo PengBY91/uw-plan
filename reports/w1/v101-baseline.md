@@ -11,7 +11,9 @@ tags: [acoustic-optic-fusion, slam, camera, calibration, rov]
 
 本页接续 [[plans/acoustic-optic-w1-environment-audit-2026-10|WSL 环境准备]]，记录 [[plans/acoustic-optic-month1-execution-checklist-2026-10|W1-02/03/04]] 的实际操作、失败与结果。运行工作区为 `/home/steve/uw-ao-lab`；日期沿用本轮工作日 2026-10-10，机器日志使用 UTC（运行跨至 2026-10-11 UTC）。本页是公共双目惯性里程计工程复现，不代表水下声光融合方法效果、闭环 SLAM 或产品验收。
 
-本轮结论：**W1-02 空目录复建、W1-03 数据入库及 W1-04 公共 A0 的 R1 运行验收已完成。** 有效结果来自 0.5× 离线回放：修正参考下 APE RMSE 0.177510 m，1 s 平移 RPE RMSE 0.067166 m。1× 回放出现严重漂移，尚未通过实时或稳健性验收；本次仅有一次有效完整半速运行，不能称为多次复现实验均通过。W1-05 至 W1-09 与 G0 仍未整项完成。
+> 后续排查与最新运行入口见 [[plans/acoustic-optic-w1-openvins-replay-fix-2026-10|1× 漂移修复与回归验收]]。本页 r01–r04 的数值、失败原因和限制保留为阶段记录，下文“尚未解决”等状态限定于这一阶段。
+
+r01–r04 阶段结论：**W1-02 空目录复建、W1-03 数据入库及 W1-04 公共 A0 的 R1 运行验收已完成。** 有效结果来自 0.5× 离线回放：修正参考下 APE RMSE 0.177510 m，1 s 平移 RPE RMSE 0.067166 m。1× 回放出现严重漂移，尚未通过实时或稳健性验收；本次仅有一次有效完整半速运行，不能称为多次复现实验均通过。W1-05 至 W1-09 与 G0 仍未整项完成。
 
 ## 数据来源与完整性
 
@@ -111,7 +113,7 @@ APE 使用完整匹配轨迹 SE(3) 对齐，禁止尺度拟合；真值关联阈
 
 主参考的实际估计时间间隔为 0.995387–1.001303 s 和 4.996495–5.001734 s；匹配真值间隔恰为 1/5 s。参考选择对旋转 RPE 影响明显，不能省略真值来源。evo CLI 的 APE 与 Python API 使用相同配对和 SE(3) 对齐协议，结果 ZIP 与配对明细随 run 保存。
 
-![r04 半速基线：SE3 对齐轨迹与全程平移误差](../assets/w1-openvins-v101/trajectory-ape-r04.png)
+![r04 半速基线：SE3 对齐轨迹与全程平移误差](../../runs/w1_v101_a0_r04/evaluation/trajectory_ape.png)
 
 图中保留了末段约 0.82 m 的误差峰值。该结果证明数据到轨迹、评分、证据归档的链路可运行，不证明达到 OpenVINS 论文精度或水下定位指标。
 
@@ -135,16 +137,7 @@ DDS 使用回环 lo、禁用 multicast、静态 peer 127.0.0.1、ROS_DOMAIN_ID=7
 
 ## 复现入口
 
-以下按已执行的 r04 命令整理，仅把新 run_id 改为 r05 以避免覆盖现有证据。必须先提交团队代码/配置变更；运行器拒绝脏工作区。已有数据通过 manifest 和 audit 校验后可直接使用，不重复下载。
-
-```bash
-cd /home/steve/uw-ao-lab
-git status --short
-sudo /usr/sbin/sysctl -w net.core.rmem_max=16777216
-RUN=w1_v101_a0_r05
-bash scripts/ros-cyclone-run.sh /usr/bin/python3 scripts/run_openvins.py   --lab "$PWD" --bag "$PWD/data/public/euroc/V1_01_easy_ros2"   --run-id "$RUN" --rate 0.5
-.venv-eval/bin/python scripts/evaluate_openvins.py   --run "$PWD/runs/$RUN"   --audit "$PWD/reports/w1/v101-data-audit/audit.json"   --gt-original "$PWD/data/public/euroc/V1_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv"   --gt-corrected "$PWD/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"
-```
+r04 当时使用 0.5×、默认 IMU best-effort 深度 5，仅带 Jazzy 头文件兼容补丁。此后运行器默认值、线程与 QoS 已修复，不能用当前代码的默认配置冒充原始 r04 重复实验。当前复现步骤、完整输入审计和自动验收命令统一见 [[plans/acoustic-optic-w1-openvins-replay-fix-2026-10|1× 修复记录]]；历史 run_id 均不得覆盖。
 
 仅当 run.json、estimator/recorder/player.log、输出 bag、evaluation/metrics.json 与轨迹图均存在且相互一致，才评审该次结果。脚本输出 status=scored 仅表示成功计算指标，不代表精度通过；首先检查初始化、覆盖、APE/RPE 全程及所有失败运行。
 
@@ -166,4 +159,4 @@ bash scripts/ros-cyclone-run.sh /usr/bin/python3 scripts/run_openvins.py   --lab
 
 知识库保存报告、轨迹图、更新后的清单/缺口/导航。sources/projects/2026-10-10-w1-v101 中另有精选 JSON 与脚本镜像；受知识库现有白名单影响，这些非 Markdown 原始文件不随 wiki Git 提交，脚本的正式版本由独立代码仓库负责。
 
-W1-02/03/04 已按本页限定验收勾选。剩余 [[plans/acoustic-optic-w1-missing-inputs-2026-10|SDK、D0、水下标定与时间模型]]、独立参考方案、B 的完整几何链、SVIn 后端审计仍需继续。下一步先把半速流程作为离线调试入口；实时化另做输入接收审计与同配置多次运行，关闭问题单独修复，不提前进入声光融合创新方法的效果比较。
+W1-02/03/04 已按本页限定验收勾选。剩余 [[plans/acoustic-optic-w1-missing-inputs-2026-10|SDK、D0、水下标定与时间模型]]、独立参考方案、B 的完整几何链、SVIn 后端审计仍需继续。r04 阶段提出的输入接收审计、重复运行和关闭问题修复，已在后续 [[plans/acoustic-optic-w1-openvins-replay-fix-2026-10|1× 修复记录]] 中继续执行；当前状态以该页为准。
