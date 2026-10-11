@@ -8,6 +8,7 @@ import argparse
 import hashlib
 import json
 from pathlib import Path
+import re
 import sys
 
 import numpy as np
@@ -117,9 +118,16 @@ def write_openvins(meta, euroc_dir, out):
     dump = lambda d: '%YAML:1.0\n\n' + yaml.dump(d, Dumper=Indented, default_flow_style=None, sort_keys=False)
     (out/'kalibr_imucam_chain.yaml').write_text(dump(cams))
     (out/'kalibr_imu_chain.yaml').write_text(dump(imu))
-    estimator = (euroc_dir/'estimator_config.yaml').read_text().replace('gravity_mag: 9.81', 'gravity_mag: 9.80')
+    estimator = (euroc_dir/'estimator_config.yaml').read_text()
+    overrides = {'gravity_mag': 9.80, **meta['route'].get('estimator_overrides', {}).get('values', {})}
+    for key, value in overrides.items():
+        value = str(value).lower() if isinstance(value, bool) else value
+        estimator, n = re.subn(rf'^{key}:[^#\n]*', f'{key}: {value} ', estimator, flags=re.M)
+        if n != 1:
+            raise ValueError(f'estimator override {key} matched {n} lines')
     head, rest = estimator.split('\n', 1)  # %YAML directive must stay on the first line for OpenCV
-    (out/'estimator_config.yaml').write_text(head + '\n# Derived from configs/euroc_v101 by scripts/sim_to_bag.py; only gravity changed.\n' + rest)
+    note = meta['route'].get('estimator_overrides', {}).get('reason', 'none')
+    (out/'estimator_config.yaml').write_text(head + f'\n# Derived from configs/euroc_v101 by scripts/sim_to_bag.py. Overrides: {overrides}. Reason: {note}\n' + rest)
     return {'focal_px': f, 'baseline_m': float(np.linalg.norm(np.subtract(cams['cam0']['T_imu_cam'], cams['cam1']['T_imu_cam'])[:3, 3]))}
 
 
