@@ -111,11 +111,15 @@ def write_openvins(meta, euroc_dir, out):
                     'rostopic': '/imu0', 'time_offset': 0.0, 'update_rate': float(rate), 'model': 'kalibr',
                     'Tw': np.eye(3).tolist(), 'R_IMUtoGYRO': np.eye(3).tolist(), 'Ta': np.eye(3).tolist(),
                     'R_IMUtoACC': np.eye(3).tolist(), 'Tg': np.zeros((3, 3)).tolist()}}
-    dump = lambda d: '%YAML:1.0\n\n' + yaml.safe_dump(d, default_flow_style=None, sort_keys=False)
+    class Indented(yaml.SafeDumper):  # OpenCV FileStorage wants sequence items indented under their key
+        def increase_indent(self, flow=False, indentless=False):
+            return super().increase_indent(flow, False)
+    dump = lambda d: '%YAML:1.0\n\n' + yaml.dump(d, Dumper=Indented, default_flow_style=None, sort_keys=False)
     (out/'kalibr_imucam_chain.yaml').write_text(dump(cams))
     (out/'kalibr_imu_chain.yaml').write_text(dump(imu))
     estimator = (euroc_dir/'estimator_config.yaml').read_text().replace('gravity_mag: 9.81', 'gravity_mag: 9.80')
-    (out/'estimator_config.yaml').write_text('# Derived from configs/euroc_v101 by scripts/sim_to_bag.py; only gravity changed.\n' + estimator)
+    head, rest = estimator.split('\n', 1)  # %YAML directive must stay on the first line for OpenCV
+    (out/'estimator_config.yaml').write_text(head + '\n# Derived from configs/euroc_v101 by scripts/sim_to_bag.py; only gravity changed.\n' + rest)
     return {'focal_px': f, 'baseline_m': float(np.linalg.norm(np.subtract(cams['cam0']['T_imu_cam'], cams['cam1']['T_imu_cam'])[:3, 3]))}
 
 
