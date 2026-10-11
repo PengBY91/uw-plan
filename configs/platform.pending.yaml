@@ -10,6 +10,11 @@ sonar:
   sdk_supported_os: null
   projection: null
   pixel_to_range_bearing: null
+  mapping_validation_evidence: null  # G-A1 item 3: known-target forward/inverse check
+  vertical_aperture_deg: null        # B: measured or from verified model manual; do not reuse M750d 20 deg
+  vertical_aperture_source: null
+  gain_tvg_settings: null            # B E-B0: fixed gain/TVG under which echo/no-echo was characterised
+  echo_threshold_evidence: null
   device_clock: null
 stereo:
   model: null
@@ -18,14 +23,19 @@ stereo:
   left_right_sync: null
 imu:
   model: null
+  source_kind: null                  # raw_driver | mavlink_raw_imu | fused_attitude_only (not usable as raw IMU)
   raw_accel_gyro_topic: null
   units: null
   sample_clock: null
+  measured_rate_hz: null             # G-A1 item 1: about 200 Hz or higher, recheck after hardware choice
+  transport_latency_s: null
+  publisher_qos_reliability: null    # best-effort depth 5 lost 44% of 200 Hz EuRoC IMU at 1x (r05)
+  static_rotation_check_evidence: null
 pressure_depth:
   topic: null
   reference: null
 extrinsics:
-  frame_convention: null
+  frame_convention: null             # world ENU or NED, body axes; one file for A and B
   T_body_camera: null
   T_body_imu: null
   T_body_sonar: null
@@ -36,3 +46,8 @@ reference:
   pose_source: null
   observable_dof: null
   uncertainty: null
+gates:
+  g_a1:                              # topic A plan v2 section 7; any null or false at M1 end -> A keeps baseline only
+    raw_imu_recorded_and_traceable: null
+    local_baseline_1x_complete_input: null   # algorithm-side input audit, as in W1 r09/r10, on platform data
+    sonar_mapping_validated: null

@@ -1,6 +1,14 @@
-# Underwater acoustic-optic W1 lab
+# Underwater acoustic-optic lab (topics A and B)
 
-Team-maintained acquisition, conversion, audit and baseline scripts are versioned here.
+One repository serves topic A (direction-level failure detection, plan v2) and topic B (single-FLS + stereo mapping, plan v2), following the shared W1, month-1 and month-2 plans.
+Team-maintained acquisition, conversion, audit, baseline and evaluation code is versioned here.
+
+- scripts/: W1 public-baseline tooling (EuRoC import, OpenVINS replay, audits, acceptance).
+- team/uwbench/: shared package and the uwbench CLI contract (runbook E7/R5). Run with PYTHONPATH=team/uwbench; `python -m uwbench list` shows which contracted subcommands exist. Unimplemented ones exit non-zero.
+  - uwbench.sonar: range/bearing model and elevation arcs shared by A's sonar factor and B's candidates; B 5.3 effect-size estimate.
+  - uwbench.metrics.axes: A v2 scoring, body-axis x/y/z/yaw error, estimator sigma and time-integrated exceedance with unavailable gaps.
+  - uwbench.metrics.occupancy: B section 6 map ratios with undefined (None) empty denominators.
+- Tests: `.venv-eval/bin/python -m unittest discover -s team/uwbench/tests` with PYTHONPATH=team/uwbench, plus scripts/test_*.py from scripts/.
 The Git branch is codex/w1-public-baseline. No remote is configured by this setup.
 
 - Runtime: Ubuntu 24.04, ROS 2 Jazzy, system Python 3.12.
@@ -39,6 +47,12 @@ From clean team and OpenVINS Git checkouts, choose an unused run ID (r01-r10 alr
     .venv-eval/bin/python scripts/audit_input_trace.py --bag "$PWD/data/public/euroc/V1_01_easy_ros2" --run "$PWD/runs/$RUN"
     .venv-eval/bin/python scripts/evaluate_openvins.py --run "$PWD/runs/$RUN" --audit "$PWD/reports/w1/v101-data-audit/audit.json" --gt-original "$PWD/data/public/euroc/V1_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv" --gt-corrected "$PWD/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"
     .venv-eval/bin/python scripts/check_replay_acceptance.py --run "$PWD/runs/$RUN"
+
+Optional A v2 scoring preview (writes runs/$RUN/axis-diagnostics; yaw+translation alignment over the first 10 s, provisional 0.15 m / 3 deg tolerances, not frozen):
+
+    .venv-eval/bin/python scripts/axis_diagnostics.py --run "$PWD/runs/$RUN" --gt "$PWD/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"
+
+r09/r10 give identical results: max |error| x 0.050 m, y 0.128 m, z 0.104 m, yaw 1.49 deg; no exceedance. V1_01 therefore does not exercise the detection track.
 
 r11 is an example new ID, not a completed run. The bag runner explicitly uses reliable IMU by default. Bare OpenVINS launch defaults to best-effort for live-driver compatibility; reliable subscription requires a compatible publisher. Input trace is written after worker shutdown. Acceptance checks input and update completeness, output validity/coverage, accuracy and shutdown, not just playback. RPE uses actual timestamp pairs; evo delta_unit=s is unsupported.
 

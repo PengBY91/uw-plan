@@ -9,6 +9,10 @@
 !team/*.py
 !team/*.cpp
 !team/*.h
+!team/uwbench/
+!team/uwbench/pyproject.toml
+!team/uwbench/**/
+!team/uwbench/**/*.py
 !configs/
 !configs/*.yaml
 !configs/euroc_v101/
