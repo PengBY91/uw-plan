@@ -1,0 +1,26 @@
+# Track team source, explicit configs and small provenance records only.
+*
+!.gitignore
+!README.md
+!scripts/
+!scripts/*.py
+!scripts/*.sh
+!team/
+!team/*.py
+!team/*.cpp
+!team/*.h
+!configs/
+!configs/*.yaml
+!configs/euroc_v101/
+!configs/euroc_v101/*.yaml
+!manifests/
+!manifests/*.yaml
+!manifests/*.json
+!locks/
+!locks/*.json
+!locks/*.txt
+!locks/*.patch
+!locks/*.sha256
+!reports/
+!reports/w1/
+!reports/w1/*.md

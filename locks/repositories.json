@@ -1,0 +1,262 @@
+[
+  {
+    "path": "ros_ws/src/open_vins",
+    "head": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/ros_ws/src/open_vins",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "stdout": "69488123ed9362dd44b6f28e7f4680abbff1442b\n",
+      "stderr": ""
+    },
+    "origin": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/ros_ws/src/open_vins",
+        "remote",
+        "get-url",
+        "origin"
+      ],
+      "exit_code": 0,
+      "stdout": "https://github.com/rpng/open_vins.git\n",
+      "stderr": ""
+    },
+    "status": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/ros_ws/src/open_vins",
+        "status",
+        "--short"
+      ],
+      "exit_code": 0,
+      "stdout": " M ov_msckf/src/ros/ROS2Visualizer.h\n M ov_msckf/src/ros/ROSVisualizerHelper.h\n",
+      "stderr": ""
+    },
+    "submodules": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/ros_ws/src/open_vins",
+        "submodule",
+        "status"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "vendor/octomap",
+    "head": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/octomap",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "stdout": "b5f9a9598f734609974d1086a785c54d25ec8763\n",
+      "stderr": ""
+    },
+    "origin": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/octomap",
+        "remote",
+        "get-url",
+        "origin"
+      ],
+      "exit_code": 0,
+      "stdout": "https://github.com/OctoMap/octomap.git\n",
+      "stderr": ""
+    },
+    "status": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/octomap",
+        "status",
+        "--short"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "submodules": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/octomap",
+        "submodule",
+        "status"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "vendor/SVIn",
+    "head": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SVIn",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "stdout": "fcda5466e08d955c5207fdc7e05f6eb57bf0fc7e\n",
+      "stderr": ""
+    },
+    "origin": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SVIn",
+        "remote",
+        "get-url",
+        "origin"
+      ],
+      "exit_code": 0,
+      "stdout": "https://github.com/AutonomousFieldRoboticsLab/SVIn.git\n",
+      "stderr": ""
+    },
+    "status": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SVIn",
+        "status",
+        "--short"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "submodules": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SVIn",
+        "submodule",
+        "status"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "vendor/SonarSweep",
+    "head": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SonarSweep",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "stdout": "b189606109c2dd6184c1aeefc54910b12a1b904f\n",
+      "stderr": ""
+    },
+    "origin": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SonarSweep",
+        "remote",
+        "get-url",
+        "origin"
+      ],
+      "exit_code": 0,
+      "stdout": "https://github.com/LIAS-CUHKSZ/SonarSweep.git\n",
+      "stderr": ""
+    },
+    "status": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SonarSweep",
+        "status",
+        "--short"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "submodules": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SonarSweep",
+        "submodule",
+        "status"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  },
+  {
+    "path": "vendor/SonarSweep_dataset",
+    "head": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SonarSweep_dataset",
+        "rev-parse",
+        "HEAD"
+      ],
+      "exit_code": 0,
+      "stdout": "d4db20dffeba41b857eb5e604a78578ef816a8c7\n",
+      "stderr": ""
+    },
+    "origin": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SonarSweep_dataset",
+        "remote",
+        "get-url",
+        "origin"
+      ],
+      "exit_code": 0,
+      "stdout": "https://github.com/LingpengChen/SonarSweep_dataset.git\n",
+      "stderr": ""
+    },
+    "status": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SonarSweep_dataset",
+        "status",
+        "--short"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    "submodules": {
+      "command": [
+        "git",
+        "-C",
+        "/home/steve/uw-ao-lab/vendor/SonarSweep_dataset",
+        "submodule",
+        "status"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  }
+]

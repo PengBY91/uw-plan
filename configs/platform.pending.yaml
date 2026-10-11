@@ -1,0 +1,38 @@
+schema_version: 1
+status: pending_verification
+purpose: input_checklist_only_not_algorithm_config
+stereo_integrated: true
+sonar:
+  manufacturer: null
+  model: null
+  sdk_version: null
+  firmware_version: null
+  sdk_supported_os: null
+  projection: null
+  pixel_to_range_bearing: null
+  device_clock: null
+stereo:
+  model: null
+  driver: null
+  underwater_calibration_path: null
+  left_right_sync: null
+imu:
+  model: null
+  raw_accel_gyro_topic: null
+  units: null
+  sample_clock: null
+pressure_depth:
+  topic: null
+  reference: null
+extrinsics:
+  frame_convention: null
+  T_body_camera: null
+  T_body_imu: null
+  T_body_sonar: null
+timing:
+  clock_domains: null
+  offsets_and_jitter: null
+reference:
+  pose_source: null
+  observable_dof: null
+  uncertainty: null

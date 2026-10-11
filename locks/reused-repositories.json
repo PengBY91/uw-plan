@@ -1,0 +1,14 @@
+[
+  {
+    "name": "SVIn",
+    "source": "/home/steve/code/underwater/uw_slam/external_repos/SVIn",
+    "sha": "fcda5466e08d955c5207fdc7e05f6eb57bf0fc7e",
+    "local_changes": ""
+  },
+  {
+    "name": "SonarSweep_dataset",
+    "source": "/home/steve/code/underwater_ood_scheduling/datasets/SonarSweep",
+    "sha": "d4db20dffeba41b857eb5e604a78578ef816a8c7",
+    "local_changes": ""
+  }
+]

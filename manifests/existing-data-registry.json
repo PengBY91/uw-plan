@@ -1,0 +1,12 @@
+{
+  "status": "paths_discovered_not_dataset_validation",
+  "existing_mh01_mcap": {
+    "path": "/home/steve/code/underwater_ood_scheduling/datasets/uw_slam_bags/euroc_mh01.mcap",
+    "bytes": 36119270,
+    "bag_info_exit": 0
+  },
+  "existing_datasets_root": "/home/steve/code/underwater_ood_scheduling/datasets",
+  "existing_tank_root": "/home/steve/code/underwater_ood_scheduling/data/Tank Dataset",
+  "v101_status": "no_name_match_in_scanned_roots",
+  "d0_status": "not_identified_as_current_platform_D0"
+}

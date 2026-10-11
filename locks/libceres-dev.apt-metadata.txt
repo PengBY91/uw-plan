@@ -1,0 +1,33 @@
+Package: libceres-dev
+Architecture: amd64
+Version: 2.2.0+dfsg-4.1ubuntu2
+Multi-Arch: same
+Priority: optional
+Section: universe/libdevel
+Source: ceres-solver
+Origin: Ubuntu
+Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
+Original-Maintainer: Debian Science Team <debian-science-maintainers@lists.alioth.debian.org>
+Bugs: https://bugs.launchpad.net/ubuntu/+filebug
+Installed-Size: 19792
+Depends: libceres4t64 (= 2.2.0+dfsg-4.1ubuntu2), libblas-dev, libgoogle-glog-dev, libgflags-dev, libeigen3-dev (>= 3.4.0), libeigen3-dev (<< 3.4.1), libsuitesparse-dev
+Filename: pool/universe/c/ceres-solver/libceres-dev_2.2.0+dfsg-4.1ubuntu2_amd64.deb
+Size: 1703022
+MD5sum: f1cdfe924e6d98e91c109de46144f8ef
+SHA1: 8550c0040074ed6ee8b8504394c3487e9bb0f058
+SHA256: 65b30bc5fdbf5d68923196c1d63aed539067ad1a89d5bf0190eb6c07dc1b819f
+SHA512: be7d72c7bfaae2b2a33c6c198bc588f38f6fa79c7761dfb920f27b954aa22eae5e81848ed313b0b37d3456ff6c68020d41737bc0bfff0402575c7e2f9409f02d
+Homepage: http://ceres-solver.org
+Description-en: nonlinear least squares minimizer (development files)
+ Ceres Solver is an open source C++ library for modeling and solving large,
+ complicated optimization problems.
+ It is a feature rich, mature and performant library which has been used
+ in production at Google since 2010.
+ .
+ Ceres Solver can solve two kinds of problems.
+  - Non-linear Least Squares problems with bounds constraints.
+  - General unconstrained optimization problems.
+ .
+ This package contains the development header files.
+Description-md5: d345da6d14aefd2f0e674ab2d588dcca
+

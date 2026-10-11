@@ -1,0 +1,11 @@
+schema_version: 1
+status: pending_inputs
+sequence: V1_01_easy
+source_url: https://doi.org/10.3929/ethz-b-000690084
+ros1_bag: null
+asl_directory: null
+ground_truth: null
+calibration: null
+sha256: null
+conversion: null
+acceptance: not_run
