@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from uwbench.detect import ATMOSPHERE_PA, G, RHO, information_gap, parse_diag, statistics, threshold
+from uwbench.detect import ATMOSPHERE_PA, G, RHO, drift_budget_deg, information_gap, parse_diag, statistics, threshold
 
 
 def synthetic(seed=0, yaw_drift=0.0):
@@ -62,6 +62,24 @@ class DetectTest(unittest.TestCase):
         t = synthetic()[0]
         self.assertAlmostEqual(stats['conflict_cum'][-1, 3], 0.5*(t[-1] - 20), delta=0.2)
         self.assertLess(stats['conflict_cum'][t < 20, 3].max(), 0.1)
+
+    def test_frozen_bias_keeps_drift_that_the_online_bias_absorbed(self):
+        t, est, diag, imu, odom, pressure = synthetic(yaw_drift=0.5)
+        absorbed = odom.copy()  # online bias moves to explain the estimated drift: corrected gyro = gyro + drift rate
+        absorbed[absorbed[:, 0] > 20, 3] += np.radians(0.5)
+        stats = statistics(t, est, diag, imu, absorbed, pressure, gyro_noise=(1e-4, 1e-5))
+        self.assertLess(stats['conflict_cum'][:, 3].max(), 0.1)
+        self.assertAlmostEqual(stats['conflict_cum_frozen'][-1, 3], 0.5*(t[-1] - 20), delta=0.2)
+        np.testing.assert_allclose(stats['conflict_cum_frozen_excess'][:, 3],
+                                   stats['conflict_cum_frozen'][:, 3] - stats['budget_yaw_deg'])
+        true_bias = np.column_stack([imu[:, 0], np.zeros((len(imu), 3))])
+        oracle = statistics(t, est, diag, imu, absorbed, pressure, true_bias=true_bias)['conflict_cum_true'][:, 3]
+        np.testing.assert_allclose(oracle, stats['conflict_cum_frozen'][:, 3], atol=1e-6)  # frozen bias is the true one here
+
+    def test_drift_budget_grows_with_white_noise_and_bias_walk(self):
+        self.assertAlmostEqual(drift_budget_deg(100.0, 1e-3, 0.0, 1.0), np.degrees(1e-2))
+        self.assertAlmostEqual(drift_budget_deg(30.0, 0.0, 1e-4, 3.0), np.degrees(3e-4*np.sqrt(30.0**3/3)))
+        self.assertEqual(drift_budget_deg(-1.0, 1e-3, 1e-4, 3.0), 0.0)
 
     def test_depth_conflict_is_zero_when_estimate_follows_gauge(self):
         conflict_z = statistics(*synthetic())['conflict'][:, 2]
