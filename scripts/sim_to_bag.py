@@ -140,6 +140,7 @@ def main():
     parser.add_argument('--run', type=Path, required=True, help='data/sim/<run_id> containing raw/')
     parser.add_argument('--lab', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--overrides-from', type=Path, help='take estimator_overrides from this route JSON instead of the generated one')
+    parser.add_argument('--restore-bag', action='store_true', help='rebuild ros2/ from raw/ and verify it against checksums.sha256')
     parser.add_argument('--openvins-only', type=Path, help='only write OpenVINS YAMLs to this new directory; bag, reference and audit are reused')
     args = parser.parse_args()
     raw = args.run/'raw'
@@ -149,6 +150,16 @@ def main():
         meta['route']['estimator_overrides']['source'] = str(args.overrides_from)
     if args.openvins_only:
         print(json.dumps(write_openvins(meta, args.lab/'configs/euroc_v101', args.openvins_only), indent=2))
+        return
+    if args.restore_bag:
+        if (args.run/'ros2').exists():
+            parser.error('ros2/ already exists; refusing to overwrite')
+        write_bag(raw, args.run/'ros2', meta)
+        recorded = dict(line.split()[::-1] for line in (args.run/'checksums.sha256').read_text().splitlines())
+        for f in sorted((args.run/'ros2').iterdir()):
+            if recorded.get(f'ros2/{f.name}') != hashlib.sha256(f.read_bytes()).hexdigest():
+                raise SystemExit(f'restored {f.name} does not match checksums.sha256')
+        print('restored ros2/ matches checksums.sha256')
         return
     counts = write_bag(raw, args.run/'ros2', meta)
     write_reference(raw, args.run/'reference'/'gt_imu.csv')
