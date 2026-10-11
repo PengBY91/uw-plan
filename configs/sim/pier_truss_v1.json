@@ -1,0 +1,149 @@
+{
+  "name": "pier_truss_v1",
+  "purpose": "W2-11 repeated-structure pass: lateral motion along a cross-braced pile pier (highly repetitive members, see-through layers) at about 10 m standoff, 6 m depth; final 5 m approach/retreat along the normal as the observable-direction contrast",
+  "world": "PierHarbor",
+  "package": "Ocean",
+  "ticks_per_sec": 200,
+  "assumptions": {
+    "imu_noise": "ASSUMPTION consumer-MEMS class per-sample sigmas at 200 Hz; replace with platform Allan-variance values after the IMU arrives",
+    "depth_sigma_m": "ASSUMPTION 2 cm per sample",
+    "sonar_elevation_deg": "ASSUMPTION 20 deg until the platform vertical aperture is measured (do not cite as the platform value)",
+    "scene_geometry": "pier located from the HoloOcean sonar octree (UE y is negated in HoloOcean); truss starts about 5-8 m ahead of x=620 at y=-720 per probe images; ranges below 1.5 m were seen at x>=630, so the path stays at x<=620"
+  },
+  "sensors": {
+    "imu_hz": 200,
+    "imu_noise": {
+      "AccelSigma": 0.02,
+      "AngVelSigma": 0.002,
+      "AccelBiasSigma": 0.0003,
+      "AngVelBiasSigma": 2e-05
+    },
+    "depth_hz": 50,
+    "depth_sigma_m": 0.02,
+    "camera_hz": 20,
+    "width": 640,
+    "height": 480,
+    "fov_deg": 90.0,
+    "sonar_hz": 10,
+    "sonar": {
+      "RangeBins": 256,
+      "AzimuthBins": 128,
+      "RangeMin": 0.3,
+      "RangeMax": 20,
+      "Elevation": 20,
+      "Azimuth": 120,
+      "MultSigma": 0.1,
+      "AddSigma": 0.05,
+      "MultiPath": false,
+      "ViewRegion": false
+    }
+  },
+  "waypoints": [
+    {
+      "t": 0,
+      "pose": [
+        615,
+        -735,
+        -6.0,
+        0,
+        0,
+        0.0
+      ]
+    },
+    {
+      "t": 6,
+      "pose": [
+        615,
+        -735,
+        -6.0,
+        0,
+        0,
+        0.0
+      ]
+    },
+    {
+      "t": 8,
+      "pose": [
+        615.4,
+        -734.6,
+        -5.6,
+        0,
+        0,
+        15
+      ]
+    },
+    {
+      "t": 10,
+      "pose": [
+        614.6,
+        -735.4,
+        -6.4,
+        0,
+        0,
+        -15
+      ]
+    },
+    {
+      "t": 12,
+      "pose": [
+        615,
+        -735,
+        -6.0,
+        0,
+        0,
+        0.0
+      ]
+    },
+    {
+      "t": 52,
+      "pose": [
+        615,
+        -720,
+        -6.0,
+        0,
+        0,
+        0.0
+      ]
+    },
+    {
+      "t": 92,
+      "pose": [
+        615,
+        -735,
+        -6.0,
+        0,
+        0,
+        0.0
+      ]
+    },
+    {
+      "t": 96,
+      "pose": [
+        620,
+        -735,
+        -6.0,
+        0,
+        0,
+        0.0
+      ]
+    },
+    {
+      "t": 100,
+      "pose": [
+        615,
+        -735,
+        -6.0,
+        0,
+        0,
+        0.0
+      ]
+    }
+  ],
+  "estimator_overrides": {
+    "values": {
+      "init_dyn_use": true,
+      "init_imu_thresh": 0.1
+    },
+    "reason": "tank_wall_v1_s01_a0_r02 never initialised: EuRoC init_imu_thresh 1.5 m^2/s^4 is drone-level jerk, AUV excitation variance was 0.009-0.017"
+  }
+}
