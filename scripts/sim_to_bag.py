@@ -23,6 +23,10 @@ from uwbench.mapping import R_BODY_OPTICAL  # noqa: E402
 TS = get_typestore(Stores.ROS2_JAZZY)
 EPOCH_NS = 1_700_000_000 * 10**9  # sim t=0 maps here; only offsets matter
 ATMOSPHERE_PA, RHO, G = 101325.0, 1000.0, 9.81
+# Sim A0 baseline on top of configs/euroc_v101. Sim calibration is exact, so online camera calibration is off:
+# in sim_pier_truss_v1_s01_a0_r02 it drifted (time offset +62 ms) and amplified a weak-parallax failure to km scale.
+SIM_BASELINE = {'gravity_mag': 9.80, 'calib_cam_extrinsics': False, 'calib_cam_intrinsics': False, 'calib_cam_timeoffset': False}
+SIM_BASELINE_REASON = 'Sim baseline: gravity 9.80; online camera calibration off because the simulated calibration is exact (pier r02 diagnosis).'
 
 
 def stamp(t):
@@ -119,14 +123,14 @@ def write_openvins(meta, euroc_dir, out):
     (out/'kalibr_imucam_chain.yaml').write_text(dump(cams))
     (out/'kalibr_imu_chain.yaml').write_text(dump(imu))
     estimator = (euroc_dir/'estimator_config.yaml').read_text()
-    overrides = {'gravity_mag': 9.80, **meta['route'].get('estimator_overrides', {}).get('values', {})}
+    overrides = {**SIM_BASELINE, **meta['route'].get('estimator_overrides', {}).get('values', {})}
     for key, value in overrides.items():
         value = str(value).lower() if isinstance(value, bool) else value
         estimator, n = re.subn(rf'^{key}:[^#\n]*', f'{key}: {value} ', estimator, flags=re.M)
         if n != 1:
             raise ValueError(f'estimator override {key} matched {n} lines')
     head, rest = estimator.split('\n', 1)  # %YAML directive must stay on the first line for OpenCV
-    note = meta['route'].get('estimator_overrides', {}).get('reason', 'none')
+    note = SIM_BASELINE_REASON + ' Route: ' + meta['route'].get('estimator_overrides', {}).get('reason', 'none')
     (out/'estimator_config.yaml').write_text(head + f'\n# Derived from configs/euroc_v101 by scripts/sim_to_bag.py. Overrides: {overrides}. Reason: {note}\n' + rest)
     return {'focal_px': f, 'baseline_m': float(np.linalg.norm(np.subtract(cams['cam0']['T_imu_cam'], cams['cam1']['T_imu_cam'])[:3, 3]))}
 
