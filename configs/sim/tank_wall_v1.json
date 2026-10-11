@@ -1,0 +1,36 @@
+{
+  "name": "tank_wall_v1",
+  "purpose": "W2-11 pool analogue: lateral motion along a textureless flat wall (A v2 along-wall degeneracy) with an excitation segment for VIO initialisation",
+  "world": "Tank",
+  "package": "Ocean",
+  "ticks_per_sec": 200,
+  "assumptions": {
+    "imu_noise": "ASSUMPTION consumer-MEMS class per-sample sigmas at 200 Hz; replace with platform Allan-variance values after the IMU arrives",
+    "depth_sigma_m": "ASSUMPTION 2 cm per sample",
+    "sonar_elevation_deg": "ASSUMPTION 20 deg until the platform vertical aperture is measured (do not cite as the platform value)",
+    "pitch_sign": "HoloOcean pitch +deg is nose down in this world (verified: -30 looked at the sky)"
+  },
+  "sensors": {
+    "imu_hz": 200,
+    "imu_noise": {"AccelSigma": 0.02, "AngVelSigma": 0.002, "AccelBiasSigma": 0.0003, "AngVelBiasSigma": 0.00002},
+    "depth_hz": 50,
+    "depth_sigma_m": 0.02,
+    "camera_hz": 20, "width": 640, "height": 480, "fov_deg": 90.0,
+    "sonar_hz": 10,
+    "sonar": {"RangeBins": 256, "AzimuthBins": 128, "RangeMin": 0.3, "RangeMax": 8, "Elevation": 20, "Azimuth": 120,
+              "MultSigma": 0.1, "AddSigma": 0.05, "MultiPath": false, "ViewRegion": false}
+  },
+  "waypoints": [
+    {"t": 0,  "pose": [0.0, -2.5, -0.5, 0, 15, 0]},
+    {"t": 4,  "pose": [0.0, -2.5, -0.5, 0, 15, 0]},
+    {"t": 6,  "pose": [0.3, -2.3, -0.7, 0, 15, 15]},
+    {"t": 8,  "pose": [0.6, -2.7, -0.4, 0, 15, -15]},
+    {"t": 10, "pose": [1.0, -3.0, -0.5, 0, 15, 0]},
+    {"t": 30, "pose": [1.0, 3.0, -0.5, 0, 15, 0]},
+    {"t": 50, "pose": [1.0, -3.0, -0.5, 0, 15, 0]},
+    {"t": 56, "pose": [0.0, -2.0, -0.5, 0, 15, 60]},
+    {"t": 64, "pose": [-1.0, 0.0, -0.6, 0, 15, 150]},
+    {"t": 72, "pose": [0.0, 2.0, -0.5, 0, 15, 240]},
+    {"t": 80, "pose": [0.0, -2.5, -0.5, 0, 15, 360]}
+  ]
+}

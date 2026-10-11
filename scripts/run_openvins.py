@@ -19,6 +19,9 @@ def main():
     parser.add_argument('--rate', type=float, default=1.0)
     parser.add_argument('--imu-history-depth', type=int, default=1000)
     parser.add_argument('--imu-reliability', choices=['reliable', 'best_effort'], default='reliable')
+    parser.add_argument('--config-dir', type=Path, help='OpenVINS YAML directory (default: configs/euroc_v101)')
+    parser.add_argument('--dataset-audit', type=Path, help='uwbench audit.json that must have passed (default: W1 EuRoC audit)')
+    parser.add_argument('--topics', nargs='+', default=['/cam0/image_raw', '/cam1/image_raw', '/imu0'])
     args = parser.parse_args()
     if args.rate <= 0 or args.imu_history_depth <= 0 or Path(args.run_id).name != args.run_id:
         parser.error('Invalid playback rate or run ID')
@@ -28,15 +31,19 @@ def main():
     source_dirty = subprocess.check_output(['git', '-C', str(args.lab/'ros_ws/src/open_vins'), 'status', '--porcelain'], text=True)
     if source_dirty.strip():
         parser.error('Commit OpenVINS source changes before a versioned baseline run')
-    audit = json.loads((args.lab/'reports/w1/v101-data-audit/audit.json').read_text())
-    if audit['status'] != 'passed':
+    if args.dataset_audit:
+        if not json.loads(args.dataset_audit.read_text()).get('passed'):
+            parser.error('uwbench dataset audit has not passed')
+    elif json.loads((args.lab/'reports/w1/v101-data-audit/audit.json').read_text())['status'] != 'passed':
         parser.error('Dataset audit has not passed')
-    config_directory = args.lab/'configs/euroc_v101'
+    config_directory = (args.config_dir or args.lab/'configs/euroc_v101').resolve()
     run = args.lab/'runs'/args.run_id
     run.mkdir(parents=True, exist_ok=False)
     processes, handles = {}, []
     record = {'run_id': args.run_id, 'start_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-              'rate': args.rate, 'imu_reliability': args.imu_reliability, 'imu_history_depth': args.imu_history_depth, 'ros_domain_id': os.environ.get('ROS_DOMAIN_ID'),
+              'rate': args.rate, 'bag': str(args.bag), 'config_dir': str(config_directory), 'topics': args.topics,
+              'dataset_audit': str(args.dataset_audit) if args.dataset_audit else 'reports/w1/v101-data-audit/audit.json',
+              'imu_reliability': args.imu_reliability, 'imu_history_depth': args.imu_history_depth, 'ros_domain_id': os.environ.get('ROS_DOMAIN_ID'),
               'rmw_implementation': os.environ.get('RMW_IMPLEMENTATION', 'default'),
               'cyclonedds_uri': os.environ.get('CYCLONEDDS_URI'),
               'clock_mode': 'header timestamps; no simulated clock',
@@ -103,7 +110,7 @@ def main():
         start_time = time.monotonic()
         player = start('player', ['ros2', 'bag', 'play', str(args.bag), '--rate', str(args.rate),
                        '--read-ahead-queue-size', '1000', '--disable-keyboard-controls',
-                       '--topics', '/cam0/image_raw', '/cam1/image_raw', '/imu0'])
+                       '--topics', *args.topics])
         deadline = start_time + 600 / args.rate
         while player.poll() is None:
             if processes['estimator'].poll() is not None or processes['recorder'].poll() is not None:

@@ -17,6 +17,10 @@
 !configs/*.yaml
 !configs/euroc_v101/
 !configs/euroc_v101/*.yaml
+!configs/sim/
+!configs/sim/*.json
+!team/sim/
+!team/sim/*.py
 !manifests/
 !manifests/*.yaml
 !manifests/*.json
