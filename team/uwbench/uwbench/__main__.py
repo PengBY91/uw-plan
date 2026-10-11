@@ -35,7 +35,12 @@ def _eval_traj(argv):
     return main(argv)
 
 
-IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj}
+def _detect_a(argv):
+    from uwbench.detect import main
+    return main(argv)
+
+
+IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj, 'detect-a': _detect_a}
 
 
 def main(argv=None):

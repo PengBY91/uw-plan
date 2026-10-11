@@ -46,7 +46,7 @@ class MapRatioTest(unittest.TestCase):
 
 class ContractTest(unittest.TestCase):
     def test_unimplemented_command_fails(self):
-        self.assertNotEqual(main(['detect-a']), 0)
+        self.assertNotEqual(main(['diagnose-a']), 0)
 
 
 if __name__ == '__main__':
