@@ -135,9 +135,17 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--run', type=Path, required=True, help='data/sim/<run_id> containing raw/')
     parser.add_argument('--lab', type=Path, default=Path(__file__).resolve().parents[1])
+    parser.add_argument('--overrides-from', type=Path, help='take estimator_overrides from this route JSON instead of the generated one')
+    parser.add_argument('--openvins-only', type=Path, help='only write OpenVINS YAMLs to this new directory; bag, reference and audit are reused')
     args = parser.parse_args()
     raw = args.run/'raw'
     meta = json.loads((raw/'meta.json').read_text())
+    if args.overrides_from:
+        meta['route']['estimator_overrides'] = json.loads(args.overrides_from.read_text())['estimator_overrides']
+        meta['route']['estimator_overrides']['source'] = str(args.overrides_from)
+    if args.openvins_only:
+        print(json.dumps(write_openvins(meta, args.lab/'configs/euroc_v101', args.openvins_only), indent=2))
+        return
     counts = write_bag(raw, args.run/'ros2', meta)
     write_reference(raw, args.run/'reference'/'gt_imu.csv')
     calibration = write_openvins(meta, args.lab/'configs/euroc_v101', args.run/'openvins')
