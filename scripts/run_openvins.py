@@ -35,7 +35,9 @@ def main():
               'cyclonedds_uri': os.environ.get('CYCLONEDDS_URI'),
               'clock_mode': 'header timestamps; no simulated clock',
               'team_commit': subprocess.check_output(['git', '-C', str(args.lab), 'rev-parse', 'HEAD'], text=True).strip(),
-              'commands': {}}
+              'commands': {},
+              'udp_rmem_max': Path('/proc/sys/net/core/rmem_max').read_text().strip(),
+              'communication_config_sha256': hashlib.sha256((args.lab/'configs/cyclonedds-local.xml').read_bytes()).hexdigest() if os.environ.get('RMW_IMPLEMENTATION') == 'rmw_cyclonedds_cpp' else None}
 
     def start(name, command):
         handle = (run/(name+'.log')).open('w')
