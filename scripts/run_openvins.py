@@ -19,6 +19,13 @@ def main():
     args = parser.parse_args()
     if args.rate <= 0 or Path(args.run_id).name != args.run_id:
         parser.error('Invalid playback rate or run ID')
+    dirty = subprocess.check_output(['git', '-C', str(args.lab), 'status', '--porcelain'], text=True)
+    if dirty.strip():
+        parser.error('Commit team code/config changes before starting a versioned baseline run')
+    audit = json.loads((args.lab/'reports/w1/v101-data-audit/audit.json').read_text())
+    if audit['status'] != 'passed':
+        parser.error('Dataset audit has not passed')
+    config_directory = args.lab/'configs/euroc_v101'
     run = args.lab/'runs'/args.run_id
     run.mkdir(parents=True, exist_ok=False)
     processes, handles = {}, []
@@ -49,7 +56,8 @@ def main():
 
     try:
         start('estimator', ['ros2', 'launch', 'ov_msckf', 'subscribe.launch.py',
-              'config:=euroc_mav', 'use_stereo:=true', 'max_cameras:=2', 'rviz_enable:=false'])
+              'config_path:='+str(config_directory/'estimator_config.yaml'),
+              'use_stereo:=true', 'max_cameras:=2', 'rviz_enable:=false'])
         deadline = time.monotonic() + 35
         while time.monotonic() < deadline:
             if processes['estimator'].poll() is not None:
@@ -101,7 +109,7 @@ def main():
         record['exit_codes'] = {name: p.returncode for name, p in processes.items()}
         record['end_utc'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
         record['config_hashes'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in (args.lab/'ros_ws/install/ov_msckf/share/ov_msckf/config/euroc_mav').glob('*.yaml')}
+            for p in config_directory.glob('*.yaml')}
         (run/'run.json').write_text(json.dumps(record, indent=2)+'\n')
     print(json.dumps(record, indent=2))
     if record['status'] == 'failed':
