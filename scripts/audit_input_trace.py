@@ -59,7 +59,7 @@ def main():
                      non_increasing_count=int(np.sum(np.diff(updates)<=0)), unmatched_stamps=bad,
                      callback_to_update_wait_s=dict(median=float(np.median(waits)),p95=float(np.percentile(waits,95)),max=float(max(waits)))),
         interpretation='Estimator callback receipt and camera update entry, not a separate observer; queue wait excludes update compute time.')
-    result['complete_input'] = all(x['ordered_complete'] for x in [imu,cam0,cam1]) and not bad and len(set(matched))==len(received) and not result['stereo_mismatched_pairs']
+    result['complete_input'] = all(x['ordered_complete'] for x in [imu,cam0,cam1]) and not bad and len(set(matched))==len(received) and not result['stereo_mismatched_pairs'] and len(updates)==len(received) and result['updates']['non_increasing_count']==0
     path = args.run/'input-audit.json'
     if path.exists(): raise FileExistsError(path)
     path.write_text(json.dumps(result,indent=2)+'\n')
