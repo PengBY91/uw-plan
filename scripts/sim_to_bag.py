@@ -91,7 +91,7 @@ def write_reference(raw, path):
 def write_openvins(meta, euroc_dir, out):
     s = meta['route']['sensors']
     width, height, fov = s['width'], s['height'], np.radians(s['fov_deg'])
-    f = width/2/np.tan(fov/2)  # UE horizontal FOV, square pixels, centred principal point
+    f = float(width/2/np.tan(fov/2))  # UE horizontal FOV, square pixels, centred principal point
     out.mkdir(parents=True)
     cams = {}
     for i, socket in enumerate(('left', 'right')):
@@ -104,10 +104,10 @@ def write_openvins(meta, euroc_dir, out):
     rate = s['imu_hz']
     noise = s['imu_noise']
     imu = {'imu0': {'T_i_b': np.eye(4).tolist(),
-                    'accelerometer_noise_density': noise['AccelSigma']/np.sqrt(rate),
-                    'accelerometer_random_walk': noise['AccelBiasSigma']*np.sqrt(rate),
-                    'gyroscope_noise_density': noise['AngVelSigma']/np.sqrt(rate),
-                    'gyroscope_random_walk': noise['AngVelBiasSigma']*np.sqrt(rate),
+                    'accelerometer_noise_density': float(noise['AccelSigma']/np.sqrt(rate)),
+                    'accelerometer_random_walk': float(noise['AccelBiasSigma']*np.sqrt(rate)),
+                    'gyroscope_noise_density': float(noise['AngVelSigma']/np.sqrt(rate)),
+                    'gyroscope_random_walk': float(noise['AngVelBiasSigma']*np.sqrt(rate)),
                     'rostopic': '/imu0', 'time_offset': 0.0, 'update_rate': float(rate), 'model': 'kalibr',
                     'Tw': np.eye(3).tolist(), 'R_IMUtoGYRO': np.eye(3).tolist(), 'Ta': np.eye(3).tolist(),
                     'R_IMUtoACC': np.eye(3).tolist(), 'Tg': np.zeros((3, 3)).tolist()}}
