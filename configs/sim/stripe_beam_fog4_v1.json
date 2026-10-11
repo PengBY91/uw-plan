@@ -1,0 +1,200 @@
+{
+  "name": "stripe_beam_fog4_v1",
+  "purpose": "W2-11 directional-degeneracy pass (aperture problem): in fog that hides the background, move 26 m along a 20 m horizontal beam whose stretched brick texture is horizontal stripes, between two cobblestone anchor panels; motion along the beam (body y) should be weakly observable and KLT may slide along stripes, while vertical motion stays observable. Fog-density gradient member: density 4 (stripe_beam_v1 is density 2); everything else identical.",
+  "world": "OpenWater",
+  "package": "Ocean",
+  "ticks_per_sec": 200,
+  "assumptions": {
+    "imu_noise": "ASSUMPTION consumer-MEMS class per-sample sigmas at 200 Hz; replace with platform Allan-variance values after the IMU arrives",
+    "depth_sigma_m": "ASSUMPTION 2 cm per sample",
+    "sonar_elevation_deg": "ASSUMPTION 20 deg until the platform vertical aperture is measured (do not cite as the platform value)",
+    "scene_geometry": "props from beam_probe: at fog 2 / depth 0.5 the background disappears at 2.5 m and stretched brick reads as horizontal stripes; props are probably absent from the precomputed sonar octree, so sonar is not expected to see them"
+  },
+  "sensors": {
+    "imu_hz": 200,
+    "imu_noise": {
+      "AccelSigma": 0.02,
+      "AngVelSigma": 0.002,
+      "AccelBiasSigma": 0.0003,
+      "AngVelBiasSigma": 2e-05
+    },
+    "depth_hz": 50,
+    "depth_sigma_m": 0.02,
+    "camera_hz": 20,
+    "width": 640,
+    "height": 480,
+    "fov_deg": 90.0,
+    "sonar_hz": 10,
+    "sonar": {
+      "RangeBins": 256,
+      "AzimuthBins": 128,
+      "RangeMin": 0.3,
+      "RangeMax": 10,
+      "Elevation": 20,
+      "Azimuth": 120,
+      "MultSigma": 0.1,
+      "AddSigma": 0.05,
+      "MultiPath": false,
+      "ViewRegion": false
+    }
+  },
+  "waypoints": [
+    {
+      "t": 0,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 6,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 8,
+      "pose": [
+        -12.7,
+        -2.5,
+        -19.7,
+        0,
+        0,
+        100
+      ]
+    },
+    {
+      "t": 10,
+      "pose": [
+        -13.3,
+        -2.5,
+        -20.3,
+        0,
+        0,
+        80
+      ]
+    },
+    {
+      "t": 12,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 77,
+      "pose": [
+        13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 82,
+      "pose": [
+        13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 147,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 150,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    }
+  ],
+  "estimator_overrides": {
+    "values": {
+      "init_dyn_use": true,
+      "init_imu_thresh": 0.1
+    },
+    "reason": "AUV excitation is far below the drone-level EuRoC jerk threshold (tank r02)"
+  },
+  "props": [
+    {
+      "type": "box",
+      "location": [
+        0,
+        0,
+        -20.0
+      ],
+      "scale": [
+        20,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -14.5,
+        0,
+        -20.0
+      ],
+      "scale": [
+        3,
+        0.5,
+        3
+      ],
+      "material": "cobblestone"
+    },
+    {
+      "type": "box",
+      "location": [
+        14.5,
+        0,
+        -20.0
+      ],
+      "scale": [
+        3,
+        0.5,
+        3
+      ],
+      "material": "cobblestone"
+    }
+  ],
+  "fog": [
+    {
+      "t": 0,
+      "density": 4.0,
+      "depth": 0.5
+    }
+  ]
+}
