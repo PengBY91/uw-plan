@@ -1,25 +1,27 @@
 diff --git a/ov_msckf/launch/subscribe.launch.py b/ov_msckf/launch/subscribe.launch.py
-index 58b8874..d174c29 100644
+index 58b8874..e2f6f90 100644
 --- a/ov_msckf/launch/subscribe.launch.py
 +++ b/ov_msckf/launch/subscribe.launch.py
-@@ -8,6 +8,7 @@ import os
+@@ -8,6 +8,8 @@ import os
  import sys
  
  launch_args = [
++    DeclareLaunchArgument(name="imu_reliable", default_value="false", description="Require reliable IMU publisher; enable for audited bag replay"),
 +    DeclareLaunchArgument(name="imu_history_depth", default_value="1000", description="IMU subscriber queue depth"),
      DeclareLaunchArgument(name="namespace", default_value="ov_msckf", description="namespace"),
      DeclareLaunchArgument(
          name="ov_enable", default_value="true", description="enable OpenVINS node"
-@@ -86,6 +87,7 @@ def launch_setup(context):
+@@ -86,6 +88,8 @@ def launch_setup(context):
              {"max_cameras": LaunchConfiguration("max_cameras")},
              {"save_total_state": LaunchConfiguration("save_total_state")},
              {"config_path": config_path},
 +            {"imu_history_depth": LaunchConfiguration("imu_history_depth")},
++            {"imu_reliable": LaunchConfiguration("imu_reliable")},
          ],
      )
  
 diff --git a/ov_msckf/src/ros/ROS2Visualizer.cpp b/ov_msckf/src/ros/ROS2Visualizer.cpp
-index e91cd74..e2cdd97 100644
+index e91cd74..5933bbf 100644
 --- a/ov_msckf/src/ros/ROS2Visualizer.cpp
 +++ b/ov_msckf/src/ros/ROS2Visualizer.cpp
 @@ -42,7 +42,12 @@ ROS2Visualizer::ROS2Visualizer(std::shared_ptr<rclcpp::Node> node, std::shared_p
@@ -76,7 +78,7 @@ index e91cd74..e2cdd97 100644
    }
  }
  
-@@ -170,7 +197,12 @@ void ROS2Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
+@@ -170,7 +197,16 @@ void ROS2Visualizer::setup_subscribers(std::shared_ptr<ov_core::YamlParser> pars
    _node->declare_parameter<std::string>("topic_imu", "/imu0");
    _node->get_parameter("topic_imu", topic_imu);
    parser->parse_external("relative_config_imu", "imu0", "rostopic", topic_imu);
@@ -86,11 +88,15 @@ index e91cd74..e2cdd97 100644
 +  if (imu_depth <= 0) throw std::invalid_argument("imu_history_depth must be positive");
 +  auto imu_qos = rclcpp::SensorDataQoS();
 +  imu_qos.keep_last(static_cast<size_t>(imu_depth));
++  if (!_node->has_parameter("imu_reliable")) _node->declare_parameter<bool>("imu_reliable", false);
++  const bool imu_reliable = _node->get_parameter("imu_reliable").as_bool();
++  if (imu_reliable) imu_qos.reliable();
++  PRINT_INFO("IMU QoS: depth=%d, reliable=%d\n", imu_depth, imu_reliable);
 +  sub_imu = _node->create_subscription<sensor_msgs::msg::Imu>(topic_imu, imu_qos,
                                                                std::bind(&ROS2Visualizer::callback_inertial, this, std::placeholders::_1));
    PRINT_INFO("subscribing to IMU: %s\n", topic_imu.c_str());
  
-@@ -437,6 +469,8 @@ void ROS2Visualizer::visualize_final() {
+@@ -437,6 +473,8 @@ void ROS2Visualizer::visualize_final() {
  
  void ROS2Visualizer::callback_inertial(const sensor_msgs::msg::Imu::SharedPtr msg) {
  
@@ -99,7 +105,7 @@ index e91cd74..e2cdd97 100644
    // convert into correct format
    ov_core::ImuData message;
    message.timestamp = msg->header.stamp.sec + msg->header.stamp.nanosec * 1e-9;
-@@ -450,10 +484,10 @@ void ROS2Visualizer::callback_inertial(const sensor_msgs::msg::Imu::SharedPtr ms
+@@ -450,10 +488,10 @@ void ROS2Visualizer::callback_inertial(const sensor_msgs::msg::Imu::SharedPtr ms
    // If the processing queue is currently active / running just return so we can keep getting measurements
    // Otherwise create a second thread to do our update in an async manor
    // The visualization of the state, images, and features will be synchronous with the update!
@@ -114,7 +120,7 @@ index e91cd74..e2cdd97 100644
      // Lock on the queue (prevents new images from appending)
      std::lock_guard<std::mutex> lck(camera_queue_mtx);
  
-@@ -471,10 +505,11 @@ void ROS2Visualizer::callback_inertial(const sensor_msgs::msg::Imu::SharedPtr ms
+@@ -471,10 +509,11 @@ void ROS2Visualizer::callback_inertial(const sensor_msgs::msg::Imu::SharedPtr ms
  
        // Loop through our queue and see if we are able to process any of our camera measurements
        // We are able to process if we have at least one IMU measurement greater than the camera time
@@ -127,7 +133,7 @@ index e91cd74..e2cdd97 100644
          _app->feed_measurement_camera(camera_queue.at(0));
          visualize();
          camera_queue.pop_front();
-@@ -489,9 +524,7 @@ void ROS2Visualizer::callback_inertial(const sensor_msgs::msg::Imu::SharedPtr ms
+@@ -489,9 +528,7 @@ void ROS2Visualizer::callback_inertial(const sensor_msgs::msg::Imu::SharedPtr ms
    // If we are single threaded, then run single threaded
    // Otherwise detach this thread so it runs in the background!
    if (!_app->get_params().use_multi_threading_subs) {
@@ -138,7 +144,7 @@ index e91cd74..e2cdd97 100644
    }
  }
  
-@@ -537,6 +570,9 @@ void ROS2Visualizer::callback_monocular(const sensor_msgs::msg::Image::SharedPtr
+@@ -537,6 +574,9 @@ void ROS2Visualizer::callback_monocular(const sensor_msgs::msg::Image::SharedPtr
  void ROS2Visualizer::callback_stereo(const sensor_msgs::msg::Image::ConstSharedPtr msg0, const sensor_msgs::msg::Image::ConstSharedPtr msg1,
                                       int cam_id0, int cam_id1) {
  

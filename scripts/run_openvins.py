@@ -18,12 +18,16 @@ def main():
     parser.add_argument('--run-id', required=True)
     parser.add_argument('--rate', type=float, default=1.0)
     parser.add_argument('--imu-history-depth', type=int, default=1000)
+    parser.add_argument('--imu-reliability', choices=['reliable', 'best_effort'], default='reliable')
     args = parser.parse_args()
     if args.rate <= 0 or args.imu_history_depth <= 0 or Path(args.run_id).name != args.run_id:
         parser.error('Invalid playback rate or run ID')
     dirty = subprocess.check_output(['git', '-C', str(args.lab), 'status', '--porcelain'], text=True)
     if dirty.strip():
         parser.error('Commit team code/config changes before starting a versioned baseline run')
+    source_dirty = subprocess.check_output(['git', '-C', str(args.lab/'ros_ws/src/open_vins'), 'status', '--porcelain'], text=True)
+    if source_dirty.strip():
+        parser.error('Commit OpenVINS source changes before a versioned baseline run')
     audit = json.loads((args.lab/'reports/w1/v101-data-audit/audit.json').read_text())
     if audit['status'] != 'passed':
         parser.error('Dataset audit has not passed')
@@ -32,7 +36,7 @@ def main():
     run.mkdir(parents=True, exist_ok=False)
     processes, handles = {}, []
     record = {'run_id': args.run_id, 'start_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-              'rate': args.rate, 'imu_history_depth': args.imu_history_depth, 'ros_domain_id': os.environ.get('ROS_DOMAIN_ID'),
+              'rate': args.rate, 'imu_reliability': args.imu_reliability, 'imu_history_depth': args.imu_history_depth, 'ros_domain_id': os.environ.get('ROS_DOMAIN_ID'),
               'rmw_implementation': os.environ.get('RMW_IMPLEMENTATION', 'default'),
               'cyclonedds_uri': os.environ.get('CYCLONEDDS_URI'),
               'clock_mode': 'header timestamps; no simulated clock',
@@ -70,7 +74,8 @@ def main():
         start('estimator', ['ros2', 'launch', 'ov_msckf', 'subscribe.launch.py',
               'config_path:='+str(config_directory/'estimator_config.yaml'),
               'use_stereo:=true', 'max_cameras:=2', 'rviz_enable:=false',
-              'imu_history_depth:='+str(args.imu_history_depth)])
+              'imu_history_depth:='+str(args.imu_history_depth),
+              'imu_reliable:='+str(args.imu_reliability == 'reliable').lower()])
         deadline = time.monotonic() + 35
         while time.monotonic() < deadline:
             if processes['estimator'].poll() is not None:
