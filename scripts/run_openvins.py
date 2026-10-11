@@ -31,6 +31,8 @@ def main():
     processes, handles = {}, []
     record = {'run_id': args.run_id, 'start_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
               'rate': args.rate, 'ros_domain_id': os.environ.get('ROS_DOMAIN_ID'),
+              'rmw_implementation': os.environ.get('RMW_IMPLEMENTATION', 'default'),
+              'cyclonedds_uri': os.environ.get('CYCLONEDDS_URI'),
               'clock_mode': 'header timestamps; no simulated clock',
               'team_commit': subprocess.check_output(['git', '-C', str(args.lab), 'rev-parse', 'HEAD'], text=True).strip(),
               'commands': {}}
@@ -64,13 +66,13 @@ def main():
                 raise RuntimeError('Estimator exited during startup')
             topics = subprocess.run(['ros2', 'topic', 'list', '--no-daemon'],
                                     capture_output=True, text=True, timeout=10)
-            if '/ov_msckf/poseimu' in topics.stdout:
+            if '/ov_msckf/poseimu' in topics.stdout.splitlines():
                 break
             time.sleep(1)
         else:
             raise RuntimeError('Estimator pose publisher was not discovered')
         start('recorder', ['ros2', 'bag', 'record', '-s', 'mcap', '-o', str(run/'estimate_bag'),
-                           '/ov_msckf/poseimu', '/ov_msckf/odomimu'])
+                           '--topics', '/ov_msckf/poseimu', '/ov_msckf/odomimu'])
         deadline = time.monotonic() + 30
         while time.monotonic() < deadline:
             if processes['recorder'].poll() is not None:

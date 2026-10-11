@@ -24,3 +24,5 @@
 !reports/
 !reports/w1/
 !reports/w1/*.md
+
+!configs/cyclonedds-local.xml
