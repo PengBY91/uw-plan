@@ -11,3 +11,7 @@ If repaired runs fail a criterion, diagnose before changing the criterion; recor
 ## Amendment after r06, before r07
 
 r06 at best-effort depth 1000 recovered accuracy (APE 0.044129994 m, 1s RPE 0.013804897 m) but missed 45/29120 IMUs across the sequence, so it fails input acceptance and is NOT counted as a passing repair. Test optional reliable IMU subscription with depth 1000 in r07, followed by r08 if it passes. The bag publisher already offers reliable delivery; no estimator YAML, calibration, data, or acceptance bound changes. This isolates reliability from depth at configuration level, although the binary is rebuilt for the new option. Bare OpenVINS launch retains best-effort default for live-driver compatibility; our versioned bag runner explicitly defaults to reliable. Verify actual endpoints during replay.
+
+## Amendment after r07, before r08
+
+r07 reliable/depth1000 received all IMUs and stereo pairs but updated only 2911/2912 pairs. It fails complete-input acceptance despite APE 0.051242766 m. Trace shows the final worker was triggered at the last camera stamp, then all nine later IMUs arrived while the preceding camera update was running; the worker used its stale trigger timestamp and left the last camera queued. Refresh an atomic watermark of IMUs already fed before each queued camera update. It does not synthesize IMU data or drain using future truth. Use r08 and r09 as the two new complete 1x regression runs; all acceptance bounds unchanged. Preserve r07 as a failed intermediate run.

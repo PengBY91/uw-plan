@@ -1,9 +1,9 @@
 {
   "upstream_base": "69488123ed9362dd44b6f28e7f4680abbff1442b",
   "jazzy_compat_commit": "49d30a527af5fa580bde80e824278138ad2e2dfa",
-  "fix_commit": "3a7a754c570c1e2a810c57f98b91f2a89f3b9412",
+  "fix_commit": "cb2fb7f713c96ed19f4e27b4e4b84a25d81ee62a",
   "branch": "codex/w1-ros2-replay-fix",
-  "patch_sha256": "75e48743470cb4ad1612f33f388f95739ff25fad1528d6efea139c228e7656be",
+  "patch_sha256": "13bee0585dac38ceb97c6fbda84b840c37cbb4f1230500f793a81b9d7ff56754",
   "patch_order": [
     "openvins-jazzy.patch",
     "openvins-ros2-replay.patch"
