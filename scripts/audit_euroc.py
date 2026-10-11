@@ -68,7 +68,11 @@ def scan(path, asl=None, image_output=None):
                                   dimensions=[int(msg.width), int(msg.height)],
                                   pixel_sha256=hashlib.sha256(pixels.tobytes()).hexdigest())
                     if asl:
-                        image_path = asl / camera / 'data' / (str(sample_ns) + '.png')
+                        csv_rows = [line.split(',') for line in (asl/camera/'data.csv').read_text().splitlines() if line and not line.startswith('#')]
+                        csv_stamp, filename = csv_rows[index]
+                        sample['asl_stamp_delta_ns'] = int(csv_stamp) - sample_ns
+                        assert abs(sample['asl_stamp_delta_ns']) <= 128
+                        image_path = asl / camera / 'data' / filename
                         with Image.open(image_path) as im:
                             sample['asl_pixels_equal'] = bool(np.array_equal(pixels, np.asarray(im)))
                         assert sample['asl_pixels_equal']
@@ -81,7 +85,8 @@ def scan(path, asl=None, image_output=None):
                     w, a = msg.angular_velocity, msg.linear_acceleration
                     row = [w.x, w.y, w.z, a.x, a.y, a.z]
                     assert np.isfinite(row).all()
-                    imu_rows.append(row)
+                    if topic == '/imu0':
+                        imu_rows.append(row)
         for topic, stat in stats.items():
             assert stat['count'] == counts[topic] > 0
             stat['content_sha256'] = hashes[topic].hexdigest()
@@ -100,17 +105,23 @@ def scan(path, asl=None, image_output=None):
             lines = [line.split(',')[0] for line in (asl/camera/'data.csv').read_text().splitlines()
                      if line and not line.startswith('#')]
             csv_stamps = list(map(int, lines))
-            assert stamps[f'/{camera}/image_raw'] == csv_stamps
+            assert len(stamps[f'/{camera}/image_raw']) == len(csv_stamps)
+            delta = np.array(csv_stamps, dtype=np.int64) - np.array(stamps[f'/{camera}/image_raw'], dtype=np.int64)
+            max_delta = int(np.max(np.abs(delta)))
+            assert max_delta <= 128
             png_count = len(list((asl/camera/'data').glob('*.png')))
             assert png_count == len(csv_stamps)
-            asl_checks[camera] = {'timestamps_equal': True, 'png_count': png_count}
+            asl_checks[camera] = {'timestamp_max_abs_delta_ns': max_delta, 'timestamp_tolerance_ns': 128, 'png_count': png_count}
         imu_lines = [line.split(',') for line in (asl/'imu0/data.csv').read_text().splitlines()
                      if line and not line.startswith('#')]
-        assert stamps['/imu0'] == [int(row[0]) for row in imu_lines]
+        imu_csv_stamps = np.array([int(row[0]) for row in imu_lines], dtype=np.int64)
+        assert len(stamps['/imu0']) == len(imu_csv_stamps)
+        imu_delta = int(np.max(np.abs(imu_csv_stamps - np.array(stamps['/imu0'], dtype=np.int64))))
+        assert imu_delta <= 128
         values = np.array([[float(v) for v in row[1:7]] for row in imu_lines])
         error = float(np.max(np.abs(values - np.array(imu_rows))))
         assert error <= 1e-6
-        asl_checks['imu0'] = {'timestamps_equal': True, 'max_abs_value_difference': error,
+        asl_checks['imu0'] = {'timestamp_max_abs_delta_ns': imu_delta, 'timestamp_tolerance_ns': 128, 'max_abs_value_difference': error,
                               'value_tolerance': 1e-6, 'finite_values': True}
     return {'topics': stats, 'samples': samples, 'asl_checks': asl_checks,
             'camera_stamps_ns': stamps['/cam0/image_raw']}

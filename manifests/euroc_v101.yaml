@@ -1,0 +1,59 @@
+schema_version: 1
+status: downloaded_converted_audited
+sequence: V1_01_easy
+source_doi: https://doi.org/10.3929/ethz-b-000690084
+raw_files:
+- filename: V1_01_easy.bag
+  source_archive: https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880/content
+  archive_member: vicon_room1/V1_01_easy/V1_01_easy.bag
+  archive_member_crc32: 001e8ccc
+  crc32_verified: true
+  bytes: 2130599434
+  sha256: 6dc6192fac63dd0a05ba745548b41fe8cae14724168a98865a81d37e681bbc81
+  whole_archive_md5_verified: false
+- filename: V1_01_easy.zip
+  source_archive: https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880/content
+  archive_member: vicon_room1/V1_01_easy/V1_01_easy.zip
+  archive_member_crc32: 1abe6a0d
+  crc32_verified: true
+  bytes: 1149702102
+  sha256: a920fe5b5e69a6ad19b32f1cfaf90ac2f59d45dfd1ca18cc9722e07684ba45fa
+  whole_archive_md5_verified: false
+ros1_bag: /home/steve/uw-ao-lab/data/public/euroc/V1_01_easy.bag
+asl_directory: /home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_asl/mav0
+ros2_directory: /home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2
+ground_truth_original: /home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv
+ground_truth_corrected: /home/steve/uw-ao-lab/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv
+conversion:
+  rosbags_version: 0.11.6
+  ros2_distribution: jazzy
+  metadata_version: 9
+  storage: mcap
+audit: /home/steve/uw-ao-lab/reports/w1/v101-data-audit/audit.json
+artifacts:
+  V1_01_easy_ros2/V1_01_easy_ros2.mcap:
+    bytes: 2129404503
+    sha256: 329eeff0797d5c3fcf89a4bf468bce8eca49abae80b538e89fccee2892dfdfb1
+  V1_01_easy_ros2/metadata.yaml:
+    bytes: 2244
+    sha256: d8e28b1eb7ae17e40dbd0cbe1318ed3fdcff66a896e80759cbb34fca37689303
+  V1_01_easy_asl/mav0/cam0/sensor.yaml:
+    bytes: 683
+    sha256: 191748edddda5d1368188f5b0a3c4bed6c48842c178ef9d83c50cba17d66e819
+  V1_01_easy_asl/mav0/cam1/sensor.yaml:
+    bytes: 684
+    sha256: a469fd673f369881f37dd6b93d251e9444950360d70c6214bf909cf509ac9524
+  V1_01_easy_asl/mav0/imu0/sensor.yaml:
+    bytes: 695
+    sha256: 91e6c408416f549f87e7405830b83849cca10521f3d3fc8bb3de862c2bc882d0
+  V1_01_easy_asl/mav0/pointcloud0/sensor.yaml:
+    bytes: 319
+    sha256: 91522a5c211fa51d2ea3842d8c70d704208593309790d31f8d4a56bb12eb4008
+  V1_01_easy_asl/mav0/state_groundtruth_estimate0/sensor.yaml:
+    bytes: 440
+    sha256: 7cfa7e00a38c5c4f3331ec6c388af8718db75e21cc01aa39d978ec9f8645dff5
+  V1_01_easy_asl/mav0/vicon0/sensor.yaml:
+    bytes: 432
+    sha256: b2b472ee698baff6e74730dcf1e14d8130da94d9459899d25bb395104dbd43b5
+ground_truth_original_sha256: 701200e6924ba845ccdeea884bd717c82d1ed91f480913ea6e2e6ccb9c0fbf6d
+ground_truth_corrected_sha256: 16543952bf69f3fb886008a26cc21d3c552deca8fa06087f0bc329c09d7fcbe3

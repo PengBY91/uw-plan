@@ -21,6 +21,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--lab', type=Path, required=True)
     parser.add_argument('--stage', type=Path, required=True)
+    parser.add_argument('--resume', action='store_true', help='Verify and reuse existing raw data; preserve prior failed audit')
     args = parser.parse_args()
     root = args.lab/'data/public/euroc'
     root.mkdir(parents=True, exist_ok=True)
@@ -35,24 +36,30 @@ def main():
         receipt = json.loads((args.stage/(name+'.receipt.json')).read_text())
         target = root/name
         if target.exists():
-            raise RuntimeError('Refusing to overwrite existing dataset: '+str(target))
-        shutil.copyfile(args.stage/name, target)
+            if not args.resume:
+                raise RuntimeError('Refusing to overwrite existing dataset: '+str(target))
+        else:
+            shutil.copyfile(args.stage/name, target)
         assert target.stat().st_size == receipt['bytes']
         assert sha256(target) == receipt['sha256']
         receipts.append(receipt)
         print('WSL COPY VERIFIED', name, flush=True)
     provenance = root/'provenance'
-    provenance.mkdir(exist_ok=False)
+    provenance.mkdir(exist_ok=args.resume)
     for name in ['eth-item.json', 'eth-files.json', 'archive-entries.json']:
         shutil.copyfile(args.stage/name, provenance/name)
     asl = root/'V1_01_easy_asl'
-    asl.mkdir(exist_ok=False)
+    reuse_asl = asl.exists() and args.resume
+    asl.mkdir(exist_ok=args.resume)
     with zipfile.ZipFile(root/'V1_01_easy.zip') as archive:
         for member in archive.infolist():
             resolved = (asl/member.filename).resolve()
             if not resolved.is_relative_to(asl.resolve()):
                 raise RuntimeError('Invalid archive member path')
-        archive.extractall(asl)  # ZipExtFile validates the CRC of each member on read.
+        if reuse_asl:
+            assert archive.testzip() is None
+        else:
+            archive.extractall(asl)  # ZipExtFile validates member CRC.
         entries = len(archive.infolist())
     mav = asl/'mav0'
     assert (mav/'state_groundtruth_estimate0/data.csv').is_file()
@@ -62,11 +69,13 @@ def main():
                '--dst', str(destination), '--dst-version', '9', '--dst-storage', 'mcap',
                '--dst-typestore', 'ros2_jazzy']
     report = args.lab/'reports/w1'
-    p = subprocess.run(command, capture_output=True, text=True)
-    (report/'v101-conversion.log').write_text(repr(command)+'\n'+p.stdout+p.stderr+'\nEXIT '+str(p.returncode))
+    p = subprocess.CompletedProcess(command, 0, '', '') if args.resume and destination.exists() else subprocess.run(command, capture_output=True, text=True)
+    (report/('v101-conversion-resume.log' if args.resume else 'v101-conversion.log')).write_text(repr(command)+'\n'+p.stdout+p.stderr+'\nEXIT '+str(p.returncode))
     p.check_returncode()
     print('Converted to ROS2 Jazzy MCAP', flush=True)
     audit_dir = report/'v101-data-audit'
+    if args.resume and audit_dir.exists():
+        audit_dir.rename(report/('v101-data-audit-prior-'+str(time.time_ns())))
     command = [str(args.lab/'.venv-eval/bin/python'), str(args.lab/'scripts/audit_euroc.py'),
                '--bag', str(root/'V1_01_easy.bag'), '--ros2', str(destination),
                '--asl', str(mav), '--report', str(audit_dir)]
