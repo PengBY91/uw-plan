@@ -1,0 +1,44 @@
+check,status,detail
+manifest.schema_version,pass,null
+manifest.run_id,pass,null
+manifest.data_root,pass,null
+manifest.split,pass,null
+manifest.raw_uri,pass,null
+manifest.calibration_uri,pass,null
+manifest.reference_uri,pass,null
+manifest.clock_model_uri,unavailable,"""public dataset; hardware-synchronised header stamps, no separate clock model"""
+manifest.world_frame,pass,null
+manifest.body_frame,pass,null
+manifest.streams,pass,null
+manifest.checksums_uri,pass,null
+streams.left,pass,null
+streams.right,pass,null
+streams.imu,pass,null
+streams.sonar,unavailable,"""EuRoC has no sonar"""
+streams.depth,unavailable,"""EuRoC has no pressure sensor"""
+files.raw,pass,"""/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2"""
+files.calibration_uri,pass,"""/home/steve/uw-ao-lab/configs/euroc_v101/kalibr_imucam_chain.yaml"""
+files.reference_uri,pass,"""/home/steve/uw-ao-lab/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"""
+files.checksums_nonempty,pass,"""/home/steve/uw-ao-lab/data/public/euroc/ros2-checksums.sha256"""
+files.hash:V1_01_easy_ros2/V1_01_easy_ros2.mcap,pass,null
+files.hash:V1_01_easy_ros2/metadata.yaml,pass,null
+left.nonempty,pass,"""2912 messages"""
+left.monotonic,pass,"{""duplicates"": 0, ""out_of_order"": 0, ""clock_back_jumps"": 0}"
+left.drop_fraction,pass,"""estimated 0/2912 from header gaps; no sequence numbers"""
+left.msgtype,pass,"""sensor_msgs/msg/Image"""
+left.constant_shape,pass,"[""(480, 752, 'mono8')""]"
+left.no_empty_frames,pass,"""0 empty"""
+right.nonempty,pass,"""2912 messages"""
+right.monotonic,pass,"{""duplicates"": 0, ""out_of_order"": 0, ""clock_back_jumps"": 0}"
+right.drop_fraction,pass,"""estimated 0/2912 from header gaps; no sequence numbers"""
+right.msgtype,pass,"""sensor_msgs/msg/Image"""
+right.constant_shape,pass,"[""(480, 752, 'mono8')""]"
+right.no_empty_frames,pass,"""0 empty"""
+imu.nonempty,pass,"""29120 messages"""
+imu.monotonic,pass,"{""duplicates"": 0, ""out_of_order"": 0, ""clock_back_jumps"": 0}"
+imu.drop_fraction,pass,"""estimated 0/29120 from header gaps; no sequence numbers"""
+imu.rate,pass,"""200.00 Hz"""
+imu.msgtype,pass,"""sensor_msgs/msg/Imu"""
+imu.accel_units_m_s2,pass,"""median |a| 9.808; ~1 means g, not m/s^2"""
+imu.gyro_units_rad_s,pass,"""p99 |w| 0.730; large values suggest deg/s"""
+stereo.pairing,pass,"{""left"": 2912, ""right"": 2912, ""paired"": 2912, ""tolerance_s"": 0.0, ""max_offset_s_of_paired"": 0.0}"

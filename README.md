@@ -8,6 +8,10 @@ Team-maintained acquisition, conversion, audit, baseline and evaluation code is 
   - uwbench.sonar: range/bearing model and elevation arcs shared by A's sonar factor and B's candidates; B 5.3 effect-size estimate.
   - uwbench.metrics.axes: A v2 scoring, body-axis x/y/z/yaw error, estimator sigma and time-integrated exceedance with unavailable gaps.
   - uwbench.metrics.occupancy: B section 6 map ratios with undefined (None) empty denominators.
+  - uwbench.mapping: B0 dense tri-state voxel grid (OctoMap log-odds defaults) with per-voxel source and update time; invalid or out-of-range depth never clears, mm depth is rejected.
+  - `uwbench audit` (W1-05/P03): manifest schema from runbook E6; hashes, monotonic time, back-jumps, drop estimate, stereo pairing, image shape, IMU units/gravity axis/rate, pressure units, empty sonar. Example: manifests/euroc_v101_run.yaml, evidence in reports/w1/euroc_v101_audit/.
+  - `uwbench eval-traj` (W1-07/P04): APE/RPE, time coverage, lost intervals, reference-invalid vs unmatched counts, v2 per-axis exceedance; empty estimates fail.
+- reports/w1/backend-decision.md (W1-09): SVIn not reused (zero-elevation single-beam sonar model, sonar/depth disabled on ROS2 main); A1 uses GTSAM 4.3.0 in a separate venv.
 - Tests: `.venv-eval/bin/python -m unittest discover -s team/uwbench/tests` with PYTHONPATH=team/uwbench, plus scripts/test_*.py from scripts/.
 The Git branch is codex/w1-public-baseline. No remote is configured by this setup.
 
@@ -48,11 +52,11 @@ From clean team and OpenVINS Git checkouts, choose an unused run ID (r01-r10 alr
     .venv-eval/bin/python scripts/evaluate_openvins.py --run "$PWD/runs/$RUN" --audit "$PWD/reports/w1/v101-data-audit/audit.json" --gt-original "$PWD/data/public/euroc/V1_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv" --gt-corrected "$PWD/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"
     .venv-eval/bin/python scripts/check_replay_acceptance.py --run "$PWD/runs/$RUN"
 
-Optional A v2 scoring preview (writes runs/$RUN/axis-diagnostics; yaw+translation alignment over the first 10 s, provisional 0.15 m / 3 deg tolerances, not frozen):
+Shared-tool equivalent (manifest-based; public SE(3) and v2 risk alignment reported side by side):
 
-    .venv-eval/bin/python scripts/axis_diagnostics.py --run "$PWD/runs/$RUN" --gt "$PWD/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"
+    PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench eval-traj --manifest manifests/euroc_v101_run.yaml --estimate "$PWD/runs/$RUN/estimate_bag" --out "$PWD/runs/$RUN/eval-traj"
 
-r09/r10 give identical results: max |error| x 0.050 m, y 0.128 m, z 0.104 m, yaw 1.49 deg; no exceedance. V1_01 therefore does not exercise the detection track.
+On r10 it reproduces the archived APE (0.044362 vs 0.044367 m; one estimate past the reference end is counted as outside-valid instead of matched). Risk mode max |error|: x 0.050 m, y 0.128 m, z 0.104 m, yaw 1.49 deg; no exceedance at the provisional 0.15 m / 3 deg, so V1_01 does not exercise the detection track.
 
 r11 is an example new ID, not a completed run. The bag runner explicitly uses reliable IMU by default. Bare OpenVINS launch defaults to best-effort for live-driver compatibility; reliable subscription requires a compatible publisher. Input trace is written after worker shutdown. Acceptance checks input and update completeness, output validity/coverage, accuracy and shutdown, not just playback. RPE uses actual timestamp pairs; evo delta_unit=s is unsupported.
 

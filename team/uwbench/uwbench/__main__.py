@@ -23,7 +23,19 @@ CONTRACT = {
     'verify-freeze': ('shared', 'P22', 'release dir -> missing or changed items; non-zero on any difference'),
     'report': ('shared', 'P12/P22/P24', 'completed runs -> gate report with evidence links'),
 }
-IMPLEMENTED = {}
+
+
+def _audit(argv):
+    from uwbench.audit import main
+    return main(argv)
+
+
+def _eval_traj(argv):
+    from uwbench.trajectory import main
+    return main(argv)
+
+
+IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj}
 
 
 def main(argv=None):

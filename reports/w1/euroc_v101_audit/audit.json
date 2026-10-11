@@ -1,0 +1,350 @@
+{
+  "manifest": "/home/steve/uw-ao-lab/manifests/euroc_v101_run.yaml",
+  "manifest_sha256": "bef17676a32f1a21a7d2b3610f3d570566aa4fe8cd0fdc52f94c96251113aaa6",
+  "hashes_verified": true,
+  "passed": true,
+  "failed": [],
+  "checks": [
+    {
+      "check": "manifest.schema_version",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.run_id",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.data_root",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.split",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.raw_uri",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.calibration_uri",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.reference_uri",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.clock_model_uri",
+      "status": "unavailable",
+      "detail": "public dataset; hardware-synchronised header stamps, no separate clock model"
+    },
+    {
+      "check": "manifest.world_frame",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.body_frame",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.streams",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "manifest.checksums_uri",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "streams.left",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "streams.right",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "streams.imu",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "streams.sonar",
+      "status": "unavailable",
+      "detail": "EuRoC has no sonar"
+    },
+    {
+      "check": "streams.depth",
+      "status": "unavailable",
+      "detail": "EuRoC has no pressure sensor"
+    },
+    {
+      "check": "files.raw",
+      "status": "pass",
+      "detail": "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2"
+    },
+    {
+      "check": "files.calibration_uri",
+      "status": "pass",
+      "detail": "/home/steve/uw-ao-lab/configs/euroc_v101/kalibr_imucam_chain.yaml"
+    },
+    {
+      "check": "files.reference_uri",
+      "status": "pass",
+      "detail": "/home/steve/uw-ao-lab/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"
+    },
+    {
+      "check": "files.checksums_nonempty",
+      "status": "pass",
+      "detail": "/home/steve/uw-ao-lab/data/public/euroc/ros2-checksums.sha256"
+    },
+    {
+      "check": "files.hash:V1_01_easy_ros2/V1_01_easy_ros2.mcap",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "files.hash:V1_01_easy_ros2/metadata.yaml",
+      "status": "pass",
+      "detail": null
+    },
+    {
+      "check": "left.nonempty",
+      "status": "pass",
+      "detail": "2912 messages"
+    },
+    {
+      "check": "left.monotonic",
+      "status": "pass",
+      "detail": {
+        "duplicates": 0,
+        "out_of_order": 0,
+        "clock_back_jumps": 0
+      }
+    },
+    {
+      "check": "left.drop_fraction",
+      "status": "pass",
+      "detail": "estimated 0/2912 from header gaps; no sequence numbers"
+    },
+    {
+      "check": "left.msgtype",
+      "status": "pass",
+      "detail": "sensor_msgs/msg/Image"
+    },
+    {
+      "check": "left.constant_shape",
+      "status": "pass",
+      "detail": [
+        "(480, 752, 'mono8')"
+      ]
+    },
+    {
+      "check": "left.no_empty_frames",
+      "status": "pass",
+      "detail": "0 empty"
+    },
+    {
+      "check": "right.nonempty",
+      "status": "pass",
+      "detail": "2912 messages"
+    },
+    {
+      "check": "right.monotonic",
+      "status": "pass",
+      "detail": {
+        "duplicates": 0,
+        "out_of_order": 0,
+        "clock_back_jumps": 0
+      }
+    },
+    {
+      "check": "right.drop_fraction",
+      "status": "pass",
+      "detail": "estimated 0/2912 from header gaps; no sequence numbers"
+    },
+    {
+      "check": "right.msgtype",
+      "status": "pass",
+      "detail": "sensor_msgs/msg/Image"
+    },
+    {
+      "check": "right.constant_shape",
+      "status": "pass",
+      "detail": [
+        "(480, 752, 'mono8')"
+      ]
+    },
+    {
+      "check": "right.no_empty_frames",
+      "status": "pass",
+      "detail": "0 empty"
+    },
+    {
+      "check": "imu.nonempty",
+      "status": "pass",
+      "detail": "29120 messages"
+    },
+    {
+      "check": "imu.monotonic",
+      "status": "pass",
+      "detail": {
+        "duplicates": 0,
+        "out_of_order": 0,
+        "clock_back_jumps": 0
+      }
+    },
+    {
+      "check": "imu.drop_fraction",
+      "status": "pass",
+      "detail": "estimated 0/29120 from header gaps; no sequence numbers"
+    },
+    {
+      "check": "imu.rate",
+      "status": "pass",
+      "detail": "200.00 Hz"
+    },
+    {
+      "check": "imu.msgtype",
+      "status": "pass",
+      "detail": "sensor_msgs/msg/Imu"
+    },
+    {
+      "check": "imu.accel_units_m_s2",
+      "status": "pass",
+      "detail": "median |a| 9.808; ~1 means g, not m/s^2"
+    },
+    {
+      "check": "imu.gyro_units_rad_s",
+      "status": "pass",
+      "detail": "p99 |w| 0.730; large values suggest deg/s"
+    },
+    {
+      "check": "stereo.pairing",
+      "status": "pass",
+      "detail": {
+        "left": 2912,
+        "right": 2912,
+        "paired": 2912,
+        "tolerance_s": 0.0,
+        "max_offset_s_of_paired": 0.0
+      }
+    }
+  ],
+  "streams": {
+    "left": {
+      "count": 2912,
+      "rate_hz": 20.0,
+      "median_interval_s": 0.05,
+      "max_interval_s": 0.05,
+      "duplicates": 0,
+      "out_of_order": 0,
+      "clock_back_jumps": 0,
+      "estimated_missing": 0,
+      "estimated_expected": 2912,
+      "estimated_drop_fraction": 0.0,
+      "receive_minus_sample_s": {
+        "min": 0.026073498,
+        "median": 0.0422022305,
+        "p95": 0.048167137799999996
+      },
+      "first_middle_last_index": [
+        0,
+        1456,
+        2911
+      ],
+      "first_middle_last_stamp_ns": [
+        1403715273262143000,
+        1403715346062143000,
+        1403715418812143000
+      ],
+      "msgtype": "sensor_msgs/msg/Image",
+      "empty_frames": 0
+    },
+    "right": {
+      "count": 2912,
+      "rate_hz": 20.0,
+      "median_interval_s": 0.05,
+      "max_interval_s": 0.05,
+      "duplicates": 0,
+      "out_of_order": 0,
+      "clock_back_jumps": 0,
+      "estimated_missing": 0,
+      "estimated_expected": 2912,
+      "estimated_drop_fraction": 0.0,
+      "receive_minus_sample_s": {
+        "min": 0.022739551,
+        "median": 0.028796086999999998,
+        "p95": 0.04143014335
+      },
+      "first_middle_last_index": [
+        0,
+        1456,
+        2911
+      ],
+      "first_middle_last_stamp_ns": [
+        1403715273262143000,
+        1403715346062143000,
+        1403715418812143000
+      ],
+      "msgtype": "sensor_msgs/msg/Image",
+      "empty_frames": 0
+    },
+    "imu": {
+      "count": 29120,
+      "rate_hz": 200.0,
+      "median_interval_s": 0.005,
+      "max_interval_s": 0.005,
+      "duplicates": 0,
+      "out_of_order": 0,
+      "clock_back_jumps": 0,
+      "estimated_missing": 0,
+      "estimated_expected": 29120,
+      "estimated_drop_fraction": 0.0,
+      "receive_minus_sample_s": {
+        "min": -0.001899549,
+        "median": 0.02455701,
+        "p95": 0.04718066835
+      },
+      "first_middle_last_index": [
+        0,
+        14560,
+        29119
+      ],
+      "first_middle_last_stamp_ns": [
+        1403715273262143000,
+        1403715346062143000,
+        1403715418857143000
+      ],
+      "msgtype": "sensor_msgs/msg/Imu",
+      "accel_norm_median": 9.808100459712925,
+      "gyro_norm_p99": 0.7298501459315435,
+      "mean_accel_first_second": [
+        9.057652876036482,
+        0.12046892184908782,
+        -3.684405567993367
+      ],
+      "gravity_body_axis": "+x"
+    },
+    "stereo_pairing": {
+      "left": 2912,
+      "right": 2912,
+      "paired": 2912,
+      "tolerance_s": 0.0,
+      "max_offset_s_of_paired": 0.0
+    }
+  },
+  "interpretation": "Drop estimates come from header gaps without sequence numbers; time-model offsets are W2-02."
+}

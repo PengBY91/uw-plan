@@ -10,57 +10,12 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
-from evo.core import lie_algebra, metrics, sync
+from evo.core import metrics, sync
 from evo.tools import file_interface
 from rosbags.highlevel import AnyReader
 
-
-def summarize(values):
-    a = np.asarray(values, dtype=float)
-    if a.size == 0 or not np.isfinite(a).all():
-        raise ValueError('Cannot score empty or non-finite errors')
-    return {'count': int(a.size), 'rmse': float(np.sqrt(np.mean(a*a))),
-            'mean': float(a.mean()), 'median': float(np.median(a)),
-            'p95': float(np.percentile(a, 95)), 'max': float(a.max())}
-
-
-def time_pairs(timestamps, delta, tolerance=0.025):
-    times = np.asarray(timestamps)
-    if len(times) < 2 or not np.isfinite(times).all() or not np.all(np.diff(times) > 0):
-        raise ValueError('Time pairing requires a nonempty increasing trajectory')
-    if delta <= 0 or tolerance < 0:
-        raise ValueError('Invalid pair interval')
-    pairs = []
-    for i, t in enumerate(times):
-        target = t + delta
-        k = int(np.searchsorted(times, target))
-        choices = [j for j in (k-1, k) if i < j < len(times)]
-        if choices:
-            j = min(choices, key=lambda j: abs(times[j]-target))
-            if abs(times[j]-target) <= tolerance:
-                pairs.append((i, j))
-    return pairs
-
-
-def score_rpe(ref, est, delta):
-    pairs = time_pairs(est.timestamps, delta)
-    if not pairs:
-        raise ValueError('No valid time-based RPE pairs')
-    values, angles, dts, ref_dts = [], [], [], []
-    for i, j in pairs:
-        error = metrics.RPE.rpe_base(ref.poses_se3[i], ref.poses_se3[j],
-                                     est.poses_se3[i], est.poses_se3[j])
-        values.append(np.linalg.norm(error[:3, 3]))
-        angles.append(lie_algebra.so3_log_angle(error[:3, :3], degrees=True))
-        dts.append(est.timestamps[j] - est.timestamps[i])
-        ref_dts.append(ref.timestamps[j] - ref.timestamps[i])
-    possible = int(np.sum(est.timestamps + delta <= est.timestamps[-1] + 0.025))
-    return {'translation_m': summarize(values), 'rotation_deg': summarize(angles),
-            'target_interval_s': delta, 'pair_tolerance_s': 0.025,
-            'actual_est_interval_s': [float(min(dts)), float(max(dts))],
-            'actual_ref_interval_s': [float(min(ref_dts)), float(max(ref_dts))],
-            'eligible_start_count': possible, 'selected_pair_count': len(pairs),
-            'pairs': pairs}
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'team/uwbench'))
+from uwbench.metrics.trajectory import score_rpe, summarize, time_pairs  # noqa: E402,F401  (re-exported for tests)
 
 
 def inspect_outputs(bag):
