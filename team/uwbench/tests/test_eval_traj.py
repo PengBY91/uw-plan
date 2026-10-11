@@ -40,6 +40,18 @@ class EvalTrajTest(unittest.TestCase):
         self.assertAlmostEqual(r['risk']['alignment_fit']['yaw_deg'], -30, places=6)
         self.assertLess(r['risk']['axes']['yaw']['abs_error_max'], 1e-6)
 
+    def test_body_sigma_does_not_depend_on_estimator_world_yaw(self):
+        # Anisotropic world covariance (large along estimator-world x); body sigma must follow the estimate, not the alignment
+        cov = np.tile(np.diag([0.04, 0.0001, 0.0001, 1e-6, 1e-6, 1e-4]), (len(self.est_t), 1, 1))
+        rows = {}
+        for deg in (0, 90):
+            G = Rotation.from_euler('z', deg, degrees=True).as_matrix()
+            G_cov = cov.copy()
+            G_cov[:, :3, :3] = G @ cov[:, :3, :3] @ G.T
+            rows[deg] = evaluate(self.ref_t, self.ref_R, self.ref_p, self.est_t, G @ self.est_R, self.est_p @ G.T,
+                                 est_cov=G_cov)[1]
+        np.testing.assert_allclose(rows[0][:, 6:], rows[90][:, 6:], atol=1e-9)
+
     def test_late_drift_is_seen_in_risk_mode_on_body_axes(self):
         drift = np.clip(self.est_t - 30, 0, None)[:, None]*np.array([[0.02, 0, 0]])  # 2 cm/s along world x after 30 s
         r = self.run_eval(est_p=self.est_p + drift)

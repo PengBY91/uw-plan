@@ -106,7 +106,9 @@ def evaluate(ref_t, ref_R, ref_p, est_t, est_R, est_p, est_cov=None, config=None
     R_align, t_align, alignment = align_yaw_translation(rR, rp, R, p, window)
     R_a, p_a = R_align @ R, p @ R_align.T + t_align
     errors = body_axis_errors(rR, rp, R_a, p_a)
-    sigma = body_axis_sigma(R_a, est_cov[matched]) if est_cov is not None else None
+    # Covariance lives in the estimator's own world frame: project with the unaligned attitude (body axes are
+    # invariant to the alignment; using R_a with an unrotated covariance swaps x/y sigma at 90 deg alignment yaw)
+    sigma = body_axis_sigma(R, est_cov[matched]) if est_cov is not None else None
     scored = ~window
     tolerances = dict(zip(AXES, [risk_cfg['tolerance_position_m']]*3 + [risk_cfg['tolerance_yaw_deg']]))
     axes = {}
