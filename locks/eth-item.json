@@ -1,0 +1,512 @@
+{
+  "id": "bcaf173e-5dac-484b-bc37-faf97a594f1f",
+  "uuid": "bcaf173e-5dac-484b-bc37-faf97a594f1f",
+  "name": "The EuRoC micro aerial vehicle datasets",
+  "handle": "20.500.11850/690084",
+  "metadata": {
+    "dc.contributor.author": [
+      {
+        "value": "Burri, Michael",
+        "language": null,
+        "authority": "virtual::374087",
+        "confidence": -1,
+        "place": 0
+      },
+      {
+        "value": "Nikolic, Janosch",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 1
+      },
+      {
+        "value": "Gohl, Pascal",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 2
+      },
+      {
+        "value": "Schneider, Thomas",
+        "language": null,
+        "authority": "virtual::374088",
+        "confidence": -1,
+        "place": 3
+      },
+      {
+        "value": "Rehder, Joern",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 4
+      },
+      {
+        "value": "Omari, Sammy",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 5
+      },
+      {
+        "value": "Achtelik, Markus W.",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 6
+      },
+      {
+        "value": "Siegwart, Roland",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 7
+      },
+      {
+        "value": "Siegwart",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 8
+      }
+    ],
+    "dc.date.accessioned": [
+      {
+        "value": "2025-11-20T13:00:15Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dc.date.available": [
+      {
+        "value": "2024-08-21T14:14:40Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      },
+      {
+        "value": "2024-09-25T11:20:20Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 1
+      },
+      {
+        "value": "2024-09-27T15:03:29Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 2
+      },
+      {
+        "value": "2025-11-17T13:25:26Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 3
+      },
+      {
+        "value": "2025-11-20T13:00:15Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 4
+      }
+    ],
+    "dc.date.issued": [
+      {
+        "value": "2024-09-27",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dc.format": [
+      {
+        "value": "application/zip",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      },
+      {
+        "value": "text/plain",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 1
+      },
+      {
+        "value": "text/csv",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 2
+      },
+      {
+        "value": "image/png",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 3
+      },
+      {
+        "value": "application/pdf",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 4
+      },
+      {
+        "value": "application/octet-stream",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 5
+      }
+    ],
+    "dc.identifier.doi": [
+      {
+        "value": "https://doi.org/10.3929/ethz-b-000690084",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dc.identifier.uri": [
+      {
+        "value": "http://hdl.handle.net/20.500.11850/690084",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dc.language.iso": [
+      {
+        "value": "en",
+        "language": "en_US",
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dc.publisher": [
+      {
+        "value": "ETH Zurich",
+        "language": "en_US",
+        "authority": null,
+        "confidence": 600,
+        "place": 0
+      }
+    ],
+    "dc.rights.license": [
+      {
+        "value": "In Copyright - Non-Commercial Use Permitted",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dc.rights.uri": [
+      {
+        "value": "http://rightsstatements.org/page/InC-NC/1.0/",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dc.subject": [
+      {
+        "value": "robotics",
+        "language": "en_US",
+        "authority": null,
+        "confidence": 600,
+        "place": 0
+      }
+    ],
+    "dc.title": [
+      {
+        "value": "The EuRoC micro aerial vehicle datasets",
+        "language": "en_US",
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dc.type": [
+      {
+        "value": "Dataset",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "dspace.entity.type": [
+      {
+        "value": "ResearchData",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.availability": [
+      {
+        "value": "Open access",
+        "language": "en_US",
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.date.deposited": [
+      {
+        "value": "2024-08-21T14:14:40Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.date.retentionend": [
+      {
+        "value": "indefinite",
+        "language": "en_US",
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.date.retentionendDate": [
+      {
+        "value": "292278994-08-17T07:12:55Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.edit.status": [
+      {
+        "value": "QS6",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.eth": [
+      {
+        "value": "yes",
+        "language": "en_US",
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.leitzahl": [
+      {
+        "value": "ETH Z\u00fcrich::00002 - ETH Z\u00fcrich::00012 - Lehre und Forschung::00007 - Departemente::02130 - Dep. Maschinenbau und Verfahrenstechnik / Dep. of Mechanical and Process Eng.::02620 - Inst. f. Robotik u. Intelligente Systeme / Inst. Robotics and Intelligent Systems::03737 - Siegwart, Roland Y. / Siegwart, Roland Y.",
+        "language": "en_US",
+        "authority": "03737",
+        "confidence": 600,
+        "place": 0
+      }
+    ],
+    "ethz.leitzahl.certified": [
+      {
+        "value": "ETH Z\u00fcrich::00002 - ETH Z\u00fcrich::00012 - Lehre und Forschung::00007 - Departemente::02130 - Dep. Maschinenbau und Verfahrenstechnik / Dep. of Mechanical and Process Eng.::02620 - Inst. f. Robotik u. Intelligente Systeme / Inst. Robotics and Intelligent Systems::03737 - Siegwart, Roland Y. / Siegwart, Roland Y.",
+        "language": "en_US",
+        "authority": "03737",
+        "confidence": 600,
+        "place": 0
+      }
+    ],
+    "ethz.publication.place": [
+      {
+        "value": "Zurich",
+        "language": "en_US",
+        "authority": null,
+        "confidence": 600,
+        "place": 0
+      }
+    ],
+    "ethz.rosetta.exportRequired": [
+      {
+        "value": "true",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.rosetta.installDate": [
+      {
+        "value": "2024-09-27T15:13:10Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.rosetta.lastUpdated": [
+      {
+        "value": "2025-02-14T14:15:17Z",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.rosetta.versionExported": [
+      {
+        "value": "true",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.size": [
+      {
+        "value": "27.15 GB",
+        "language": "en_US",
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "ethz.source": [
+      {
+        "value": "FORM",
+        "language": null,
+        "authority": null,
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "person.identifier.orcid": [
+      {
+        "value": "0000-0002-4540-2519",
+        "language": null,
+        "authority": "virtual::374087",
+        "confidence": -1,
+        "place": 0
+      },
+      {
+        "value": "0000-0002-1383-769X",
+        "language": null,
+        "authority": "virtual::374088",
+        "confidence": -1,
+        "place": 3
+      }
+    ],
+    "relation.isAuthorOfResearchData": [
+      {
+        "value": "f77af34a-4ce0-4273-9fbb-24be19b64e2e",
+        "language": null,
+        "authority": "virtual::374087",
+        "confidence": -1,
+        "place": 0
+      },
+      {
+        "value": "a2d9b932-7154-492a-86d8-0857dd2a26a0",
+        "language": null,
+        "authority": "virtual::374088",
+        "confidence": -1,
+        "place": 3
+      }
+    ],
+    "relation.isAuthorOfResearchData.latestForDiscovery": [
+      {
+        "value": "f77af34a-4ce0-4273-9fbb-24be19b64e2e",
+        "language": null,
+        "authority": "virtual::374087",
+        "confidence": -1,
+        "place": -1
+      }
+    ],
+    "relation.isPubHasPartRD": [
+      {
+        "value": "3491363d-8128-4fb7-9449-cd2edd1c29dd",
+        "language": null,
+        "authority": "virtual::374089",
+        "confidence": -1,
+        "place": 0
+      }
+    ],
+    "relation.isPubHasPartRD.latestForDiscovery": [
+      {
+        "value": "3491363d-8128-4fb7-9449-cd2edd1c29dd",
+        "language": null,
+        "authority": "virtual::374089",
+        "confidence": -1,
+        "place": -1
+      }
+    ]
+  },
+  "inArchive": true,
+  "discoverable": true,
+  "withdrawn": false,
+  "lastModified": "2025-12-12T03:07:51.681+00:00",
+  "entityType": "ResearchData",
+  "type": "item",
+  "_links": {
+    "accessStatus": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/accessStatus"
+    },
+    "bundles": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/bundles"
+    },
+    "identifiers": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/identifiers"
+    },
+    "mappedCollections": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/mappedCollections"
+    },
+    "owningCollection": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/owningCollection"
+    },
+    "relationships": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/relationships"
+    },
+    "version": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/version"
+    },
+    "templateItemOf": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/templateItemOf"
+    },
+    "thumbnail": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/thumbnail"
+    },
+    "leitzahl": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/leitzahl"
+    },
+    "entityLinkingCandidates": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/entityLinkingCandidates"
+    },
+    "coins": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/coins"
+    },
+    "citations": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/citations"
+    },
+    "accessConditionsOptions": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/accessConditionsOptions"
+    },
+    "accessConditions": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f/accessConditions"
+    },
+    "self": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/items/bcaf173e-5dac-484b-bc37-faf97a594f1f"
+    }
+  }
+}

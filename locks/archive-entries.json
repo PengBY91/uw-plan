@@ -1,0 +1,114 @@
+[
+  {
+    "name": "vicon_room1/",
+    "size": 0,
+    "compressed": 0,
+    "method": 0,
+    "crc32": "00000000",
+    "header_offset": 0
+  },
+  {
+    "name": "vicon_room1/V1_02_medium/",
+    "size": 0,
+    "compressed": 0,
+    "method": 0,
+    "crc32": "00000000",
+    "header_offset": 74
+  },
+  {
+    "name": "vicon_room1/V1_02_medium/V1_02_medium.bag",
+    "size": 1251654819,
+    "compressed": 872423011,
+    "method": 8,
+    "crc32": "540b042f",
+    "header_offset": 161
+  },
+  {
+    "name": "vicon_room1/V1_02_medium/V1_02_medium.zip",
+    "size": 668079368,
+    "compressed": 667976653,
+    "method": 8,
+    "crc32": "369b3afd",
+    "header_offset": 872423291
+  },
+  {
+    "name": "vicon_room1/._.DS_Store",
+    "size": 4096,
+    "compressed": 146,
+    "method": 8,
+    "crc32": "06d03142",
+    "header_offset": 1540400063
+  },
+  {
+    "name": "vicon_room1/.DS_Store",
+    "size": 8196,
+    "compressed": 1127,
+    "method": 8,
+    "crc32": "766076e8",
+    "header_offset": 1540400310
+  },
+  {
+    "name": "vicon_room1/V1_01_easy/",
+    "size": 0,
+    "compressed": 0,
+    "method": 0,
+    "crc32": "00000000",
+    "header_offset": 1540401536
+  },
+  {
+    "name": "vicon_room1/V1_01_easy/._.DS_Store",
+    "size": 4096,
+    "compressed": 146,
+    "method": 8,
+    "crc32": "06d03142",
+    "header_offset": 1540401621
+  },
+  {
+    "name": "vicon_room1/V1_01_easy/V1_01_easy.zip",
+    "size": 1149702102,
+    "compressed": 1149535352,
+    "method": 8,
+    "crc32": "1abe6a0d",
+    "header_offset": 1540401879
+  },
+  {
+    "name": "vicon_room1/V1_01_easy/V1_01_easy.bag",
+    "size": 2130599434,
+    "compressed": 1509580235,
+    "method": 8,
+    "crc32": "001e8ccc",
+    "header_offset": 2689937346
+  },
+  {
+    "name": "vicon_room1/V1_01_easy/.DS_Store",
+    "size": 6148,
+    "compressed": 234,
+    "method": 8,
+    "crc32": "86e02d75",
+    "header_offset": 4199517696
+  },
+  {
+    "name": "vicon_room1/V1_03_difficult/",
+    "size": 0,
+    "compressed": 0,
+    "method": 0,
+    "crc32": "00000000",
+    "header_offset": 4199518040
+  },
+  {
+    "name": "vicon_room1/V1_03_difficult/V1_03_difficult.bag",
+    "size": 1572354176,
+    "compressed": 1041536762,
+    "method": 8,
+    "crc32": "f7d11cdc",
+    "header_offset": 4199518130
+  },
+  {
+    "name": "vicon_room1/V1_03_difficult/V1_03_difficult.zip",
+    "size": 801343542,
+    "compressed": 801206634,
+    "method": 8,
+    "crc32": "d12f04fa",
+    "header_offset": 5241055017
+  }
+]

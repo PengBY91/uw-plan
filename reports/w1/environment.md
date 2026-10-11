@@ -11,7 +11,7 @@ tags: [acoustic-optic-fusion, slam, 3d-reconstruction, rov]
 
 本次执行 [[plans/acoustic-optic-month1-execution-checklist-2026-10|首月清单]]的环境盘点和仓库准备，工作区实际建立在 WSL 的 `/home/steve/uw-ao-lab`。采用已有 Ubuntu 24.04 与 ROS 2 Jazzy，评测使用独立 Python 3.12 venv。原 [[plans/acoustic-optic-month1-environment-runbook-2026-10|运行手册]]中的 Humble 命令仍是参考配置，本机使用下文 Jazzy 入口。
 
-环境与仓库准备不等于完成 W1：公共数据运行、D0 采集、标定审计、完整 B 几何链与融合后端审计仍需执行。缺少或尚未核验的输入集中在 [[plans/acoustic-optic-w1-missing-inputs-2026-10|W1 数据 SDK 与配置缺口清单]]。日期按本轮工作日记为 2026-10-10；机器证据另存 UTC 时间。
+本页保留环境准备阶段记录；后续公共基线执行与版本管理见 [[plans/acoustic-optic-w1-openvins-v101-baseline-2026-10|V1_01 基线执行记录]]。D0 采集、标定审计、完整 B 几何链与融合后端审计仍需执行。缺少或尚未核验的输入集中在 [[plans/acoustic-optic-w1-missing-inputs-2026-10|W1 数据 SDK 与配置缺口清单]]。日期按本轮工作日记为 2026-10-10；机器证据另存 UTC 时间。
 
 ## 实测环境与选择
 
@@ -50,7 +50,7 @@ tags: [acoustic-optic-fusion, slam, 3d-reconstruction, rov]
   manifests/                    数据位置登记和 V1_01 待补模板
   configs/platform.pending.yaml 平台待核验字段，不能作为算法参数运行
   reports/w1/                   命令、编译与烟测证据
-  data/{public,pool}/            新数据预留目录，目前未填充
+  data/{public,pool}/            数据目录；V1_01 已于后续执行入库
 ```
 
 | 仓库 | 锁定提交 | 来源及准备结果 |
@@ -84,7 +84,7 @@ tags: [acoustic-optic-fusion, slam, 3d-reconstruction, rov]
 
 OpenVINS 的本机版本为“上游 SHA + `locks/openvins-jazzy.patch`”。补丁只修改 `ROS2Visualizer.h`、`ROSVisualizerHelper.h` 中 image_transport、cv_bridge 和 tf2_geometry_msgs 的四处头文件包含，优先 `.hpp`、回退 `.h`，不改变估计器逻辑。首次失败是旧头文件路径不存在；最终四包构建退出码为 0，之后增量构建再次退出 0。初始日志中的编译告警保留，编译通过不替代轨迹数值验收。
 
-W1-01 已完成；W1-02 已完成仓库锁定、依赖准备、编译和入口检查，因尚未在独立空构建目录复建而保留未勾选。W1-03 至 W1-09 未整项验收，不能将本次工作记为 G0 通过。
+W1-01 已完成。后续在独立空目录 build_w1_clean / install_w1_clean 完成四包复建（8 分 11 秒），入口检查通过，W1-02 已补齐验收；日志为 reports/w1/openvins-clean-rebuild.log。W1-03 数据审计已通过；公共回放及评测状态以 [[plans/acoustic-optic-w1-openvins-v101-baseline-2026-10|基线执行记录]]为准。W1-05 至 W1-09 尚未整项验收，G0 未通过。
 
 ## 可直接执行的检查入口
 

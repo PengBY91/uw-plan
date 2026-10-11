@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ "$(cat /proc/sys/net/core/rmem_max)" -lt 4194304 ]; then
+  echo "UDP receive limit too small. Run: sudo /usr/sbin/sysctl -w net.core.rmem_max=16777216" >&2
+  exit 2
+fi
 exec bash "$ROOT/scripts/ros-run.sh" bash -c '
 P="$AO_LAB/local/cyclone/opt/ros/jazzy"
 export AMENT_PREFIX_PATH="$P:$AMENT_PREFIX_PATH"

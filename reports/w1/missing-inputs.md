@@ -17,13 +17,13 @@ tags: [acoustic-optic-fusion, slam, sonar, camera, calibration, rov]
 
 | 优先级与状态 | 输入 | 实际发现和缺口 | 阻塞任务 | 补齐与验收 |
 | --- | --- | --- | --- | --- |
-| P0，检查范围内未找到 | EuRoC V1_01_easy | 对已知工程与数据目录执行文件名搜索，无 V1_01 匹配；新公共数据目录为空 | W1-03、W1-04 | 官方 ROS bag、同序列 ASL 标定与真值；记录字节数和 SHA256，再对转换前后话题数、时间范围、图像和 IMU 进行核验 |
+| 已补齐并核验 | EuRoC V1_01_easy | 官方 bag 与 ASL ZIP 已入库；全部话题转换审计、图像抽样、IMU 及标定比对通过 | W1-03 数据阻塞已解除；运行结果见基线记录 | manifests/euroc_v101.yaml 保存字节数、CRC、SHA256、转换参数与双参考真值；详见 [[plans/acoustic-optic-w1-openvins-v101-baseline-2026-10|执行记录]] |
 | P1，已有但不能直接用 | `euroc_mh01.mcap` | 文件可读；34.4 MiB，9.8 秒，100 条消息，左右图像各 50；类型 `uw.domain.ImageFrame`，Protobuf，时间从 0 开始，无 IMU 话题 | 不能替代 W1 官方输入；也不能据此通过 W2 MH_01 复现 | 查明派生来源及时间映射；公共惯性基线另取完整 MH_01_easy、MH_02_easy bag 与对应 GT |
 | P0，未识别到对应交付 | 本机 D0 六段 | 发现旧 Tank、AFRL、AQUALOC、IROS2025 等目录及 real_session 文件；尚未确认任何一组就是当前采购平台的六段体检记录 | W1-05、W1-06；本机 A/B 适配 | 静止、可追溯平移、转向各两段；每段有相机、声呐、IMU、可用深度及设置、帧号、采样与接收时间。已有记录满足时先复用，不重复采集 |
 | P1，已有候选，完整性未验 | SonarSweep 数据与权重 | 原同名目录实际为数据转换仓库，含 raw_dataset 和 extracted_images；这些目录不证明官方 test 列表、样本和训练权重齐全 | W2-08 | 检查官方算法 loader 的样本列表、目录布局和模型文件，记录数量与权重 SHA256；不能用随机权重冒充预训练模型 |
 | P0 对定量实验，待核验 | 独立位姿与场景参考 | 旧数据和仿真可能带参考，但不能自动视为本机真值 | W1-07；W2 定量验收 | 提供参考设备或测量方案、坐标系、时间关系、可评自由度和误差预算；B 另需结构模型、ROI 与测量误差 |
 
-EuRoC 使用 [ETH 官方入口](https://projects.asl.ethz.ch/datasets/euroc-mav/)及其 [Research Collection](https://doi.org/10.3929/ethz-b-000690084)。本次未下载 GB 级公共数据；原始数据应进入 `~/uw-ao-lab/data/public/euroc/`，不要进入知识库。V1_01 待补清单已落地为 `manifests/euroc_v101.pending.yaml`，未填字段保持 null。
+EuRoC 使用 [ETH 官方入口](https://projects.asl.ethz.ch/datasets/euroc-mav/)及其 [Research Collection](https://doi.org/10.3929/ethz-b-000690084)。V1_01 已下载到 `~/uw-ao-lab/data/public/euroc/`，原始大文件不进入知识库或代码 Git。正式登记为 `manifests/euroc_v101.yaml`；原 pending 模板只保留准备阶段历史，不能用于判断当前状态。
 
 现有候选位置保存在 `manifests/existing-data-registry.json`；MH_01 实际消息证据见 `reports/w1/existing-mh01-bag-info.txt`。旧数据命名、其他机器上的实验记录和公开论文传感器配置都不能替代本机验证。
 
@@ -56,8 +56,8 @@ EuRoC 使用 [ETH 官方入口](https://projects.asl.ethz.ch/datasets/euroc-mav/
 
 ## 下一步顺序
 
-1. OpenVINS 编译与入口验收已通过；使用锁定提交和已归档的 Jazzy 兼容补丁。独立空构建目录复建仍待做，不需重新选型或全局升级环境。
-2. 获取 V1_01_easy 完整输入，生成真实哈希和 Jazzy 转换记录，执行 W1-03/04；不等待声呐 SDK。
+1. OpenVINS 独立空目录复建已通过，W1-02 已验收；继续使用锁定上游提交、Jazzy 补丁和独立代码 Git。
+2. V1_01 输入核验已完成，W1-03 已验收；W1-04 的运行、精度与通信限制以 [[plans/acoustic-optic-w1-openvins-v101-baseline-2026-10|公共基线执行记录]]为准，不能仅以进程退出码判定成功。
 3. 汇总本机 SDK、既有标定和采集接口，先核验是否已有合格 D0，再决定补采。SDK 无法在 WSL 工作时，采集端使用厂家支持的系统。
 4. 并行完成 W1-07 评测与 W1-08 完整几何烟测；此轮 OctoMap 三态检查只能证明库链接和基础状态查询。
 5. 按 W1-09 对 SVIn 的实际因子和数据路径审计后决定后端；README 提示不足以替代后端决策报告。

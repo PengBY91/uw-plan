@@ -26,3 +26,8 @@
 !reports/w1/*.md
 
 !configs/cyclonedds-local.xml
+
+!reports/w1/baseline-summary.json
+!reports/w1/v101-calibration-check.json
+
+!.gitattributes

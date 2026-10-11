@@ -1,0 +1,509 @@
+{
+  "_embedded": {
+    "bitstreams": [
+      {
+        "id": "7b2419c1-62b5-4714-b7f8-485e5fe3e5fe",
+        "uuid": "7b2419c1-62b5-4714-b7f8-485e5fe3e5fe",
+        "name": "machine_hall.zip",
+        "handle": null,
+        "metadata": {
+          "bitstream.copiedFrom": [
+            {
+              "value": "628b49fe-0f1f-4fcc-8a29-cbe269efeb90",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "bitstream.uploader": [
+            {
+              "value": "helen.oleynikova@mavt.ethz.ch",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.description": [
+            {
+              "value": "Machine Hall Datasets",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.source": [
+            {
+              "value": "machine_hall.zip",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.title": [
+            {
+              "value": "machine_hall.zip",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "ethz.date.retentionend": [
+            {
+              "value": "indefinite",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "fileaccess.group": [
+            {
+              "value": "public",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ]
+        },
+        "bundleName": "ORIGINAL",
+        "sizeBytes": 12683729426,
+        "checkSum": {
+          "checkSumAlgorithm": "MD5",
+          "value": "363f5c2502b469cdd97ef85997714806"
+        },
+        "sequenceId": 7,
+        "type": "bitstream",
+        "_links": {
+          "content": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe/content"
+          },
+          "bundle": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe/bundle"
+          },
+          "format": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe/format"
+          },
+          "thumbnail": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe/thumbnail"
+          },
+          "accessConditionsOptions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe/accessConditionsOptions"
+          },
+          "accessConditions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe/accessConditions"
+          },
+          "self": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe"
+          }
+        }
+      },
+      {
+        "id": "02ecda9a-298f-498b-970c-b7c44334d880",
+        "uuid": "02ecda9a-298f-498b-970c-b7c44334d880",
+        "name": "vicon_room1.zip",
+        "handle": null,
+        "metadata": {
+          "bitstream.copiedFrom": [
+            {
+              "value": "4b0ff329-d339-4073-a4a3-66f034891a97",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "bitstream.uploader": [
+            {
+              "value": "helen.oleynikova@mavt.ethz.ch",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.description": [
+            {
+              "value": "Vicon Room 1 Datasets",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.source": [
+            {
+              "value": "vicon_room1.zip",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.title": [
+            {
+              "value": "vicon_room1.zip",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "ethz.date.retentionend": [
+            {
+              "value": "indefinite",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "fileaccess.group": [
+            {
+              "value": "public",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ]
+        },
+        "bundleName": "ORIGINAL",
+        "sizeBytes": 6042263426,
+        "checkSum": {
+          "checkSumAlgorithm": "MD5",
+          "value": "5ce06b405827e453a82523d3ca9c2fd0"
+        },
+        "sequenceId": 8,
+        "type": "bitstream",
+        "_links": {
+          "content": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880/content"
+          },
+          "bundle": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880/bundle"
+          },
+          "format": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880/format"
+          },
+          "thumbnail": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880/thumbnail"
+          },
+          "accessConditionsOptions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880/accessConditionsOptions"
+          },
+          "accessConditions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880/accessConditions"
+          },
+          "self": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/02ecda9a-298f-498b-970c-b7c44334d880"
+          }
+        }
+      },
+      {
+        "id": "ea12bc01-3677-4b4c-853d-87c7870b8c44",
+        "uuid": "ea12bc01-3677-4b4c-853d-87c7870b8c44",
+        "name": "vicon_room2.zip",
+        "handle": null,
+        "metadata": {
+          "bitstream.copiedFrom": [
+            {
+              "value": "852b9122-8a37-4d50-9a7f-121926f586a0",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "bitstream.uploader": [
+            {
+              "value": "helen.oleynikova@mavt.ethz.ch",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.description": [
+            {
+              "value": "Vicon Room 2 Datasets",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.source": [
+            {
+              "value": "vicon_room2.zip",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.title": [
+            {
+              "value": "vicon_room2.zip",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "ethz.date.retentionend": [
+            {
+              "value": "indefinite",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "fileaccess.group": [
+            {
+              "value": "public",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ]
+        },
+        "bundleName": "ORIGINAL",
+        "sizeBytes": 6013384949,
+        "checkSum": {
+          "checkSumAlgorithm": "MD5",
+          "value": "c6347f4e0476aaa9a43a919c163c49c5"
+        },
+        "sequenceId": 9,
+        "type": "bitstream",
+        "_links": {
+          "content": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/ea12bc01-3677-4b4c-853d-87c7870b8c44/content"
+          },
+          "bundle": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/ea12bc01-3677-4b4c-853d-87c7870b8c44/bundle"
+          },
+          "format": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/ea12bc01-3677-4b4c-853d-87c7870b8c44/format"
+          },
+          "thumbnail": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/ea12bc01-3677-4b4c-853d-87c7870b8c44/thumbnail"
+          },
+          "accessConditionsOptions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/ea12bc01-3677-4b4c-853d-87c7870b8c44/accessConditionsOptions"
+          },
+          "accessConditions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/ea12bc01-3677-4b4c-853d-87c7870b8c44/accessConditions"
+          },
+          "self": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/ea12bc01-3677-4b4c-853d-87c7870b8c44"
+          }
+        }
+      },
+      {
+        "id": "5732e864-10f1-49e7-befb-669ee29ff770",
+        "uuid": "5732e864-10f1-49e7-befb-669ee29ff770",
+        "name": "calibration_datasets.zip",
+        "handle": null,
+        "metadata": {
+          "bitstream.copiedFrom": [
+            {
+              "value": "d35fe0c4-9d90-4505-97ef-08853c950d6b",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "bitstream.uploader": [
+            {
+              "value": "helen.oleynikova@mavt.ethz.ch",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.description": [
+            {
+              "value": "Calibration Datasets",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.source": [
+            {
+              "value": "calibration_datasets.zip",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.title": [
+            {
+              "value": "calibration_datasets.zip",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "ethz.date.retentionend": [
+            {
+              "value": "indefinite",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "fileaccess.group": [
+            {
+              "value": "public",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ]
+        },
+        "bundleName": "ORIGINAL",
+        "sizeBytes": 4416030888,
+        "checkSum": {
+          "checkSumAlgorithm": "MD5",
+          "value": "be0b53d38df53cfab699a795f31dbc7b"
+        },
+        "sequenceId": 10,
+        "type": "bitstream",
+        "_links": {
+          "content": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/5732e864-10f1-49e7-befb-669ee29ff770/content"
+          },
+          "bundle": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/5732e864-10f1-49e7-befb-669ee29ff770/bundle"
+          },
+          "format": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/5732e864-10f1-49e7-befb-669ee29ff770/format"
+          },
+          "thumbnail": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/5732e864-10f1-49e7-befb-669ee29ff770/thumbnail"
+          },
+          "accessConditionsOptions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/5732e864-10f1-49e7-befb-669ee29ff770/accessConditionsOptions"
+          },
+          "accessConditions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/5732e864-10f1-49e7-befb-669ee29ff770/accessConditions"
+          },
+          "self": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/5732e864-10f1-49e7-befb-669ee29ff770"
+          }
+        }
+      },
+      {
+        "id": "d861e63b-cfa9-4411-85a5-5ad6b3526e44",
+        "uuid": "d861e63b-cfa9-4411-85a5-5ad6b3526e44",
+        "name": "euroc_mav_dataset.pdf",
+        "handle": null,
+        "metadata": {
+          "bitstream.copiedFrom": [
+            {
+              "value": "cf33d956-3431-401e-a081-b1cfdf38f5a1",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "bitstream.uploader": [
+            {
+              "value": "helen.oleynikova@mrl.ethz.ch",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.source": [
+            {
+              "value": "euroc_mav_dataset.pdf",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "dc.title": [
+            {
+              "value": "euroc_mav_dataset.pdf",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ],
+          "ethz.date.retentionend": [
+            {
+              "value": "indefinite",
+              "language": null,
+              "authority": null,
+              "confidence": -1,
+              "place": 0
+            }
+          ]
+        },
+        "bundleName": "ORIGINAL",
+        "sizeBytes": 368358,
+        "checkSum": {
+          "checkSumAlgorithm": "MD5",
+          "value": "f755ebbee9b8e052feaccf602934458b"
+        },
+        "sequenceId": 11,
+        "type": "bitstream",
+        "_links": {
+          "content": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/d861e63b-cfa9-4411-85a5-5ad6b3526e44/content"
+          },
+          "bundle": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/d861e63b-cfa9-4411-85a5-5ad6b3526e44/bundle"
+          },
+          "format": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/d861e63b-cfa9-4411-85a5-5ad6b3526e44/format"
+          },
+          "thumbnail": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/d861e63b-cfa9-4411-85a5-5ad6b3526e44/thumbnail"
+          },
+          "accessConditionsOptions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/d861e63b-cfa9-4411-85a5-5ad6b3526e44/accessConditionsOptions"
+          },
+          "accessConditions": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/d861e63b-cfa9-4411-85a5-5ad6b3526e44/accessConditions"
+          },
+          "self": {
+            "href": "https://www.research-collection.ethz.ch/server/api/core/bitstreams/d861e63b-cfa9-4411-85a5-5ad6b3526e44"
+          }
+        }
+      }
+    ]
+  },
+  "page": {
+    "number": 0,
+    "size": 100,
+    "totalPages": 1,
+    "totalElements": 5
+  },
+  "_links": {
+    "self": {
+      "href": "https://www.research-collection.ethz.ch/server/api/core/bundles/063c4c7c-e88a-4d83-bb3a-eec4da733511/bitstreams?size=100"
+    }
+  }
+}

@@ -1,0 +1,766 @@
+{
+  "sequence": "V1_01_easy",
+  "acceptance": "W1 R1 offline at 0.5x; real-time and robustness not accepted",
+  "runs": {
+    "r01": {
+      "run": {
+        "run_id": "w1_v101_a0_r01",
+        "start_utc": "2026-10-11T04:25:33.725632+00:00",
+        "rate": 1.0,
+        "ros_domain_id": "71",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "2366bf0720d139b8d4bc9787a35c7a40383bd2dc",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r01/estimate_bag",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ]
+        },
+        "status": "failed",
+        "error": "Recorder subscriptions were not confirmed",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0
+        },
+        "end_utc": "2026-10-11T04:26:05.365026+00:00",
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "estimator_child_exit_codes_from_log": [
+        -2
+      ],
+      "notes": "DDS discovery failed before playback",
+      "artifact_hashes": {
+        "estimator.log": {
+          "bytes": 3574,
+          "sha256": "e6092cba1d5e1cc7aafc471bee03e8772562ed1c5fe24667f315c848752e1bda"
+        },
+        "recorder.log": {
+          "bytes": 1083,
+          "sha256": "6fb2b3cf6934ed7fd06348dbe34d06765cc5ee67c3c98d42828240bb0e19f296"
+        },
+        "run.json": {
+          "bytes": 1257,
+          "sha256": "137fe2fa5a63bdc957946319c84f9c3ff010cace4d0f80e4ef3c182b483a034f"
+        },
+        "estimate_bag/metadata.yaml": {
+          "bytes": 531,
+          "sha256": "03e1c54126ceb3d7080967311849bd2cf1d5a8779c6e0c67b7d5ee244e9a52da"
+        },
+        "estimate_bag/estimate_bag_0.mcap": {
+          "bytes": 1289,
+          "sha256": "ab47417eedadd0094747e40564f28ef83d342282d6b55981ec240ca21490a883"
+        }
+      }
+    },
+    "r02": {
+      "run": {
+        "run_id": "w1_v101_a0_r02",
+        "start_utc": "2026-10-11T04:33:41.082172+00:00",
+        "rate": 1.0,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "4d7e246683feae9e4378edde6cf23f7bbbc95dbb",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r02/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "1.0",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "playback_start_utc": "2026-10-11T04:33:43.004363+00:00",
+        "playback_wall_seconds": 149.024167633,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T04:36:18.160775+00:00",
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "estimator_child_exit_codes_from_log": [
+        -2
+      ],
+      "notes": "No valid image/pose output",
+      "artifact_hashes": {
+        "estimator.log": {
+          "bytes": 3574,
+          "sha256": "d8dddf9f1df9cb5742385aded8259357f8366a25032dce9de2a43e79ba6ace92"
+        },
+        "recorder.log": {
+          "bytes": 1264,
+          "sha256": "7ad3b23b9c2baea35947742e45180de1516168ffb3fbb8eb7badc8b8d8255d4f"
+        },
+        "player.log": {
+          "bytes": 139,
+          "sha256": "3a1401de6072729dbc91e614f820cf298f397b1dcacd9f6b744aaaf4e7bf55d0"
+        },
+        "run.json": {
+          "bytes": 1828,
+          "sha256": "3246bab6e1c1383074ab549e535946fcc3d07a6e77c064962d41b3802571af13"
+        },
+        "estimate_bag/metadata.yaml": {
+          "bytes": 2040,
+          "sha256": "33a74f91dd1586a669494fc821e041bc5dffcd6e6f87ffb6809108912f11df8f"
+        },
+        "estimate_bag/estimate_bag_0.mcap": {
+          "bytes": 9748,
+          "sha256": "1a568d9e345d3df1a307d681d226e3f41f0a5cd6793158ba9e72d8e7f6cc6ff3"
+        }
+      }
+    },
+    "r03": {
+      "run": {
+        "run_id": "w1_v101_a0_r03",
+        "start_utc": "2026-10-11T04:37:13.920498+00:00",
+        "rate": 1.0,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "363c79795d07dd5ba01f850e6aca86392197bf9b",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r03/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "1.0",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "udp_rmem_max": "16777216",
+        "communication_config_sha256": "a83e6dd60575e26422ffd61e948db34d1220e0bd0279774e59b824872eddcd79",
+        "playback_start_utc": "2026-10-11T04:37:15.557434+00:00",
+        "playback_wall_seconds": 148.021993538,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T04:39:55.828093+00:00",
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "estimator_child_exit_codes_from_log": [
+        -11
+      ],
+      "notes": "Diverged; APE 232.502 m; shutdown SIGSEGV",
+      "metrics": {
+        "status": "scored",
+        "outputs": {
+          "/ov_msckf/poseimu": {
+            "count": 2800,
+            "first_timestamp_ns": 1403715278867041111,
+            "last_timestamp_ns": 1403715418812304020,
+            "median_interval_s": 0.049999952,
+            "max_interval_s": 0.050815582,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          },
+          "/ov_msckf/odomimu": {
+            "count": 16846,
+            "first_timestamp_ns": 1403715278912142992,
+            "last_timestamp_ns": 1403715418857142925,
+            "median_interval_s": 0.005000114,
+            "max_interval_s": 0.045000077,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          }
+        },
+        "coverage": {
+          "input_stereo_pair_count": 2912,
+          "estimate_count": 2800,
+          "camera_slots_with_estimate": 2800,
+          "camera_slot_coverage": 0.9615384615384616,
+          "camera_match_tolerance_s": 0.025,
+          "first_estimate_delay_s": 5.60489821434021,
+          "last_estimate_tail_s": -0.0001609325408935547,
+          "post_start_gaps_above_75ms": [],
+          "interpretation": "output-message coverage; not an accuracy-gated localization availability metric"
+        },
+        "protocol": {
+          "ape_alignment": "full matched trajectory SE3, no scale",
+          "association_tolerance_s": 0.01,
+          "timestamp_offset_s": 0.0,
+          "primary_reference": "OpenVINS corrected V1_01_easy",
+          "secondary_reference": "ETH original ASL state_groundtruth_estimate0",
+          "rpe_engine": "evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale"
+        },
+        "references": {
+          "corrected": {
+            "reference_poses": 2895,
+            "matched_estimate_count": 2783,
+            "estimate_match_fraction": 0.9939285714285714,
+            "max_timestamp_difference_s": 0.006386518478393555,
+            "ape_translation_m": {
+              "count": 2783,
+              "rmse": 232.50220075587038,
+              "mean": 183.850537698135,
+              "median": 142.0284585671962,
+              "p95": 557.7358985604183,
+              "max": 746.4802064747691
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2763,
+                "rmse": 10.904052560247838,
+                "mean": 6.6519351909561255,
+                "median": 1.578257789700937,
+                "p95": 25.17810149803702,
+                "max": 30.19651647602054
+              },
+              "rotation_deg": {
+                "count": 2763,
+                "rmse": 0.42803879539945977,
+                "mean": 0.33202698155573734,
+                "median": 0.2692140382074931,
+                "p95": 0.7219275945963626,
+                "max": 2.473160394861566
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9892549514770508,
+                1.0047438144683838
+              ],
+              "actual_ref_interval_s": [
+                1.0,
+                1.0
+              ],
+              "eligible_start_count": 2763,
+              "selected_pair_count": 2763
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2683,
+                "rmse": 51.77288427753515,
+                "mean": 31.81105198800013,
+                "median": 8.143423491072756,
+                "p95": 112.64971396081341,
+                "max": 140.60724826472
+              },
+              "rotation_deg": {
+                "count": 2683,
+                "rmse": 0.8421933991005572,
+                "mean": 0.7519444148548374,
+                "median": 0.6879146965595443,
+                "p95": 1.4980766484483328,
+                "max": 2.9384230192583947
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.993906736373901,
+                5.005937337875366
+              ],
+              "actual_ref_interval_s": [
+                5.0,
+                5.0
+              ],
+              "eligible_start_count": 2683,
+              "selected_pair_count": 2683
+            }
+          },
+          "original": {
+            "reference_poses": 28712,
+            "matched_estimate_count": 2781,
+            "estimate_match_fraction": 0.9932142857142857,
+            "max_timestamp_difference_s": 0.0051610469818115234,
+            "ape_translation_m": {
+              "count": 2781,
+              "rmse": 231.72874330556584,
+              "mean": 183.222862594945,
+              "median": 141.49666425091905,
+              "p95": 555.8955981201125,
+              "max": 744.0959509163703
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2761,
+                "rmse": 10.879995169700267,
+                "mean": 6.637908668657337,
+                "median": 1.5610304219874571,
+                "p95": 25.107205143542537,
+                "max": 30.203619636757388
+              },
+              "rotation_deg": {
+                "count": 2761,
+                "rmse": 0.6333527223441373,
+                "mean": 0.5237036624527962,
+                "median": 0.4542347691210505,
+                "p95": 1.0988081347799072,
+                "max": 2.96049540832035
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9892549514770508,
+                1.0047438144683838
+              ],
+              "actual_ref_interval_s": [
+                0.9900000095367432,
+                1.005000114440918
+              ],
+              "eligible_start_count": 2761,
+              "selected_pair_count": 2761
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2681,
+                "rmse": 51.65195383612965,
+                "mean": 31.737134720715318,
+                "median": 7.998527927566815,
+                "p95": 112.25836834287341,
+                "max": 140.30211380632338
+              },
+              "rotation_deg": {
+                "count": 2681,
+                "rmse": 2.256085757526151,
+                "mean": 1.9865415711499028,
+                "median": 1.8099504270743205,
+                "p95": 3.7496045608914814,
+                "max": 5.441491500205898
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.993906736373901,
+                5.005937337875366
+              ],
+              "actual_ref_interval_s": [
+                4.994999885559082,
+                5.005000114440918
+              ],
+              "eligible_start_count": 2681,
+              "selected_pair_count": 2681
+            }
+          }
+        }
+      },
+      "artifact_hashes": {
+        "estimator.log": {
+          "bytes": 2044358,
+          "sha256": "f23148039425b79e0f5d42bad186fc45679430063377d3f91dc26347cc322ab0"
+        },
+        "recorder.log": {
+          "bytes": 1264,
+          "sha256": "52063616880fb8f7568fa827d88abfe3addc02fd2e36445ee23762c1c4ff3120"
+        },
+        "player.log": {
+          "bytes": 139,
+          "sha256": "3ee18c3311931c606dda9d5ee5a424a6f016398f34915516ac95870c156c6f05"
+        },
+        "run.json": {
+          "bytes": 1959,
+          "sha256": "939873eee0efc876ecbbc4b8a83fd375aaedd02a60898652b8ea1d4e2c2b9f5e"
+        },
+        "estimate_bag/metadata.yaml": {
+          "bytes": 2077,
+          "sha256": "f8eb8c2d0986dc7ea51a314dd7fb0d9802f2d4c98e1e6b05e34e20fc5d70894c"
+        },
+        "estimate_bag/estimate_bag_0.mcap": {
+          "bytes": 14046609,
+          "sha256": "f5a10106d3eefc651aff3b7e67da8e942d99c75f63501c1a1ea097eaee0d80f7"
+        }
+      }
+    },
+    "r04": {
+      "run": {
+        "run_id": "w1_v101_a0_r04",
+        "start_utc": "2026-10-11T04:41:57.395149+00:00",
+        "rate": 0.5,
+        "ros_domain_id": "76",
+        "rmw_implementation": "rmw_cyclonedds_cpp",
+        "cyclonedds_uri": "file:///home/steve/uw-ao-lab/configs/cyclonedds-local.xml",
+        "clock_mode": "header timestamps; no simulated clock",
+        "team_commit": "ca5f5549a73acb6063da9b8260597bd18ccba65e",
+        "commands": {
+          "estimator": [
+            "ros2",
+            "launch",
+            "ov_msckf",
+            "subscribe.launch.py",
+            "config_path:=/home/steve/uw-ao-lab/configs/euroc_v101/estimator_config.yaml",
+            "use_stereo:=true",
+            "max_cameras:=2",
+            "rviz_enable:=false"
+          ],
+          "recorder": [
+            "ros2",
+            "bag",
+            "record",
+            "-s",
+            "mcap",
+            "-o",
+            "/home/steve/uw-ao-lab/runs/w1_v101_a0_r04/estimate_bag",
+            "--topics",
+            "/ov_msckf/poseimu",
+            "/ov_msckf/odomimu"
+          ],
+          "player": [
+            "ros2",
+            "bag",
+            "play",
+            "/home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_ros2",
+            "--rate",
+            "0.5",
+            "--read-ahead-queue-size",
+            "1000",
+            "--disable-keyboard-controls",
+            "--topics",
+            "/cam0/image_raw",
+            "/cam1/image_raw",
+            "/imu0"
+          ]
+        },
+        "udp_rmem_max": "16777216",
+        "communication_config_sha256": "a83e6dd60575e26422ffd61e948db34d1220e0bd0279774e59b824872eddcd79",
+        "playback_start_utc": "2026-10-11T04:41:58.992637+00:00",
+        "playback_wall_seconds": 295.085883589,
+        "status": "playback_completed_requires_output_validation",
+        "exit_codes": {
+          "estimator": 0,
+          "recorder": 0,
+          "player": 0
+        },
+        "end_utc": "2026-10-11T04:48:01.317012+00:00",
+        "config_hashes": {
+          "kalibr_imu_chain.yaml": "408ea8b60b5f9e7c8251e6d302f04c0675bfefdd31229bb1afd139bc8f4a0287",
+          "kalibr_imucam_chain.yaml": "b9e11b7bcda102f7c8c384c97318d67f3916b58942f9073722f83c22bd7073f7",
+          "estimator_config.yaml": "b706f0082106e49e20c3292147d238b7e225b0df414106b9d4ac009bbb123f3b"
+        }
+      },
+      "estimator_child_exit_codes_from_log": [
+        -2
+      ],
+      "notes": "Offline R1 accepted; requested SIGINT yielded child -2 and class_loader warnings",
+      "metrics": {
+        "status": "scored",
+        "outputs": {
+          "/ov_msckf/poseimu": {
+            "count": 2800,
+            "first_timestamp_ns": 1403715278863013744,
+            "last_timestamp_ns": 1403715418812819719,
+            "median_interval_s": 0.049999953,
+            "max_interval_s": 0.051831723,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          },
+          "/ov_msckf/odomimu": {
+            "count": 22001,
+            "first_timestamp_ns": 1403715278912142992,
+            "last_timestamp_ns": 1403715418857142925,
+            "median_interval_s": 0.005000114,
+            "max_interval_s": 0.045000076,
+            "quaternion_norm_range": [
+              0.9999999999999998,
+              1.0000000000000002
+            ],
+            "finite": true,
+            "strictly_monotonic": true
+          }
+        },
+        "coverage": {
+          "input_stereo_pair_count": 2912,
+          "estimate_count": 2800,
+          "camera_slots_with_estimate": 2800,
+          "camera_slot_coverage": 0.9615384615384616,
+          "camera_match_tolerance_s": 0.025,
+          "first_estimate_delay_s": 5.600870847702026,
+          "last_estimate_tail_s": -0.0006766319274902344,
+          "post_start_gaps_above_75ms": [],
+          "interpretation": "output-message coverage; not an accuracy-gated localization availability metric"
+        },
+        "protocol": {
+          "ape_alignment": "full matched trajectory SE3, no scale",
+          "association_tolerance_s": 0.01,
+          "timestamp_offset_s": 0.0,
+          "primary_reference": "OpenVINS corrected V1_01_easy",
+          "secondary_reference": "ETH original ASL state_groundtruth_estimate0",
+          "rpe_engine": "evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale"
+        },
+        "references": {
+          "corrected": {
+            "reference_poses": 2895,
+            "matched_estimate_count": 2783,
+            "estimate_match_fraction": 0.9939285714285714,
+            "max_timestamp_difference_s": 0.002702474594116211,
+            "ape_translation_m": {
+              "count": 2783,
+              "rmse": 0.17751034493202403,
+              "mean": 0.14797366841839374,
+              "median": 0.12829969154434065,
+              "p95": 0.393691250063398,
+              "max": 0.8241209283818552
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2763,
+                "rmse": 0.06716560011995126,
+                "mean": 0.039762574558255756,
+                "median": 0.025224198229826765,
+                "p95": 0.11506788795508563,
+                "max": 0.5017711000901287
+              },
+              "rotation_deg": {
+                "count": 2763,
+                "rmse": 0.30328968622205255,
+                "mean": 0.2604127622747167,
+                "median": 0.22341019205225676,
+                "p95": 0.5286418168873876,
+                "max": 1.415590070476086
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9953873157501221,
+                1.001302719116211
+              ],
+              "actual_ref_interval_s": [
+                1.0,
+                1.0
+              ],
+              "eligible_start_count": 2763,
+              "selected_pair_count": 2763
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2683,
+                "rmse": 0.1545661651476551,
+                "mean": 0.10611086962650243,
+                "median": 0.07763979372770799,
+                "p95": 0.27378630982634183,
+                "max": 0.9181463291095312
+              },
+              "rotation_deg": {
+                "count": 2683,
+                "rmse": 0.590398037224731,
+                "mean": 0.5292648566864332,
+                "median": 0.4963237127108682,
+                "p95": 0.9781256107568076,
+                "max": 1.644518310790789
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.996495485305786,
+                5.0017335414886475
+              ],
+              "actual_ref_interval_s": [
+                5.0,
+                5.0
+              ],
+              "eligible_start_count": 2683,
+              "selected_pair_count": 2683
+            }
+          },
+          "original": {
+            "reference_poses": 28712,
+            "matched_estimate_count": 2781,
+            "estimate_match_fraction": 0.9932142857142857,
+            "max_timestamp_difference_s": 0.005676984786987305,
+            "ape_translation_m": {
+              "count": 2781,
+              "rmse": 0.18725688833251883,
+              "mean": 0.15899091373290858,
+              "median": 0.14349140289005666,
+              "p95": 0.3940235985593326,
+              "max": 0.8199162556907397
+            },
+            "rpe_1s": {
+              "translation_m": {
+                "count": 2761,
+                "rmse": 0.08045607440051888,
+                "mean": 0.06031945592803132,
+                "median": 0.048470395555478656,
+                "p95": 0.12846834557686868,
+                "max": 0.4992449655254397
+              },
+              "rotation_deg": {
+                "count": 2761,
+                "rmse": 0.5370228520324578,
+                "mean": 0.4572107606075283,
+                "median": 0.4041988676782524,
+                "p95": 0.9756128101872168,
+                "max": 2.0063879553465758
+              },
+              "target_interval_s": 1.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                0.9953873157501221,
+                1.001302719116211
+              ],
+              "actual_ref_interval_s": [
+                0.994999885559082,
+                1.0
+              ],
+              "eligible_start_count": 2761,
+              "selected_pair_count": 2761
+            },
+            "rpe_5s": {
+              "translation_m": {
+                "count": 2681,
+                "rmse": 0.23730388691964996,
+                "mean": 0.19736203640232097,
+                "median": 0.17104758997752761,
+                "p95": 0.3829422095396331,
+                "max": 1.0059505360212462
+              },
+              "rotation_deg": {
+                "count": 2681,
+                "rmse": 2.0859410695681726,
+                "mean": 1.8581741757159949,
+                "median": 1.7264143067298978,
+                "p95": 3.4947618368690323,
+                "max": 4.317798021877966
+              },
+              "target_interval_s": 5.0,
+              "pair_tolerance_s": 0.025,
+              "actual_est_interval_s": [
+                4.996495485305786,
+                5.0017335414886475
+              ],
+              "actual_ref_interval_s": [
+                4.994999885559082,
+                5.0
+              ],
+              "eligible_start_count": 2681,
+              "selected_pair_count": 2681
+            }
+          }
+        }
+      },
+      "artifact_hashes": {
+        "estimator.log": {
+          "bytes": 2035158,
+          "sha256": "862abbc6930e8371e1f82b11b830f652b9769d0390112168e0fc50ffe02d2b1b"
+        },
+        "recorder.log": {
+          "bytes": 1264,
+          "sha256": "6e4d074955045d412d7384c83a2b7440520b068a4d558a65048d56454a558985"
+        },
+        "player.log": {
+          "bytes": 141,
+          "sha256": "7f9b3f4d69c7dc02dc4990bdcfd7290e296aa8c8e98a347163c802e9d42eebb5"
+        },
+        "run.json": {
+          "bytes": 1959,
+          "sha256": "7e42fee896f9c83d2590dd72d357f0639763c573e096f99597ba178bb695c5b6"
+        },
+        "estimate_bag/metadata.yaml": {
+          "bytes": 2077,
+          "sha256": "60c8a1a988f116c2bb1cc871641e54f4309eefa21645b4b463d3af83be8970e5"
+        },
+        "estimate_bag/estimate_bag_0.mcap": {
+          "bytes": 17980734,
+          "sha256": "af38d5e423025d333bd0bd2e4c8e8db1b12cdd69318b25d4f2e171bd16c720b7"
+        }
+      }
+    }
+  }
+}

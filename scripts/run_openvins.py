@@ -4,6 +4,7 @@ import datetime
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import signal
 import subprocess
@@ -112,6 +113,13 @@ def main():
             handle.close()
         record['exit_codes'] = {name: p.returncode for name, p in processes.items()}
         record['end_utc'] = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        estimator_log = (run/'estimator.log').read_text(errors='replace') if (run/'estimator.log').exists() else ''
+        record['estimator_child_exit_codes'] = [int(code) for code in re.findall(r'process has died \[pid \d+, exit code (-?\d+)', estimator_log)]
+        record['shutdown_warnings'] = 'class_loader.ClassLoader' in estimator_log
+        if any(code not in (0, -2) for code in record['estimator_child_exit_codes']):
+            record['status'] = 'failed'
+            record['error'] = 'Unexpected estimator child exit; inspect estimator.log'
+
         record['config_hashes'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()
             for p in config_directory.glob('*.yaml')}
         (run/'run.json').write_text(json.dumps(record, indent=2)+'\n')

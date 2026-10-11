@@ -1,0 +1,7 @@
+{
+  "upstream_sha": "69488123ed9362dd44b6f28e7f4680abbff1442b",
+  "compatibility_patch_sha256": "0a8cbc71ee55baefb673f51f6c2a9fa19b3956891518e2fcd15aaea926e608cf",
+  "executable": "/home/steve/uw-ao-lab/ros_ws/install/ov_msckf/lib/ov_msckf/run_subscribe_msckf",
+  "executable_sha256": "56830c802bd46144be19bdfa6ff87c34ea1ce017d7fec0caaa7276cb71fe5578",
+  "clean_rebuild": "four packages passed, 491 seconds, separate build/install/log directories"
+}
