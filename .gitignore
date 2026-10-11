@@ -32,6 +32,8 @@
 !reports/
 !reports/w1/
 !reports/w1/*.md
+!reports/w2/
+!reports/w2/*.md
 !reports/w1/euroc_v101_audit/
 !reports/w1/euroc_v101_audit/*
 
