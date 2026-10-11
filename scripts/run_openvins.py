@@ -17,8 +17,9 @@ def main():
     parser.add_argument('--bag', type=Path, required=True)
     parser.add_argument('--run-id', required=True)
     parser.add_argument('--rate', type=float, default=1.0)
+    parser.add_argument('--imu-history-depth', type=int, default=1000)
     args = parser.parse_args()
-    if args.rate <= 0 or Path(args.run_id).name != args.run_id:
+    if args.rate <= 0 or args.imu_history_depth <= 0 or Path(args.run_id).name != args.run_id:
         parser.error('Invalid playback rate or run ID')
     dirty = subprocess.check_output(['git', '-C', str(args.lab), 'status', '--porcelain'], text=True)
     if dirty.strip():
@@ -31,12 +32,15 @@ def main():
     run.mkdir(parents=True, exist_ok=False)
     processes, handles = {}, []
     record = {'run_id': args.run_id, 'start_utc': datetime.datetime.now(datetime.timezone.utc).isoformat(),
-              'rate': args.rate, 'ros_domain_id': os.environ.get('ROS_DOMAIN_ID'),
+              'rate': args.rate, 'imu_history_depth': args.imu_history_depth, 'ros_domain_id': os.environ.get('ROS_DOMAIN_ID'),
               'rmw_implementation': os.environ.get('RMW_IMPLEMENTATION', 'default'),
               'cyclonedds_uri': os.environ.get('CYCLONEDDS_URI'),
               'clock_mode': 'header timestamps; no simulated clock',
               'team_commit': subprocess.check_output(['git', '-C', str(args.lab), 'rev-parse', 'HEAD'], text=True).strip(),
               'commands': {},
+              'openvins_libraries_sha256': {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in (args.lab/'ros_ws/install/ov_msckf/lib').glob('*.so')},
+              'openvins_commit': subprocess.check_output(['git', '-C', str(args.lab/'ros_ws/src/open_vins'), 'rev-parse', 'HEAD'], text=True).strip(),
+              'openvins_binary_sha256': hashlib.sha256((args.lab/'ros_ws/install/ov_msckf/lib/ov_msckf/run_subscribe_msckf').read_bytes()).hexdigest(),
               'udp_rmem_max': Path('/proc/sys/net/core/rmem_max').read_text().strip(),
               'communication_config_sha256': hashlib.sha256((args.lab/'configs/cyclonedds-local.xml').read_bytes()).hexdigest() if os.environ.get('RMW_IMPLEMENTATION') == 'rmw_cyclonedds_cpp' else None}
 
@@ -44,15 +48,18 @@ def main():
         handle = (run/(name+'.log')).open('w')
         handles.append(handle)
         record['commands'][name] = command
+        env = dict(os.environ)
+        if name == 'estimator':
+            env['OPENVINS_INPUT_TRACE'] = str(run/'input-trace.csv')
         processes[name] = subprocess.Popen(command, stdout=handle, stderr=subprocess.STDOUT,
-                                           start_new_session=True)
+                                           start_new_session=True, env=env)
         return processes[name]
 
     def stop(name):
         p = processes.get(name)
         if p is None or p.poll() is not None:
             return
-        os.killpg(p.pid, signal.SIGINT)
+        p.send_signal(signal.SIGINT)  # ROS launch forwards once to its child; avoid duplicate SIGINT.
         try:
             p.wait(timeout=20)
         except subprocess.TimeoutExpired:
@@ -62,7 +69,8 @@ def main():
     try:
         start('estimator', ['ros2', 'launch', 'ov_msckf', 'subscribe.launch.py',
               'config_path:='+str(config_directory/'estimator_config.yaml'),
-              'use_stereo:=true', 'max_cameras:=2', 'rviz_enable:=false'])
+              'use_stereo:=true', 'max_cameras:=2', 'rviz_enable:=false',
+              'imu_history_depth:='+str(args.imu_history_depth)])
         deadline = time.monotonic() + 35
         while time.monotonic() < deadline:
             if processes['estimator'].poll() is not None:

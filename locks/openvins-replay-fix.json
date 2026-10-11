@@ -1,0 +1,11 @@
+{
+  "upstream_base": "69488123ed9362dd44b6f28e7f4680abbff1442b",
+  "jazzy_compat_commit": "49d30a527af5fa580bde80e824278138ad2e2dfa",
+  "fix_commit": "ad0c0a4f95ec9fd3f0faf95378c2507407dd5193",
+  "branch": "codex/w1-ros2-replay-fix",
+  "patch_sha256": "01f8b4626d20377a27ca862744ff7211c29ab3c4b1dd2c589f0432ccc09fd2a5",
+  "patch_order": [
+    "openvins-jazzy.patch",
+    "openvins-ros2-replay.patch"
+  ]
+}
