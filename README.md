@@ -28,6 +28,18 @@ The Git branch is codex/w1-public-baseline. No remote is configured by this setu
 Public-dataset runs verify the software pipeline, not underwater performance.
 Execution reports and outstanding physical-platform inputs are in reports/w1/.
 
+## Simulation (W2-11)
+
+HoloOcean cannot start inside WSL (UE5 Vulkan fails on Dozen and rejects lavapipe), so generation runs in the Windows Python that has holoocean 2.3.0; conversion, audit, replay and scoring run here. Route JSONs are in configs/sim/; assumptions are marked ASSUMPTION. Results and diagnoses: reports/w2/sim-w2-11.md.
+
+    PYW=/mnt/c/Users/pengb/AppData/Local/Programs/Python/Python311/python.exe
+    $PYW "$(wslpath -w team/sim/holoocean_generate.py)" "$(wslpath -w configs/sim/<route>.json)" "$(wslpath -w $PWD/data/sim)\\<route>_s01\\raw"
+    .venv-eval/bin/python scripts/sim_to_bag.py --run data/sim/<route>_s01
+    PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench audit --manifest data/sim/<route>_s01/manifest.yaml --out data/sim/<route>_s01/audit
+    # then scripts/run_openvins.py with --config-dir data/sim/<route>_s01/openvins --dataset-audit .../audit/audit.json, and uwbench eval-traj
+
+raw/ is the only irreplaceable part (HoloOcean noise is not seedable). ros2/ bags are byte-reproducible and may be deleted; restore with `scripts/sim_to_bag.py --run data/sim/<route>_s01 --restore-bag`, which verifies checksums.sha256. Sim A0 keeps configs/euroc_v101 except gravity and fixed camera calibration (SIM_BASELINE in scripts/sim_to_bag.py), plus per-route overrides recorded in the derived config header. `scripts/sim_track_check.py` checks visual tracks against ground truth (needs the ROS system python3 with cv2).
+
 ## Verified public baseline (2026-10-10)
 
 The accepted 1x engineering regressions are r09/r10 (execution commit f8116d608064745d3148f3b16e15b05118028afa; OpenVINS ac543cd427ba880b00582abac45e01dbc51cc23b). Both received all 29120 IMUs and 2912 stereo pairs in source order and processed every pair. Both corrected-reference SE3 APE RMSE: 0.044367 m; 1s translation RPE RMSE: 0.012527 m, with clean shutdown. This does not establish underwater or hardware end-to-end real-time performance. See reports/w1/replay-fix.md and replay-fix-summary.json, including failed r05-r08. Historical r01-r04 remain in v101-baseline.md.
