@@ -4,6 +4,12 @@ Only holoocean and numpy are required. Time is the simulator clock (tick / ticks
 Extrinsics are measured from socket PoseSensors at run time; nothing about the vehicle geometry is assumed.
 Output (raw, read-only afterwards): meta.json, imu.npy, gt_imu.npy, depth.npy, left/right/sonar chunks and stamps.
 
+Sonar models (route sensors.sonar_model): 'imaging' (default) is HoloOcean's ImagingSonar, which only sees geometry in
+the world's precomputed octree, so spawned props are invisible to it. 'raycast' puts a RaycastLidar with the sonar's
+field of view at the sonar socket, accumulates one sweep per sonar frame and bins the hits into the same range x
+azimuth image (render_sonar); it is a geometry-only idealisation (no beam pattern, multipath or incidence-dependent
+intensity) and also writes the hit points (sonar_points.npy: frame index, sonar-frame x y z).
+
 usage: python holoocean_generate.py <route.json> <output_dir>
 """
 import json
@@ -19,6 +25,39 @@ SOCKETS = {'imu': 'IMUSocket', 'left': 'CameraLeftSocket', 'right': 'CameraRight
 CHUNK = 200  # frames per image chunk file
 
 
+def raycast_config(s, tps):
+    """RaycastLidar standing in for the imaging sonar: same fan, one sweep per sonar frame."""
+    son = s['sonar']
+    rays = s.get('raycast_rays_per_bin', 2)*son['AzimuthBins']*s.get('raycast_channels', 64)*s['sonar_hz']  # spread over HorizontalFov
+    return {'Channels': s.get('raycast_channels', 64), 'Range': son['RangeMax'], 'PointsPerSecond': int(rays),
+            'RotationFrequency': s['sonar_hz'], 'UpperFovLimit': son['Elevation']/2, 'LowerFovLimit': -son['Elevation']/2,
+            'HorizontalFov': son['Azimuth'], 'AtmospAttenRate': 0.0, 'DropOffGenRate': 0.0, 'DropOffAtZeroIntensity': 0.0,
+            'DropOffIntensityLimit': 0.0, 'NoiseStdDev': 0.0}
+
+
+def render_sonar(points, son, rays_per_bin, rng):
+    """Sonar-frame hits (x forward, y left, z up) -> [RangeBins, AzimuthBins] image with ImagingSonar-style noise.
+
+    Echo strength saturates with the number of hits in a cell (one channel's rays across an azimuth bin give 1 - 1/e)
+    and is scaled by RaycastGain (default 0.5, near ImagingSonar's noise-free peak of about 0.4 on the Dam wall).
+    """
+    counts = np.zeros((son['RangeBins'], son['AzimuthBins']), np.float32)
+    if len(points):
+        r = np.linalg.norm(points[:, :3], axis=1)
+        az = np.degrees(np.arctan2(points[:, 1], points[:, 0]))
+        ri = np.floor((r - son['RangeMin'])/(son['RangeMax'] - son['RangeMin'])*son['RangeBins']).astype(int)
+        ai = np.floor((az + son['Azimuth']/2)/son['Azimuth']*son['AzimuthBins']).astype(int)
+        if son.get('RaycastFlipAzimuth', False):
+            ai = son['AzimuthBins'] - 1 - ai
+        ok = (ri >= 0) & (ri < son['RangeBins']) & (ai >= 0) & (ai < son['AzimuthBins'])
+        np.add.at(counts, (ri[ok], ai[ok]), 1.0)
+    image = son.get('RaycastGain', 0.5)*(1.0 - np.exp(-counts/rays_per_bin))
+    image = image*(1 + rng.normal(0, son.get('MultSigma', 0.0), image.shape))
+    if son.get('AddSigma', 0.0) > 0:
+        image = image + rng.rayleigh(son['AddSigma'], image.shape)
+    return image.astype(np.float32)
+
+
 def scenario(route):
     s = route['sensors']
     camera = lambda name, socket: {'sensor_type': 'CameraSensor', 'sensor_name': name, 'socket': socket, 'Hz': s['camera_hz'],
@@ -30,7 +69,9 @@ def scenario(route):
                  'configuration': {'Sigma': s['depth_sigma_m']}},
                 camera('Left', 'CameraLeftSocket'), camera('Right', 'CameraRightSocket'),
                 {'sensor_type': 'ImagingSonar', 'sensor_name': 'Sonar', 'socket': 'SonarSocket', 'Hz': s['sonar_hz'],
-                 'configuration': s['sonar']}]
+                 'configuration': s['sonar']} if s.get('sonar_model', 'imaging') == 'imaging' else
+                {'sensor_type': 'RaycastLidar', 'sensor_name': 'SonarRays', 'socket': 'SonarSocket', 'Hz': route['ticks_per_sec'],
+                 'configuration': raycast_config(s, route['ticks_per_sec'])}]
     start = route['waypoints'][0]
     return {'name': route['name'], 'world': route['world'], 'package_name': route.get('package', 'Ocean'), 'main_agent': 'auv0',
             'ticks_per_sec': route['ticks_per_sec'], 'frames_per_sec': False,
@@ -68,6 +109,11 @@ def main():
     stamps = {'left': [], 'right': [], 'sonar': []}
     chunk_index = {'left': 0, 'right': 0, 'sonar': 0}
     extrinsics = None
+    raycast = route['sensors'].get('sonar_model', 'imaging') == 'raycast'
+    son = route['sensors']['sonar']
+    period = int(round(tps/route['sensors']['sonar_hz']))
+    rng = np.random.default_rng(route['sensors'].get('raycast_noise_seed', 0))
+    sweep, sonar_points = [], []
 
     def flush(kind, final=False):
         if frames[kind] and (final or len(frames[kind]) >= CHUNK):
@@ -112,9 +158,22 @@ def main():
                 frames['sonar'].append(np.asarray(s['Sonar'], np.float32))
                 stamps['sonar'].append(t)
                 flush('sonar')
+            if raycast:  # one sweep per frame: hits from ticks in (t - period/tps, t], stamped t
+                if 'SonarRays' in s:
+                    hits = np.asarray(s['SonarRays'], np.float32).reshape(-1, 5)[:, :3]
+                    sweep.append(hits[np.abs(hits).sum(axis=1) > 0])
+                if tick % period == 0:
+                    hits = np.concatenate(sweep) if sweep else np.zeros((0, 3), np.float32)
+                    sonar_points.append(np.column_stack([np.full(len(hits), len(stamps['sonar']), np.float32), hits]))
+                    frames['sonar'].append(render_sonar(hits, son, route['sensors'].get('raycast_rays_per_bin', 2), rng))
+                    stamps['sonar'].append(t)
+                    flush('sonar')
+                    sweep.clear()
     for kind in frames:
         flush(kind, final=True)
         np.save(out/f'{kind}_t.npy', np.asarray(stamps[kind]))
+    if raycast:
+        np.save(out/'sonar_points.npy', np.concatenate(sonar_points) if sonar_points else np.zeros((0, 4), np.float32))
     np.save(out/'imu.npy', np.asarray(imu))
     np.save(out/'gt_imu.npy', np.asarray(gt))
     np.save(out/'depth.npy', np.asarray(depth))
@@ -126,7 +185,10 @@ def main():
                             'gt': 'world pose of IMUSocket every tick, t + row-major 4x4',
                             'camera_socket_frame': 'x forward, y left, z up; image row 0 is top (UE convention)',
                             'images': 'grayscale from BGRA with 0.114/0.587/0.299',
-                            'depth': 'DepthSensor output = world z of DepthSocket in metres (negative below surface)'},
+                            'depth': 'DepthSensor output = world z of DepthSocket in metres (negative below surface)',
+                            'sonar_model': route['sensors'].get('sonar_model', 'imaging'),
+                            'sonar_points': 'raycast only: frame index into sonar_t, then hit x y z in the sonar socket frame '
+                                            '(x forward, y left, z up); hits from ticks in (t - 1/sonar_hz, t]'},
             'counts': {'ticks': len(gt), 'imu': len(imu), 'depth': len(depth), **{k: len(v) for k, v in stamps.items()}},
             'wall_seconds': time.time() - wall0}
     (out/'meta.json').write_text(json.dumps(meta, indent=2))
