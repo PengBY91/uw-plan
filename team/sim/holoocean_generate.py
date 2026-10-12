@@ -25,6 +25,21 @@ SOCKETS = {'imu': 'IMUSocket', 'left': 'CameraLeftSocket', 'right': 'CameraRight
 CHUNK = 200  # frames per image chunk file
 
 
+def viewport(route):
+    """Optional route 'viewport': [height, width] of the unused main viewport, which the engine renders every tick.
+
+    HoloOcean's default is 720 x 1280. Matching the camera size (480 x 640) cut a 12 s probe from 207 s to 153 s with
+    near-identical camera images (mean |diff| 0.12 grey levels); much smaller viewports (64 x 64) lower texture detail
+    in the camera images, so keep it at least the camera size. Routes without the key keep the default.
+    """
+    if 'viewport' not in route:
+        return {}
+    h, w = route['viewport']
+    if h < route['sensors']['height'] or w < route['sensors']['width']:
+        raise ValueError('viewport smaller than the cameras lowers texture detail in the camera images')
+    return {'window_height': int(h), 'window_width': int(w)}
+
+
 def raycast_config(s, tps):
     """RaycastLidar standing in for the imaging sonar: same fan, one sweep per sonar frame."""
     son = s['sonar']
@@ -75,6 +90,7 @@ def scenario(route):
     start = route['waypoints'][0]
     return {'name': route['name'], 'world': route['world'], 'package_name': route.get('package', 'Ocean'), 'main_agent': 'auv0',
             'ticks_per_sec': route['ticks_per_sec'], 'frames_per_sec': False,
+            **viewport(route),
             'agents': [{'agent_name': 'auv0', 'agent_type': 'HoveringAUV', 'control_scheme': 1,
                         'location': start['pose'][:3], 'rotation': start['pose'][3:], 'sensors': sensors}]}
 
