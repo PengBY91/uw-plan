@@ -19,6 +19,8 @@
 !configs/euroc_v101/*.yaml
 !configs/a1/
 !configs/a1/*.yaml
+!configs/a2/
+!configs/a2/*.yaml
 !configs/sim/
 !configs/sim/*.json
 !team/sim/

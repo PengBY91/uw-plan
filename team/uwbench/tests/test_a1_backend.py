@@ -112,7 +112,7 @@ class BackendTests(unittest.TestCase):
         est = sm.isam.calculateEstimate()
         from gtsam.symbol_shorthand import S
         from uwbench.a1 import factors
-        r = [factors.whitened_norm(f, est) for _, _, f, _ in sm.sonar_factors]
+        r = [factors.whitened_norm(f, est) for _, _, f, _, _ in sm.sonar_factors]
         self.assertLess(np.median(r), 0.1)
         err = [np.linalg.norm(est.atPoint3(S(l)) - self.scene.sonar[l]) for l in sm.sonar_added]
         self.assertLess(np.median(err), 0.05)
@@ -137,13 +137,32 @@ class BackendTests(unittest.TestCase):
         sm = run(self.scene, {'enabled': True, 'kernel': 'cauchy', 'kernel_k': 1.0}, corrupt)
         est = sm.isam.calculateEstimate()
         from uwbench.a1 import factors
-        flagged = [factors.whitened_norm(f, est) for _, _, f, o in sm.sonar_factors if o]
-        clean = [factors.whitened_norm(f, est) for _, _, f, o in sm.sonar_factors if not o]
+        flagged = [factors.whitened_norm(f, est) for _, _, f, o, _ in sm.sonar_factors if o]
+        clean = [factors.whitened_norm(f, est) for _, _, f, o, _ in sm.sonar_factors if not o]
         self.assertEqual(len(flagged), 1)
         self.assertGreater(flagged[0], 20)            # the 1.5 m (30 sigma) error stays in its residual
         self.assertLess(np.median(clean), 0.5)
         truth = np.array([self.scene.p(k*DT) for k in range(self.scene.n)])
         self.assertLess(np.abs(self.positions(sm) - truth).max(), 0.05)
+
+    def test_weight_none_matches_a1_and_innovation_downweights_outlier(self):
+        a1 = run(self.scene, {'enabled': True})
+        none = run(self.scene, {'enabled': True, 'weight': {'kind': 'none'}})
+        np.testing.assert_array_equal(self.positions(none), self.positions(a1))
+        self.assertTrue(all(w == 1.0 for *_, w in none.sonar_factors))
+        seen = {}
+        for k in range(self.scene.n):
+            for j, *_ in self.scene.sonar_obs(k*DT):
+                seen.setdefault(j, []).append(k)
+        j_bad = max(seen, key=lambda j: len(seen[j]))
+        k_bad = seen[j_bad][len(seen[j_bad])//2]
+
+        def corrupt(k, t, obs):
+            return [(j, r + (1.5 if (j, k) == (j_bad, k_bad) else 0.0), b, (j, k) == (j_bad, k_bad)) for j, r, b, _ in obs]
+        sm = run(self.scene, {'enabled': True, 'weight': {'kind': 'innovation', 'w_min': 0.1}}, corrupt)
+        flagged = [w for *_, o, w in sm.sonar_factors if o]
+        self.assertEqual(flagged, [0.1])
+        self.assertTrue(all(0.1 <= w <= 1.0 for *_, w in sm.sonar_factors))
 
     def test_landmark_without_baseline_stays_pending(self):
         sm = run(self.scene, {'enabled': True, 'init_min_baseline_m': 100.0})

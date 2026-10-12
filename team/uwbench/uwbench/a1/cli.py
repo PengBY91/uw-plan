@@ -184,7 +184,7 @@ def main(argv):
             from uwbench.a1 import factors
             from uwbench.sonar import elevation
             el, inl, out = [], [], []
-            for kk, lid, f, outlier in sm.sonar_factors:
+            for kk, lid, f, outlier, _ in sm.sonar_factors:
                 p_s, _, _, _ = factors.predict(est.atPose3(X(kk)), sm.T_bs, est.atPoint3(S(lid)))
                 el.append(float(elevation(p_s)))
                 (out if outlier else inl).append(whitened(f, est))
@@ -196,7 +196,9 @@ def main(argv):
                 'landmarks_pending': len(sm.sonar_buffer),
                 'elevation_outside_aperture_fraction': float(np.mean(np.abs(el) > half + 1e-9)),
                 'whitened_residual_inliers': stats(inl), 'whitened_residual_injected_outliers': stats(out),
-                'landmark_position_error_m': stats(err)}
+                'landmark_position_error_m': stats(err),
+                'weights': dict(stats([w for *_, w in sm.sonar_factors]), policy=sm.weighting.cfg,
+                                at_minimum_fraction=float(np.mean([w <= sm.weighting.cfg['w_min'] + 1e-12 for *_, w in sm.sonar_factors])))}
     with open(args.out/'factors.csv', 'w', newline='') as f:
         if sm.counts:
             w = csv.DictWriter(f, fieldnames=list(sm.counts[0]))

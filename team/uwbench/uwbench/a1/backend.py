@@ -13,6 +13,7 @@ import numpy as np
 from gtsam.symbol_shorthand import B, L, S, V, X
 
 from uwbench.a1 import factors
+from uwbench.a1.weights import ScalarWeight
 
 DEFAULTS = {
     'keyframe_stride': 2,
@@ -20,7 +21,7 @@ DEFAULTS = {
                'init_gate_px': 3.0, 'prune_gate_px': 4.0, 'prune_min_depth_m': 0.2, 'pruned_prior_sigma_m': 1.0},
     'sonar': {'enabled': False, 'sigma_range_m': 0.05, 'sigma_bearing_deg': 1.0, 'kernel': 'none', 'kernel_k': 1.345,
               'init_min_observations': 3, 'init_min_baseline_m': 0.3, 'init_max_cost': 9.0, 'init_max_buffer': 30,
-              'init_max_attempts': 30, 'elevation_steps': 41, 'max_gap_s': 1.0},
+              'init_max_attempts': 30, 'elevation_steps': 41, 'max_gap_s': 1.0, 'weight': {'kind': 'none'}},
     'prior': {'pose_sigma_rot_rad': 1e-3, 'pose_sigma_pos_m': 1e-3, 'velocity_sigma_mps': 1e-2,
               'bias_sigma_acc': 0.05, 'bias_sigma_gyro': 0.005},
     'gravity_mps2': 9.8,
@@ -72,13 +73,15 @@ class Smoother:
         s = cfg['sonar']
         self.sonar_sigma = np.array([s['sigma_range_m'], np.radians(s['sigma_bearing_deg'])])
         self.sonar_model = factors.noise_model(*self.sonar_sigma, kernel=s['kernel'], k=s['kernel_k'])
+        self.weighting = ScalarWeight(s['weight'])
+        self._models = {}
         params = gtsam.ISAM2Params()
         params.setRelinearizeThreshold(cfg['isam_relinearize_threshold'])
         self.isam = gtsam.ISAM2(params)
         self.visual_pending, self.visual_added, self.visual_pruned = {}, set(), set()
         self.visual_factor_idx = {}   # landmark id -> iSAM2 factor indices of its stereo factors
         self.sonar_buffer, self.sonar_added, self.sonar_rejected, self.sonar_attempts = {}, set(), set(), {}
-        self.sonar_factors = []   # (keyframe, landmark id, factor, is_injected_outlier)
+        self.sonar_factors = []   # (keyframe, track id, factor, is_injected_outlier, A2 weight)
         self.counts = []
         self.poses_causal, self.k = [], -1
         self.state = None
@@ -218,6 +221,21 @@ class Smoother:
     def _pose_estimate(self, kk, k, pose_k):
         return pose_k if kk == k else self.isam.calculateEstimatePose3(X(kk))
 
+    def _weighted_factor(self, k, lid, z, pose, p_landmark, outlier):
+        """Sonar factor with the A2 scalar weight (1 for A1); the innovation uses the current estimates only."""
+        innovation = None
+        if self.weighting.cfg['kind'] == 'innovation':
+            e, _, _ = factors.residual(pose, self.T_bs, p_landmark, z)
+            innovation = float(np.linalg.norm(e/self.sonar_sigma))
+        w = self.weighting.weight(lid, innovation)
+        key = round(w, 4)
+        if key not in self._models:
+            s = self.cfg['sonar']
+            self._models[key] = factors.noise_model(*(self.sonar_sigma/np.sqrt(key)), kernel=s['kernel'], k=s['kernel_k'])
+        f = factors.sonar_factor(X(k), S(lid), z, self.T_bs, self._models[key])
+        self.sonar_factors.append((k, lid, f, outlier, w))
+        return f
+
     def _add_sonar(self, k, pose, sonar_obs, graph, values, c):
         s = self.cfg['sonar']
         for lid, rho, theta, outlier in sonar_obs:
@@ -226,9 +244,8 @@ class Smoother:
             if lid in self.sonar_rejected:
                 continue
             if lid in self.sonar_added:
-                f = factors.sonar_factor(X(k), S(lid), z, self.T_bs, self.sonar_model)
-                graph.add(f)
-                self.sonar_factors.append((k, lid, f, bool(outlier)))
+                p_l = self.isam.calculateEstimatePoint3(S(lid))
+                graph.add(self._weighted_factor(k, lid, z, pose, p_l, bool(outlier)))
                 c['sonar_factors'] += 1
                 continue
             buf = self.sonar_buffer.setdefault(lid, [])
@@ -255,10 +272,8 @@ class Smoother:
                     c['sonar_buffered'] += 1
                 continue
             values.insert(S(lid), res[0])
-            for kk, zz, out in buf:
-                f = factors.sonar_factor(X(kk), S(lid), zz, self.T_bs, self.sonar_model)
-                graph.add(f)
-                self.sonar_factors.append((kk, lid, f, out))
+            for (kk, zz, out), T in zip(buf, poses):
+                graph.add(self._weighted_factor(kk, lid, zz, T, res[0], out))
                 c['sonar_factors'] += 1
             self.sonar_added.add(lid)
             del self.sonar_buffer[lid]

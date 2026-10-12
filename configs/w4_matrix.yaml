@@ -1,0 +1,42 @@
+# W4-01 (P10) A2 comparison matrix. Written 2026-10-12 before any A2 candidate was run; changes after the first
+# comparison must be recorded below with a reason and applied to every family.
+# Simulation stand-in: no D1/D2/D3 exist yet, so the split below is a declared simulation split, not D data.
+schema_version: 1
+split:
+  development: [stripe_beam_v1_s01, stripe_beam_v1_s02, stripe_beam_v1_s03]
+  validation: [pilaster_wall_v1_s01, stripe_wall_h_v1_s01, slope_wall_v1_s01]
+  rule: candidates are ranked on development runs only; validation runs only the per-family winners plus the two
+    references, once.
+shared:   # identical for every configuration: same backend, front end, correspondence and initialisation as A1
+  backend: uwbench run-a (A1 commit of this file)
+  front_end: runs/sim_<dataset>_a1_frontend_r01/tracks.npz (KLT, computed once per dataset)
+  keyframe_stride: 2
+  initialisation: ground-truth pose and velocity at keyframe 0, zero bias prior
+  sonar_association: oracle scene geometry, continuous tracks (max_gap_s 1.0); controlled experiment
+  base_sigma: {range_m: 0.05, bearing_deg: 1.0}
+  scoring: eval-traj with configs/a1/eval_traj_10hz.yaml on trajectory_causal.tum
+references: [sonar_off, fixed]          # configs/a1/sonar_off.yaml and configs/a1/fixed.yaml (A1)
+families:                               # at most ten candidates per family; each switch on its own
+  fixed_weight:                         # Gaussian, no kernel, no scalar policy
+    sigma_scale: [0.5, 2.0, 4.0]        # 1.0 is the A1 reference
+  robust_kernel:                        # A1 sigma, fixed kernel, no scalar policy
+    huber_k: [1.0, 1.345, 2.0]
+    cauchy_k: [0.5, 1.0, 2.0]
+  scalar_weight:                        # A1 sigma, no kernel, bounded scalar weight
+    innovation:                         # ema_alpha 0.3
+      w_min: [0.1, 0.3]
+      high_low: [[3.0, 1.5], [2.0, 1.0]]
+    support:
+      w_min: [0.1, 0.3]
+      n_full: [5, 20]
+selection:
+  primary: median over development runs of the public-alignment translation APE RMSE (m)
+  eligibility: completed run on every development dataset; a failed run makes the candidate ineligible but is kept
+  tie_break: [lower median max risk-mode axis position error, fewer non-default parameters]
+  winner_per_family: one; ties broken as above; all candidates and failures stay in the report
+outputs_per_run: [public APE and RPE 1 s / 5 s, risk-mode per-axis max error and exceedance seconds,
+  matched coverage (valid localisation), unalarmed risk, normal-condition cost, wall and solve time]
+notes:
+  unalarmed_risk: not evaluable; A1/A2 output no health or alarm field, so exceedance is reported without it
+  normal_cost: APE difference to sonar_off on validation runs where sonar_off has no risk-mode exceedance
+changes: []

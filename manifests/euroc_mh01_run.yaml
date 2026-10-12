@@ -1,0 +1,19 @@
+# uwbench manifest for the public W2-07 sequence MH_01_easy; provenance in euroc_mh01.yaml. Same sensors and calibration as V1_01 (configs/euroc_v101).
+schema_version: 1
+run_id: euroc_MH_01_easy
+data_root: /home/steve/uw-ao-lab/data/public/euroc
+split: public_pipeline_check
+raw_uri: MH_01_easy_ros2
+calibration_uri: /home/steve/uw-ao-lab/configs/euroc_v101/kalibr_imucam_chain.yaml
+reference_uri: /home/steve/uw-ao-lab/ros_ws/src/open_vins/ov_data/euroc_mav/MH_01_easy.csv
+clock_model_uri: {unavailable: "public dataset; hardware-synchronised header stamps, no separate clock model"}
+world_frame: vicon (gravity-aligned)
+body_frame: imu0
+checksums_uri: {unavailable: "hashes in manifests/euroc_mh01.yaml artifacts"}
+streams:
+  left: {topic: /cam0/image_raw, acquisition_clock: header}
+  right: {topic: /cam1/image_raw, acquisition_clock: header, pairing_tolerance_s: 0.0}
+  imu: {topic: /imu0, units: "m/s^2, rad/s", min_rate_hz: 190}
+  sonar: {unavailable: "EuRoC has no sonar"}
+  depth: {unavailable: "EuRoC has no pressure sensor"}
+conditions: {layout: Machine hall, visibility: in air}
