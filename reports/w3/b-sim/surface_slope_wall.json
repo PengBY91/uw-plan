@@ -1,0 +1,122 @@
+[
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b0_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 18234,
+    "occupied_outside_band": 0.01870132719096194,
+    "occupied_in_surface_band": 0.893166611824065,
+    "occupied_interior_beyond_band": 0.08813206098497313,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.5592408260288219
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b1_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 20002,
+    "occupied_outside_band": 0.05494450554944506,
+    "occupied_in_surface_band": 0.8645135486451355,
+    "occupied_interior_beyond_band": 0.08054194580541946,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.5771802109641955
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b2a_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 37521,
+    "occupied_outside_band": 0.30001865621918394,
+    "occupied_in_surface_band": 0.6494496415340743,
+    "occupied_interior_beyond_band": 0.050531702246741826,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.7234066260585351
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b2c_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 41074,
+    "occupied_outside_band": 0.3291133076885621,
+    "occupied_in_surface_band": 0.6101183230267322,
+    "occupied_interior_beyond_band": 0.06076836928470565,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.738560392215124
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b0_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 25557,
+    "occupied_outside_band": 0.49446335641898503,
+    "occupied_in_surface_band": 0.32938138279140744,
+    "occupied_interior_beyond_band": 0.17615526078960755,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.17679393849353736
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b1_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 28268,
+    "occupied_outside_band": 0.5234540823546059,
+    "occupied_in_surface_band": 0.31693080515070043,
+    "occupied_interior_beyond_band": 0.15961511249469365,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.1863764670925568
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b2a_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 48750,
+    "occupied_outside_band": 0.6164307692307692,
+    "occupied_in_surface_band": 0.2862974358974359,
+    "occupied_interior_beyond_band": 0.09727179487179487,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.2952755905511811
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b2c_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 53256,
+    "occupied_outside_band": 0.6221834159531321,
+    "occupied_in_surface_band": 0.27919858795253116,
+    "occupied_interior_beyond_band": 0.09861799609433679,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.31912048729757836
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b0_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 16935,
+    "occupied_outside_band": 0.021612046058458814,
+    "occupied_in_surface_band": 0.8768231473280189,
+    "occupied_interior_beyond_band": 0.1015648066135223,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.4174714009805378
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b1_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 18914,
+    "occupied_outside_band": 0.07005392830707413,
+    "occupied_in_surface_band": 0.8348313418631701,
+    "occupied_interior_beyond_band": 0.09511472982975573,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.44053632446887536
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b2a_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 39297,
+    "occupied_outside_band": 0.3686032012621829,
+    "occupied_in_surface_band": 0.5795607807211747,
+    "occupied_interior_beyond_band": 0.05183601801664249,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.6035507354033576
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b2c_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 42673,
+    "occupied_outside_band": 0.3873643756004968,
+    "occupied_in_surface_band": 0.5524101891125536,
+    "occupied_interior_beyond_band": 0.0602254352869496,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.6226786510176794
+  }
+]

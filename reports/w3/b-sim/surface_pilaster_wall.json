@@ -1,0 +1,122 @@
+[
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b0_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 9855,
+    "occupied_outside_band": 0.0136986301369863,
+    "occupied_in_surface_band": 0.8953830542871639,
+    "occupied_interior_beyond_band": 0.09091831557584983,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.4025676071463438
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b1_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 10054,
+    "occupied_outside_band": 0.014521583449373383,
+    "occupied_in_surface_band": 0.8953650288442411,
+    "occupied_interior_beyond_band": 0.09011338770638552,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.41032900517426535
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b2a_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 12665,
+    "occupied_outside_band": 0.025661271219897353,
+    "occupied_in_surface_band": 0.8972759573628108,
+    "occupied_interior_beyond_band": 0.07706277141729174,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.5197207849262911
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b2c_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 15656,
+    "occupied_outside_band": 0.036280020439448134,
+    "occupied_in_surface_band": 0.8290112416964742,
+    "occupied_interior_beyond_band": 0.13470873786407767,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.5957239090110319
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b0_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 14482,
+    "occupied_outside_band": 0.7898080375638724,
+    "occupied_in_surface_band": 0.12387791741472172,
+    "occupied_interior_beyond_band": 0.08631404502140588,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.06272576393634677
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b1_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 14712,
+    "occupied_outside_band": 0.7848694942903752,
+    "occupied_in_surface_band": 0.12982599238716694,
+    "occupied_interior_beyond_band": 0.08530451332245786,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.06790002928829444
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b2a_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 16946,
+    "occupied_outside_band": 0.767083677564027,
+    "occupied_in_surface_band": 0.15177623037885046,
+    "occupied_interior_beyond_band": 0.08114009205712262,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.0982134140388558
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b2c_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 17799,
+    "occupied_outside_band": 0.7974043485589078,
+    "occupied_in_surface_band": 0.13068149896061576,
+    "occupied_interior_beyond_band": 0.07191415248047643,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.09011031924240945
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b0_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 13097,
+    "occupied_outside_band": 0.02221882873940597,
+    "occupied_in_surface_band": 0.6433534397190196,
+    "occupied_interior_beyond_band": 0.3344277315415744,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.38660548667382605
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b1_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 13412,
+    "occupied_outside_band": 0.02311362958544587,
+    "occupied_in_surface_band": 0.639800178944229,
+    "occupied_interior_beyond_band": 0.3370861914703251,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.3937811188128478
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b2a_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 15523,
+    "occupied_outside_band": 0.03317657669264962,
+    "occupied_in_surface_band": 0.6177285318559557,
+    "occupied_interior_beyond_band": 0.3490948914513947,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.437762374304403
+  },
+  {
+    "map": "runs/sim_pilaster_wall_v1_s01_b2c_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 16652,
+    "occupied_outside_band": 0.04353831371607014,
+    "occupied_in_surface_band": 0.606353591160221,
+    "occupied_interior_beyond_band": 0.3501080951237089,
+    "visible_surface_voxels": 20486,
+    "visible_surface_recall": 0.4590940154251684
+  }
+]

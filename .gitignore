@@ -38,10 +38,20 @@
 !reports/w1/*.md
 !reports/w2/
 !reports/w2/*.md
+!reports/w2/euroc-mh/
+!reports/w2/euroc-mh/*
+!reports/w2/euroc-mh/*/
+!reports/w2/euroc-mh/*/*
 !reports/w3/
 !reports/w3/*.md
 !reports/w4/
 !reports/w4/*.md
+!reports/w3/a1-sim/
+!reports/w3/a1-sim/*
+!reports/w3/b-sim/
+!reports/w3/b-sim/*
+!reports/w4/a2-sim/
+!reports/w4/a2-sim/*
 !reports/w1/euroc_v101_audit/
 !reports/w1/euroc_v101_audit/*
 
