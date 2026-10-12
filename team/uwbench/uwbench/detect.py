@@ -22,6 +22,9 @@ Pilot scope, stated so nobody reads it as the M3 protocol:
   the measured distance to the line is compared with the distance the estimated position predicts. The difference is a cumulative conflict along the plane normal,
   projected on the estimated body x and y. Frames whose line normal is more than gate_deg from the reference plane
   (seen through the estimated attitude) are skipped, so another structure does not count as conflict.
+  The multi-plane form (sonar_conflict_multi) keeps every surface it has seen: a line is matched to a known plane by
+  normal (sonar_match_deg) and by a small change of that plane's conflict since it was last seen (sonar_jump_m);
+  unmatched lines start a new plane through the current estimated pose that inherits the conflict accumulated so far.
 - every statistic at time t uses only data stamped <= t; reference errors are read only to score.
 Inputs per run: estimator.log with the b64db17 [DIAG] lines, estimate_bag (poseimu + odomimu), the input bag (imu0,
 depth/pressure) recorded in run.json, and eval-traj/axis_errors.csv for labels.
@@ -48,15 +51,15 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           'lambda_min_quantile': 0.10, 'false_alarm_targets': [0.0, 0.01, 0.05],
           'early_warning_s': [0.0, 10.0], 'budget_n_sigma': 3.0,
           'sonar_threshold': 0.25, 'sonar_inlier_m': 0.05, 'sonar_min_inliers': 20, 'sonar_gate_deg': 15.0,
-          'sonar_reference_s': 0.0}
+          'sonar_reference_s': 0.0, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15}
 DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DIR-gap': 'axis', 'DIR-conflict': 'axis',
              'DIR-gap+conflict': 'axis', 'DIR-cumconflict': 'axis', 'DIR-gap+cumconflict': 'axis',
              'DIR-cumconflict-frozen': 'axis', 'DIR-cumconflict-frozen-budget': 'axis', 'ORACLE-cumconflict-truebias': 'axis',
-             'DIR-cumconflict+sonar': 'axis'}
+             'DIR-cumconflict+sonar': 'axis', 'DIR-cumconflict+sonar-multi': 'axis'}
 CUMULATIVE = {'DIR-cumconflict': 'conflict_cum', 'DIR-cumconflict-frozen': 'conflict_cum_frozen',
               'DIR-cumconflict-frozen-budget': 'conflict_cum_frozen_excess', 'ORACLE-cumconflict-truebias': 'conflict_cum_true',
-              'DIR-cumconflict+sonar': 'conflict_cum_sonar'}
-SOURCE_AXES = {'conflict_cum_sonar': (0, 1, 2, 3)}  # every other cumulative form: depth for z, gyro for heading only
+              'DIR-cumconflict+sonar': 'conflict_cum_sonar', 'DIR-cumconflict+sonar-multi': 'conflict_cum_sonar_multi'}
+SOURCE_AXES = {'conflict_cum_sonar': (0, 1, 2, 3), 'conflict_cum_sonar_multi': (0, 1, 2, 3)}  # every other cumulative form: depth for z, gyro for heading only
 
 
 def parse_diag(log_path):
@@ -217,6 +220,49 @@ def sonar_conflict(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0):
     return out
 
 
+def sonar_conflict_multi(t, est, lines, T_imu_sonar, match_deg, jump_m):
+    """Cumulative horizontal conflict over a growing set of local planes, projected on estimated body x and y.
+
+    Each frame's line is associated with a known plane if the normals (through the estimated attitude) are within
+    match_deg and the conflict on that plane moved by less than jump_m since the plane was last seen: drift is slow,
+    a different surface jumps. Otherwise a new plane is fixed through the current estimated pose and inherits the
+    current conflict vector, so changing surfaces does not reset what has accumulated. The conflict vector is
+    carry + c * n of the plane in view; only its component along that normal is measured.
+    """
+    est_t, R, p = est[0], est[1], est[2]
+    R_is, t_is = T_imu_sonar[:3, :3], T_imu_sonar[:3, 3]
+    cos_match = np.cos(np.radians(match_deg))
+    planes = []  # dicts: n, h, carry (3-vector, est world, horizontal), c_last
+    current = np.zeros(3)
+    value_t, values, counts = [], [], []
+    for ts, mx, my, d in lines:
+        if not np.isfinite(d) or ts < est_t[0]:
+            continue
+        j = np.searchsorted(est_t, ts, side='right') - 1  # latest estimate at or before the frame
+        p_s = p[j] + R[j] @ t_is
+        n_w = R[j] @ R_is @ np.array([mx, my, 0.0])
+        best, best_jump = None, jump_m
+        for plane in planes:
+            if n_w @ plane['n'] < cos_match:
+                continue
+            c = d - (plane['h'] - plane['n'] @ p_s)
+            if abs(c - plane['c_last']) < best_jump:
+                best, best_jump, best_c = plane, abs(c - plane['c_last']), c
+        if best is None:
+            planes.append({'n': n_w, 'h': n_w @ p_s + d, 'carry': current.copy(), 'c_last': 0.0})
+            continue
+        best['c_last'] = best_c
+        current = best['carry'] + best_c*best['n']
+        value_t.append(ts)
+        values.append(np.abs(R[j].T @ current)[:2])
+        counts.append(len(planes))
+    out = np.zeros((len(t), 2))
+    if values:
+        k = np.searchsorted(np.asarray(value_t), t, side='right') - 1
+        out[k >= 0] = np.asarray(values)[k[k >= 0]]
+    return out, len(planes)
+
+
 def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, true_bias=None, sonar=None):
     """Detector statistics at estimate stamps t (all causal). Larger means more alarming for every column.
 
@@ -295,6 +341,9 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
         stats['conflict_cum_sonar'] = np.column_stack([sonar_conflict(t, est, sonar[0], sonar[1], cfg['sonar_gate_deg'],
                                                                       cfg['sonar_reference_s']),
                                                        z_cum, yaw_cum])
+        multi, n_planes = sonar_conflict_multi(t, est, sonar[0], sonar[1], cfg['sonar_match_deg'], cfg['sonar_jump_m'])
+        stats['conflict_cum_sonar_multi'] = np.column_stack([multi, z_cum, yaw_cum])
+        stats['sonar_planes'] = n_planes
     return stats
 
 
@@ -457,12 +506,15 @@ def main(argv):
                                                                                 'cum_conflict_z_m', 'cum_conflict_yaw_deg',
                                                                                 'cum_conflict_yaw_frozen_deg', 'budget_yaw_deg',
                                                                                 'cum_conflict_yaw_truebias_deg',
-                                                                                'cum_conflict_sonar_x_m', 'cum_conflict_sonar_y_m']
+                                                                                'cum_conflict_sonar_x_m', 'cum_conflict_sonar_y_m',
+                                                                                'cum_conflict_sonar_multi_x_m',
+                                                                                'cum_conflict_sonar_multi_y_m']
         true_yaw = s['conflict_cum_true'][:, 3] if 'conflict_cum_true' in s else np.full(len(r['t']), np.nan)
         sonar_xy = s['conflict_cum_sonar'][:, :2] if 'conflict_cum_sonar' in s else np.full((len(r['t']), 2), np.nan)
+        multi_xy = s['conflict_cum_sonar_multi'][:, :2] if 'conflict_cum_sonar_multi' in s else np.full((len(r['t']), 2), np.nan)
         cols = np.column_stack([r['t'], r['scored'], s['DET-NIS'], s['DET-FEAT'], s['DET-COV'], s['lambda'], s['tau'],
                                 s['conflict'][:, 2:], s['conflict_cum'][:, 2:], s['conflict_cum_frozen'][:, 3],
-                                s['budget_yaw_deg'], true_yaw, sonar_xy])
+                                s['budget_yaw_deg'], true_yaw, sonar_xy, multi_xy])
         np.savetxt(args.out/f'stats_{r["name"]}.csv', cols, delimiter=',', header=','.join(header), comments='',
                    fmt=['%.6f', '%d'] + ['%.6g']*(cols.shape[1] - 2))
     tol_yaw = DEFAULTS['risk']['tolerance_yaw_deg']
@@ -470,6 +522,7 @@ def main(argv):
                for r in runs}
     record = {'pilot': True, 'config': cfg, 'runs': [str(r) for r in args.runs], 'pooled': summary,
               'frozen_budget_reaches_yaw_tolerance_s': horizon,
+              'sonar_planes': {r['name']: r['stats'].get('sonar_planes') for r in runs},
               'notes': 'tau in the last LORO fold is what stats_*.csv holds; false alarms are normal-sample fractions'}
     (args.out/'summary.json').write_text(json.dumps(record, indent=2) + '\n')
     for e in summary:

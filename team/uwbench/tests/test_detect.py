@@ -6,6 +6,7 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 
 from uwbench.detect import (ATMOSPHERE_PA, G, RHO, drift_budget_deg, fit_line, information_gap, parse_diag, sonar_conflict,
+                            sonar_conflict_multi,
                             sonar_first_returns, statistics, threshold)
 
 
@@ -126,6 +127,58 @@ class DetectTest(unittest.TestCase):
         self.assertLess(averaged[:, 0].max(), 0.1)
         self.assertLess(averaged[:, 0].max(), single.max())
         np.testing.assert_allclose(averaged[est_t < 5, 0], 0.0)  # nothing before the plane is fixed
+
+    @staticmethod
+    def wall_scene(drift, surfaces):
+        """Vehicle facing +x, moving along y at 0.2 m/s; estimate drifts toward the wall by drift(t); sonar sees surfaces(t)."""
+        est_t = np.arange(0, 100, 0.05)
+        R = np.tile(np.eye(3), (len(est_t), 1, 1))
+        p = np.column_stack([drift(est_t), 0.2*est_t, np.zeros_like(est_t)])
+        sonar_t = np.arange(0, 100, 0.1)
+        rows = []
+        for ts in sonar_t:
+            angle_deg, wall_x = surfaces(ts)  # true wall normal heading and the wall's x at the true vehicle position
+            a = np.radians(angle_deg)
+            rows.append([ts, np.cos(a), np.sin(a), wall_x*np.cos(a)])  # true vehicle at x = 0
+        return est_t, (est_t, R, p), np.array(rows)
+
+    def test_multi_plane_conflict_ignores_switching_between_parallel_surfaces(self):
+        # wall at 2.0 m and a buttress face at 1.4 m alternate in view; the estimate has no error
+        est_t, est, lines = self.wall_scene(lambda t: 0*t, lambda ts: (0.0, 2.0 if int(ts) % 3 else 1.4))
+        single = sonar_conflict(est_t, est, lines, np.eye(4), 15.0)[:, 0]
+        multi, n_planes = sonar_conflict_multi(est_t, est, lines, np.eye(4), 3.0, 0.15)
+        self.assertGreater(single.max(), 0.5)  # one reference plane reads the buttress as 0.6 m of conflict
+        self.assertLess(multi[:, 0].max(), 1e-6)
+        self.assertEqual(n_planes, 2)
+
+    def test_multi_plane_conflict_carries_drift_across_a_new_surface(self):
+        # estimate drifts 1 cm/s toward the structure; the sonar sees a new surface 0.6 m nearer from t = 50 s on
+        est_t, est, lines = self.wall_scene(lambda t: 0.01*t, lambda ts: (0.0, 2.0 if ts < 50 else 1.4))
+        multi, n_planes = sonar_conflict_multi(est_t, est, lines, np.eye(4), 3.0, 0.15)
+        self.assertAlmostEqual(multi[-1, 0], 0.01*est_t[-1], delta=0.02)
+        self.assertEqual(n_planes, 2)
+
+    def test_multi_plane_conflict_follows_a_curved_wall(self):
+        # arc wall of radius 100 m, 2 m away at y = 0: over 20 m along y the normal turns 11 deg
+        est_t = np.arange(0, 100, 0.05)
+        est = (est_t, np.tile(np.eye(3), (len(est_t), 1, 1)), np.column_stack([0*est_t, 0.2*est_t, 0*est_t]))
+        centre, radius = np.array([102.0, 0.0]), 100.0
+        rows = []
+        for ts in np.arange(0, 100, 0.1):
+            to_centre = centre - np.array([0.0, 0.2*ts])
+            dist = np.linalg.norm(to_centre)
+            rows.append([ts, *(to_centre/dist), dist - radius])  # tangent line at the closest wall point
+        single = sonar_conflict(est_t, est, np.array(rows), np.eye(4), 15.0)[:, 0]
+        self.assertGreater(single.max(), 0.5)
+        # each local plane leaves the arc by about radius * angle^2 / 2 before it is replaced, and the hand-over carries
+        # that bias on: the false conflict scales with the match angle (a known limit of chaining planes)
+        bias = {}
+        for match_deg in (0.5, 3.0):
+            multi, n_planes = sonar_conflict_multi(est_t, est, np.array(rows), np.eye(4), match_deg, 0.15)
+            bias[match_deg] = multi[:, 0].max()
+            self.assertGreater(n_planes, 2)
+        self.assertLess(bias[0.5], 0.1)
+        self.assertLess(bias[0.5], bias[3.0])
 
     def test_depth_conflict_is_zero_when_estimate_follows_gauge(self):
         conflict_z = statistics(*synthetic())['conflict'][:, 2]
