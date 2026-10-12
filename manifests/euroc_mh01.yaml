@@ -1,0 +1,56 @@
+schema_version: 1
+status: downloaded_converted_audited
+sequence: MH_01_easy
+source_doi: https://doi.org/10.3929/ethz-b-000690084
+raw_files:
+- filename: MH_01_easy.bag
+  source_archive: https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe/content
+  archive_member: machine_hall/MH_01_easy/MH_01_easy.bag
+  archive_member_crc32: a4de9033
+  crc32_verified: true
+  bytes: 2673818914
+  sha256: 57f440ccd68ec8dc8f9461269f5909656b86198bac3adfd677b1fcc7a1428fa9
+  whole_archive_md5_verified: false
+- filename: MH_01_easy.zip
+  source_archive: https://www.research-collection.ethz.ch/server/api/core/bitstreams/7b2419c1-62b5-4714-b7f8-485e5fe3e5fe/content
+  archive_member: machine_hall/MH_01_easy/MH_01_easy.zip
+  archive_member_crc32: a1c54dd7
+  crc32_verified: true
+  bytes: 1571292346
+  sha256: 5f4ecbc563e7bf04950efab76fc3b14e126d4c91a1dd1134c33124fe18a4bfc6
+  whole_archive_md5_verified: false
+ros1_bag: /home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy.bag
+asl_directory: /home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy_asl/mav0
+ros2_directory: /home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy_ros2
+ground_truth_original: /home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv
+ground_truth_corrected: /home/steve/uw-ao-lab-m1/ros_ws/src/open_vins/ov_data/euroc_mav/MH_01_easy.csv
+conversion:
+  rosbags_version: 0.11.6
+  ros2_distribution: jazzy
+  metadata_version: 9
+  storage: mcap
+audit: reports/w2/euroc-mh/mh_01_easy-data-audit/audit.json
+artifacts:
+  MH_01_easy_ros2/MH_01_easy_ros2.mcap:
+    bytes: 2673323833
+    sha256: 6e0106347b199220d261196959e59dbcbdf9e791b732d99704aaab1b3dfef25e
+  MH_01_easy_ros2/metadata.yaml:
+    bytes: 1662
+    sha256: 2694c036e59bc3fef54ea371151da4a93c7c84d0ea5f12560b2b30f78e2fffa6
+  MH_01_easy_asl/mav0/cam0/sensor.yaml:
+    bytes: 683
+    sha256: 191748edddda5d1368188f5b0a3c4bed6c48842c178ef9d83c50cba17d66e819
+  MH_01_easy_asl/mav0/cam1/sensor.yaml:
+    bytes: 684
+    sha256: a469fd673f369881f37dd6b93d251e9444950360d70c6214bf909cf509ac9524
+  MH_01_easy_asl/mav0/imu0/sensor.yaml:
+    bytes: 695
+    sha256: 91e6c408416f549f87e7405830b83849cca10521f3d3fc8bb3de862c2bc882d0
+  MH_01_easy_asl/mav0/leica0/sensor.yaml:
+    bytes: 388
+    sha256: 41de3d21b59e5711e4912f1f9e0d84b6824346f69b14eaab84def80656ac35ff
+  MH_01_easy_asl/mav0/state_groundtruth_estimate0/sensor.yaml:
+    bytes: 489
+    sha256: e02cacbad1b654908f1fad9f8997672a2928ec348840225919259f73f1084a95
+ground_truth_original_sha256: aae2d7c5684724c8afe364d2fd8499a6ed77a9169adf03736531f67d8e7b2117
+ground_truth_corrected_sha256: aae2d7c5684724c8afe364d2fd8499a6ed77a9169adf03736531f67d8e7b2117
