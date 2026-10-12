@@ -117,7 +117,8 @@ def map_main(argv):
     origin, shape, z0 = route_roi(ds, cfg, boxes)
     grid = VoxelGrid(origin, shape, cfg['resolution_m'])
     poses = Poses(ds, args.poses)
-    dep = np.load(args.depth/'depth.npz')
+    with np.load(args.depth/'depth.npz') as f:   # decompress once; npz members re-decompress on every access
+        dep = {k: f[k] for k in ['times', 'depth', 'valid']}
     fx, fy, cx, cy = ds.K
     K = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1.0]])
     s = cfg['stereo_pixel_stride']
