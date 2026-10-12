@@ -5,8 +5,8 @@ from pathlib import Path
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from uwbench.detect import (ATMOSPHERE_PA, G, RHO, drift_budget_deg, fit_line, information_gap, parse_diag, sonar_conflict,
-                            sonar_conflict_multi,
+from uwbench.detect import (ATMOSPHERE_PA, CONFIG, G, RHO, drift_budget_deg, fit_line, information_gap, parse_diag, sonar_conflict,
+                            sonar_conflict_map, sonar_conflict_multi,
                             sonar_first_returns, statistics, threshold)
 
 
@@ -179,6 +179,82 @@ class DetectTest(unittest.TestCase):
             self.assertGreater(n_planes, 2)
         self.assertLess(bias[0.5], 0.1)
         self.assertLess(bias[0.5], bias[3.0])
+
+    @staticmethod
+    def scan_scene(segments, est_offset, est_yaw_drift, duration=100.0):
+        """Vehicle at x = 0 facing +x, moving along +y at 0.2 m/s past 2-D wall segments; 128-beam first returns
+        quantised to 3.8 cm. The estimate is offset by est_offset(t) (2-vector) and rotated by est_yaw_drift(t) rad."""
+        est_t = np.arange(0, duration, 0.05)
+        true_p = np.column_stack([0*est_t, 0.2*est_t])
+        yaw = est_yaw_drift(est_t)
+        R = Rotation.from_euler('z', yaw).as_matrix()
+        # the estimate believes the vehicle moved along its own (rotated) heading, plus an extra offset
+        steps = np.diff(true_p, axis=0, prepend=true_p[:1])
+        p_est = np.cumsum(np.einsum('nij,nj->ni', R[:, :2, :2], steps), axis=0) + est_offset(est_t)
+        est = (est_t, R, np.column_stack([p_est, 0*est_t]))
+        az = np.radians(np.linspace(-60, 60, 128))
+        d = np.column_stack([np.cos(az), np.sin(az)])
+        a0 = np.array([seg[0] for seg in segments], float)
+        a1 = np.array([seg[1] for seg in segments], float)
+        scans = []
+        for ts in np.arange(0, duration, 0.1):
+            o = np.array([0.0, 0.2*ts])
+            # solve o + r d = a0 + u (a1 - a0) for every beam and segment at once
+            e = a1 - a0
+            den = d[:, None, 0]*(-e[None, :, 1]) - d[:, None, 1]*(-e[None, :, 0])
+            w = a0[None, :, :] - o
+            with np.errstate(divide='ignore', invalid='ignore'):
+                r = (w[..., 0]*(-e[None, :, 1]) - w[..., 1]*(-e[None, :, 0]))/den
+                u = (d[:, None, 0]*w[..., 1] - d[:, None, 1]*w[..., 0])/den
+            r = np.where((np.abs(den) > 1e-12) & (r > 0.3) & (r < 10) & (u >= 0) & (u <= 1), r, np.inf).min(axis=1)
+            hit = np.isfinite(r)
+            r = (np.floor(r[hit]/0.038) + 0.5)*0.038
+            scans.append((ts, r[:, None]*d[hit]))
+        return est_t, est, scans
+
+    GROW = {**CONFIG, 'map_grow': True, 'map_rotation': True}
+
+    def test_fixed_map_conflict_is_flat_along_a_wall_without_error(self):
+        est_t, est, scans = self.scan_scene([((2, -10), (2, 40))], lambda t: np.zeros((len(t), 2)), lambda t: 0*t)
+        out, n_map = sonar_conflict_map(est_t, est, scans, np.eye(4), CONFIG)
+        # 20 m along the wall, points past the map follow the tangent of its edge; the edge normal from one quantised
+        # scan is off by about 0.1 deg, which over 20 m is 4 cm
+        self.assertLess(out[:, 0].max(), 0.06)
+        self.assertLess(out[:, 1].max(), 0.03)  # and the registration does not slide along the wall
+        self.assertLess(n_map, 200)  # one scan, not grown
+
+    def test_fixed_map_conflict_keeps_estimated_drift_toward_the_wall(self):
+        est_t, est, scans = self.scan_scene([((2, -10), (2, 40))], lambda t: np.column_stack([0.01*t, 0*t]),
+                                            lambda t: 0*t)
+        out, _ = sonar_conflict_map(est_t, est, scans, np.eye(4), CONFIG)
+        self.assertAlmostEqual(out[-1, 0], 0.01*est_t[-1], delta=0.05)
+
+    def test_growing_map_measures_heading_drift(self):
+        # estimate heading drifts 0.05 deg/s; it walks into the wall in its own frame, which only a fixed frame shows
+        drift = lambda t: np.radians(0.05)*t
+        est_t, est, scans = self.scan_scene([((2, -10), (2, 40))], lambda t: np.zeros((len(t), 2)), drift)
+        out, _ = sonar_conflict_map(est_t, est, scans, np.eye(4), self.GROW)
+        expected = np.abs(np.sin(drift(est_t))*0.2*est_t/2)  # lateral offset of a path turning at a constant rate
+        self.assertAlmostEqual(out[-1, 2], np.degrees(drift(est_t[-1])), delta=0.5)
+        self.assertLess(np.abs(out[-1, 0] - expected[-1]), 0.15)
+
+    def test_growing_map_bends_along_a_featureless_wall(self):
+        # known limit: rotation from the overlap at the scan's trailing edge is weak, so the grown map bends slowly
+        est_t, est, scans = self.scan_scene([((2, -10), (2, 40))], lambda t: np.zeros((len(t), 2)), lambda t: 0*t)
+        out, _ = sonar_conflict_map(est_t, est, scans, np.eye(4), self.GROW)
+        self.assertLess(out[:, 1].max(), 0.05)  # the degenerate direction is frozen: no slide along the wall
+        self.assertGreater(out[:, 0].max(), 0.03)  # but 20 m of growth bends the wall toward the vehicle
+        self.assertLess(out[:, 0].max(), 0.2)
+
+    def test_growing_map_sees_along_wall_error_at_pilasters(self):
+        # pilasters every 2 m, closer than the 7 m the fan covers at 2 m, so a mapped one is always still in view
+        ys = np.arange(-8, 40, 2.0)
+        wall = [((2, -10), (2, 40))] + [((1.7, y), (2, y)) for y in ys] + [((1.7, y), (1.7, y + 0.4)) for y in ys] + \
+               [((1.7, y + 0.4), (2, y + 0.4)) for y in ys]
+        est_t, est, scans = self.scan_scene(wall, lambda t: np.column_stack([0*t, 0.01*t]), lambda t: 0*t)
+        out, _ = sonar_conflict_map(est_t, est, scans, np.eye(4), self.GROW)
+        self.assertAlmostEqual(out[-1, 1], 0.01*est_t[-1], delta=0.15)
+        self.assertLess(out[:, 0].max(), 0.15)
 
     def test_depth_conflict_is_zero_when_estimate_follows_gauge(self):
         conflict_z = statistics(*synthetic())['conflict'][:, 2]

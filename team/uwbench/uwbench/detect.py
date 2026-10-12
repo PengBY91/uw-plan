@@ -25,6 +25,13 @@ Pilot scope, stated so nobody reads it as the M3 protocol:
   The multi-plane form (sonar_conflict_multi) keeps every surface it has seen: a line is matched to a known plane by
   normal (sonar_match_deg) and by a small change of that plane's conflict since it was last seen (sonar_jump_m);
   unmatched lines start a new plane through the current estimated pose that inherits the conflict accumulated so far.
+  The scan-to-map form (sonar_conflict_map) keeps the first-return points themselves: the first scan after t_0 is
+  the map, every later scan is registered to it by 2-D point-to-plane ICP over a horizontal translation and a
+  rotation (points weighted by 1/map_sigma_m^2, plus a random-walk prior on the change of the correction between
+  scans, so directions the geometry does not constrain stay put and single-scan noise does not bend the map),
+  and the scan's new points are added where the registration puts them, not where the estimate does. The map
+  therefore stays in the t_0 frame as it grows; the conflict is the registered minus the estimated sonar position,
+  and the registered rotation is a sonar heading conflict.
 - every statistic at time t uses only data stamped <= t; reference errors are read only to score.
 Inputs per run: estimator.log with the b64db17 [DIAG] lines, estimate_bag (poseimu + odomimu), the input bag (imu0,
 depth/pressure) recorded in run.json, and eval-traj/axis_errors.csv for labels.
@@ -39,6 +46,7 @@ import numpy as np
 import yaml
 from rosbags.highlevel import AnyReader
 from scipy.optimize import brentq
+from scipy.spatial import cKDTree
 from scipy.spatial.transform import Rotation
 
 from uwbench.metrics.axes import AXES, body_axis_sigma
@@ -51,15 +59,22 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           'lambda_min_quantile': 0.10, 'false_alarm_targets': [0.0, 0.01, 0.05],
           'early_warning_s': [0.0, 10.0], 'budget_n_sigma': 3.0,
           'sonar_threshold': 0.25, 'sonar_inlier_m': 0.05, 'sonar_min_inliers': 20, 'sonar_gate_deg': 15.0,
-          'sonar_reference_s': 0.0, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15}
+          'sonar_reference_s': 0.0, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15,
+          'map_voxel_m': 0.05, 'map_assoc_m': 0.3, 'map_huber_m': 0.05, 'map_min_pairs': 20,
+          'map_sigma_m': 0.03, 'map_prior_m': 0.02, 'map_prior_deg': 0.02, 'map_iterations': 6,
+          'map_normal_k': 12, 'map_degenerate_ratio': 0.02, 'map_lever_m': 2.0,
+          'map_grow': False, 'map_rotation': False, 'map_init_s': 0.0}
 DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DIR-gap': 'axis', 'DIR-conflict': 'axis',
              'DIR-gap+conflict': 'axis', 'DIR-cumconflict': 'axis', 'DIR-gap+cumconflict': 'axis',
              'DIR-cumconflict-frozen': 'axis', 'DIR-cumconflict-frozen-budget': 'axis', 'ORACLE-cumconflict-truebias': 'axis',
-             'DIR-cumconflict+sonar': 'axis', 'DIR-cumconflict+sonar-multi': 'axis'}
+             'DIR-cumconflict+sonar': 'axis', 'DIR-cumconflict+sonar-multi': 'axis', 'DIR-cumconflict+sonar-map': 'axis',
+             'DIR-sonar-map+yaw': 'axis'}
 CUMULATIVE = {'DIR-cumconflict': 'conflict_cum', 'DIR-cumconflict-frozen': 'conflict_cum_frozen',
               'DIR-cumconflict-frozen-budget': 'conflict_cum_frozen_excess', 'ORACLE-cumconflict-truebias': 'conflict_cum_true',
-              'DIR-cumconflict+sonar': 'conflict_cum_sonar', 'DIR-cumconflict+sonar-multi': 'conflict_cum_sonar_multi'}
-SOURCE_AXES = {'conflict_cum_sonar': (0, 1, 2, 3), 'conflict_cum_sonar_multi': (0, 1, 2, 3)}  # every other cumulative form: depth for z, gyro for heading only
+              'DIR-cumconflict+sonar': 'conflict_cum_sonar', 'DIR-cumconflict+sonar-multi': 'conflict_cum_sonar_multi',
+              'DIR-cumconflict+sonar-map': 'conflict_cum_sonar_map', 'DIR-sonar-map+yaw': 'conflict_cum_sonar_map_yaw'}
+SOURCE_AXES = {'conflict_cum_sonar': (0, 1, 2, 3), 'conflict_cum_sonar_multi': (0, 1, 2, 3),
+               'conflict_cum_sonar_map': (0, 1, 2, 3), 'conflict_cum_sonar_map_yaw': (0, 1, 2, 3)}  # every other cumulative form: depth for z, gyro for heading only
 
 
 def parse_diag(log_path):
@@ -263,6 +278,108 @@ def sonar_conflict_multi(t, est, lines, T_imu_sonar, match_deg, jump_m):
     return out, len(planes)
 
 
+def scan_normals(points, k=12):
+    """Unit normals of 2-D scan points from PCA of their k nearest neighbours in the same scan."""
+    _, nb = cKDTree(points).query(points, k=min(k, len(points)))
+    X = points[nb] - points[nb].mean(axis=1, keepdims=True)
+    return np.linalg.eigh(np.einsum('nki,nkj->nij', X, X))[1][:, :, 0]
+
+
+def rot2(angle):
+    c, s_ = np.cos(angle), np.sin(angle)
+    return np.array([[c, -s_], [s_, c]])
+
+
+def sonar_conflict_map(t, est, scans, T_imu_sonar, cfg=CONFIG):
+    """Scan-to-map sonar conflict at stamps t: columns body-x and body-y position conflict (m), heading conflict (deg).
+
+    scans: list of (stamp, [n, 2] sonar-frame points). The correction (phi, tau) maps estimated-world horizontal points
+    into the map frame: q_map = rot(phi) q + tau.
+    """
+    est_t, R, p = est[0], est[1], est[2]
+    R_is, t_is = T_imu_sonar[:3, :3], T_imu_sonar[:3, 3]
+    phi, tau = 0.0, np.zeros(2)
+    map_pts, map_nrm, voxels, tree = None, None, set(), None
+    # per-scan random-walk prior on the correction: how far it may move between scans (drift, not measurement noise)
+    w_t, w_phi = 1/cfg['map_prior_m']**2, 1/np.radians(cfg['map_prior_deg'])**2
+    w_point = 1/cfg['map_sigma_m']**2
+    huber = cfg['map_huber_m']
+    value_t, values = [], []
+
+    def add(points, normals):
+        nonlocal map_pts, map_nrm, tree
+        keys = np.floor(points/cfg['map_voxel_m']).astype(np.int64)
+        keep = []
+        for i, key in enumerate(map(tuple, keys)):
+            if key not in voxels:
+                voxels.add(key)
+                keep.append(i)
+        if keep:
+            map_pts = points[keep] if map_pts is None else np.vstack([map_pts, points[keep]])
+            map_nrm = normals[keep] if map_nrm is None else np.vstack([map_nrm, normals[keep]])
+            tree = cKDTree(map_pts)
+
+    for ts, pts in scans:
+        if ts < est_t[0] or len(pts) < cfg['map_min_pairs']:
+            continue
+        j = np.searchsorted(est_t, ts, side='right') - 1
+        c3 = p[j] + R[j] @ t_is
+        q = (R[j] @ R_is @ np.column_stack([pts, np.zeros(len(pts))]).T).T[:, :2] + c3[:2]  # estimated world, horizontal
+        nrm = scan_normals(pts, cfg['map_normal_k']) @ (R[j] @ R_is)[:2, :2].T
+        if map_pts is None or (not cfg['map_grow'] and ts - map_t0 <= cfg['map_init_s']):
+            # the first scans (map_init_s after the first) define the map, in the estimated world at t_0
+            if map_pts is None:
+                map_t0 = ts
+            add(q, nrm)
+            continue
+        c = c3[:2]
+        registered = True
+        for _ in range(cfg['map_iterations']):
+            y = q @ rot2(phi).T + tau
+            cy = rot2(phi) @ c + tau
+            dist, idx = tree.query(y)
+            if cfg['map_grow']:
+                ok = dist < cfg['map_assoc_m']
+            else:  # fixed map: a point beyond its edge is compared with the tangent of the nearest map point
+                ok = np.abs(np.einsum('ij,ij->i', map_nrm[idx], y - map_pts[idx])) < cfg['map_assoc_m']
+            if ok.sum() < cfg['map_min_pairs']:
+                registered = False  # no overlap with the map: keep the correction, add nothing
+                break
+            n, m, yy = map_nrm[idx[ok]], map_pts[idx[ok]], y[ok]
+            r = np.einsum('ij,ij->i', n, yy - m)
+            lever = yy - cy
+            J = np.column_stack([n, n[:, 0]*(-lever[:, 1]) + n[:, 1]*lever[:, 0]])
+            w = w_point*np.where(np.abs(r) <= huber, 1.0, huber/np.abs(r))
+            if not cfg['map_rotation']:
+                J = J[:, :2]
+            H_data = J.T @ (w[:, None]*J)
+            prior = np.diag([w_t, w_t, w_phi][:J.shape[1]])
+            delta = -np.linalg.solve(H_data + prior, J.T @ (w*r))
+            if not cfg['map_rotation']:
+                H_data, delta = np.pad(H_data, (0, 1)), np.append(delta, 0.0)
+                H_data[2, 2] = 0.0
+            # do not move along directions the scan barely constrains (a flat wall along itself): with quantised ranges
+            # and noisy normals they carry spurious information that slides the registration
+            S = np.diag([1.0, 1.0, 1/cfg['map_lever_m']])  # rotation expressed as metres at the lever arm
+            lam, V = np.linalg.eigh(S @ H_data @ S)
+            weak = V[:, lam < cfg['map_degenerate_ratio']*lam.max()]
+            scaled = np.linalg.solve(S, delta)
+            delta = S @ (scaled - weak @ (weak.T @ scaled))
+            phi += delta[2]
+            tau = rot2(delta[2]) @ (tau - cy) + cy + delta[:2]
+        if registered:
+            if cfg['map_grow']:
+                add(q @ rot2(phi).T + tau, nrm @ rot2(phi).T)
+            e = (rot2(phi) @ c + tau) - c
+            value_t.append(ts)
+            values.append([*np.abs(R[j].T @ np.array([e[0], e[1], 0.0]))[:2], abs(np.degrees(phi))])
+    out = np.zeros((len(t), 3))
+    if values:
+        k = np.searchsorted(np.asarray(value_t), t, side='right') - 1
+        out[k >= 0] = np.asarray(values)[k[k >= 0]]
+    return out, (0 if map_pts is None else len(map_pts))
+
+
 def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, true_bias=None, sonar=None):
     """Detector statistics at estimate stamps t (all causal). Larger means more alarming for every column.
 
@@ -344,6 +461,11 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
         multi, n_planes = sonar_conflict_multi(t, est, sonar[0], sonar[1], cfg['sonar_match_deg'], cfg['sonar_jump_m'])
         stats['conflict_cum_sonar_multi'] = np.column_stack([multi, z_cum, yaw_cum])
         stats['sonar_planes'] = n_planes
+        if len(sonar) > 2:
+            m, n_map = sonar_conflict_map(t, est, sonar[2], sonar[1], cfg)
+            stats['conflict_cum_sonar_map'] = np.column_stack([m[:, :2], z_cum, yaw_cum])
+            stats['conflict_cum_sonar_map_yaw'] = np.column_stack([m[:, :2], z_cum, m[:, 2]])
+            stats['sonar_map_points'] = n_map
     return stats
 
 
@@ -360,7 +482,7 @@ def information_gap(t, lam, lam_min):
 
 
 def load_sim_sonar(dataset, cfg=CONFIG):
-    """Sonar lines and extrinsic of a simulated dataset: the raycast replay (props) if present, else the raw images."""
+    """Sonar lines, extrinsic and first-return scans of a simulated dataset (raycast replay if present, else raw)."""
     raw = dataset/'raw'
     if not (raw/'meta.json').exists():
         return None
@@ -368,8 +490,10 @@ def load_sim_sonar(dataset, cfg=CONFIG):
     source = dataset/'sonar_raycast' if (dataset/'sonar_raycast'/'sonar_t.npy').exists() else raw
     stamps = np.load(source/'sonar_t.npy') + SIM_EPOCH_S
     images = np.concatenate([np.load(f) for f in sorted(source.glob('sonar_[0-9]*.npy'))])
-    lines = sonar_lines(stamps, images, meta['route']['sensors']['sonar'], cfg)
-    return lines, np.asarray(meta['socket_extrinsics_in_imu_frame']['sonar'])
+    geometry = meta['route']['sensors']['sonar']
+    lines = sonar_lines(stamps, images, geometry, cfg)
+    scans = [(ts, sonar_first_returns(image, geometry, cfg['sonar_threshold'])) for ts, image in zip(stamps, images)]
+    return lines, np.asarray(meta['socket_extrinsics_in_imu_frame']['sonar']), scans
 
 
 def load_run(run_dir, cfg=CONFIG):
@@ -394,8 +518,8 @@ def load_run(run_dir, cfg=CONFIG):
     data['stats'] = statistics(data['t'], est, parse_diag(run_dir/'estimator.log'),
                                read_series(bag, '/imu0', 'gyro'),
                                read_series(run_dir/'estimate_bag', '/ov_msckf/odomimu', 'twist_angular'),
-                               read_series(bag, '/depth/pressure', 'pressure'), gyro_noise=gyro_noise, true_bias=true_bias,
-                               sonar=load_sim_sonar(bag.parent, cfg))
+                               read_series(bag, '/depth/pressure', 'pressure'), cfg=cfg, gyro_noise=gyro_noise,
+                               true_bias=true_bias, sonar=load_sim_sonar(bag.parent, cfg))
     data['gyro_noise'] = gyro_noise
     return data
 
@@ -508,13 +632,18 @@ def main(argv):
                                                                                 'cum_conflict_yaw_truebias_deg',
                                                                                 'cum_conflict_sonar_x_m', 'cum_conflict_sonar_y_m',
                                                                                 'cum_conflict_sonar_multi_x_m',
-                                                                                'cum_conflict_sonar_multi_y_m']
+                                                                                'cum_conflict_sonar_multi_y_m',
+                                                                                'cum_conflict_sonar_map_x_m',
+                                                                                'cum_conflict_sonar_map_y_m',
+                                                                                'sonar_map_yaw_deg']
         true_yaw = s['conflict_cum_true'][:, 3] if 'conflict_cum_true' in s else np.full(len(r['t']), np.nan)
         sonar_xy = s['conflict_cum_sonar'][:, :2] if 'conflict_cum_sonar' in s else np.full((len(r['t']), 2), np.nan)
         multi_xy = s['conflict_cum_sonar_multi'][:, :2] if 'conflict_cum_sonar_multi' in s else np.full((len(r['t']), 2), np.nan)
+        map_xyh = (np.column_stack([s['conflict_cum_sonar_map'][:, :2], s['conflict_cum_sonar_map_yaw'][:, 3]])
+                   if 'conflict_cum_sonar_map' in s else np.full((len(r['t']), 3), np.nan))
         cols = np.column_stack([r['t'], r['scored'], s['DET-NIS'], s['DET-FEAT'], s['DET-COV'], s['lambda'], s['tau'],
                                 s['conflict'][:, 2:], s['conflict_cum'][:, 2:], s['conflict_cum_frozen'][:, 3],
-                                s['budget_yaw_deg'], true_yaw, sonar_xy, multi_xy])
+                                s['budget_yaw_deg'], true_yaw, sonar_xy, multi_xy, map_xyh])
         np.savetxt(args.out/f'stats_{r["name"]}.csv', cols, delimiter=',', header=','.join(header), comments='',
                    fmt=['%.6f', '%d'] + ['%.6g']*(cols.shape[1] - 2))
     tol_yaw = DEFAULTS['risk']['tolerance_yaw_deg']
@@ -523,6 +652,7 @@ def main(argv):
     record = {'pilot': True, 'config': cfg, 'runs': [str(r) for r in args.runs], 'pooled': summary,
               'frozen_budget_reaches_yaw_tolerance_s': horizon,
               'sonar_planes': {r['name']: r['stats'].get('sonar_planes') for r in runs},
+              'sonar_map_points': {r['name']: r['stats'].get('sonar_map_points') for r in runs},
               'notes': 'tau in the last LORO fold is what stats_*.csv holds; false alarms are normal-sample fractions'}
     (args.out/'summary.json').write_text(json.dumps(record, indent=2) + '\n')
     for e in summary:
