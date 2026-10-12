@@ -1,0 +1,607 @@
+{
+  "name": "pilaster_deep_fog6_v1",
+  "purpose": "W2-11 along-wall (body y) source check for detect-a: the stripe_wall_h_v1 horizontal-stripe brick wall and route (y and heading degenerate for vision), plus full-height brick pilasters every 2 m protruding 0.3 m (0.3 m wide). Spacing below the sonar sector width at 2 m (~7 m) so a mapped pilaster is still in view when the next one enters; 0.3 m protrusion as pilaster_deep_v1 (where vision recovered y at fog 2); fog density 6 (depth 0.5) to fade the wall texture for vision while the sonar still sees the relief. Probe at 2.25 m stand-off: mean horizontal gradient of the left image 2.79 / 1.45 / 0.89 / 0.54 at fog 2 / 4 / 6 / 8; pilasters stay visible as darker bands at all four. Sonar is the raycast model.",
+  "world": "OpenWater",
+  "package": "Ocean",
+  "ticks_per_sec": 200,
+  "assumptions": {
+    "imu_noise": "ASSUMPTION consumer-MEMS class per-sample sigmas at 200 Hz; replace with platform Allan-variance values after the IMU arrives",
+    "depth_sigma_m": "ASSUMPTION 2 cm per sample",
+    "sonar_elevation_deg": "ASSUMPTION 20 deg until the platform vertical aperture is measured (do not cite as the platform value)",
+    "scene_geometry": "wall from identical [10, 0.5, 1] boxes, face at y = -0.25; pilasters [0.3, 0.6, 10] boxes, front face at y = -0.55, same brick material"
+  },
+  "sensors": {
+    "imu_hz": 200,
+    "imu_noise": {
+      "AccelSigma": 0.02,
+      "AngVelSigma": 0.002,
+      "AccelBiasSigma": 0.0003,
+      "AngVelBiasSigma": 2e-05
+    },
+    "depth_hz": 50,
+    "depth_sigma_m": 0.02,
+    "camera_hz": 20,
+    "width": 640,
+    "height": 480,
+    "fov_deg": 90.0,
+    "sonar_hz": 10,
+    "sonar": {
+      "RangeBins": 256,
+      "AzimuthBins": 128,
+      "RangeMin": 0.3,
+      "RangeMax": 10,
+      "Elevation": 20,
+      "Azimuth": 120,
+      "MultSigma": 0.1,
+      "AddSigma": 0.05,
+      "MultiPath": false,
+      "ViewRegion": false
+    },
+    "sonar_model": "raycast"
+  },
+  "waypoints": [
+    {
+      "t": 0,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 6,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 8,
+      "pose": [
+        -12.7,
+        -2.5,
+        -19.7,
+        0,
+        0,
+        100
+      ]
+    },
+    {
+      "t": 10,
+      "pose": [
+        -13.3,
+        -2.5,
+        -20.3,
+        0,
+        0,
+        80
+      ]
+    },
+    {
+      "t": 12,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 77,
+      "pose": [
+        13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 82,
+      "pose": [
+        13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 147,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 150,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    }
+  ],
+  "estimator_overrides": {
+    "values": {
+      "init_dyn_use": true,
+      "init_imu_thresh": 0.1
+    },
+    "reason": "AUV excitation is far below the drone-level EuRoC jerk threshold (tank r02)"
+  },
+  "props": [
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -24.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -24.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -23.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -23.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -22.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -22.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -21.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -21.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -20.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -20.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -19.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -19.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -18.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -18.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -17.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -17.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -16.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -16.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -15.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0,
+        -15.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -14.5,
+        0,
+        -20.0
+      ],
+      "scale": [
+        3,
+        0.5,
+        3
+      ],
+      "material": "cobblestone"
+    },
+    {
+      "type": "box",
+      "location": [
+        14.5,
+        0,
+        -20.0
+      ],
+      "scale": [
+        3,
+        0.5,
+        3
+      ],
+      "material": "cobblestone"
+    },
+    {
+      "type": "box",
+      "location": [
+        -9.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -7.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -3.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -1.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        1.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        3.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        7.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        9.0,
+        -0.25,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.6,
+        10.0
+      ],
+      "material": "brick"
+    }
+  ],
+  "fog": [
+    {
+      "t": 0,
+      "density": 6.0,
+      "depth": 0.5
+    }
+  ]
+}
