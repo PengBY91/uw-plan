@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation
 
 from uwbench.detect import (ATMOSPHERE_PA, CONFIG, G, RHO, drift_budget_deg, fit_line, information_gap, parse_diag, sonar_conflict,
                             sonar_conflict_map, sonar_conflict_multi,
-                            sonar_echo_thickness, sonar_first_returns, sonar_lines, statistics, threshold)
+                            sonar_echo_thickness, sonar_first_returns, sonar_lines, statistics, threshold, pooled, AXES)
 
 
 def synthetic(seed=0, yaw_drift=0.0):
@@ -147,9 +147,40 @@ class DetectTest(unittest.TestCase):
         lines = np.column_stack([sonar_t, np.cos(angle), np.sin(angle), np.full(len(sonar_t), 2.0)])
         single = sonar_conflict(est_t, (est_t, R, p), lines, np.eye(4), 15.0, 0.0)[:, 0]
         averaged = sonar_conflict(est_t, (est_t, R, p), lines, np.eye(4), 15.0, 5.0)
-        self.assertLess(averaged[:, 0].max(), 0.1)
-        self.assertLess(averaged[:, 0].max(), single.max())
-        np.testing.assert_allclose(averaged[est_t < 5, 0], 0.0)  # nothing before the plane is fixed
+        self.assertLess(np.nanmax(averaged[:, 0]), 0.1)
+        self.assertLess(np.nanmax(averaged[:, 0]), single.max())
+        self.assertTrue(np.isnan(averaged[est_t < 5, 0]).all())  # not scorable before the plane is fixed
+
+    def test_sonar_conflict_is_not_scorable_while_frames_are_missing(self):
+        est_t = np.arange(0, 20, 0.05)
+        R = np.tile(np.eye(3), (len(est_t), 1, 1))
+        p = np.zeros((len(est_t), 3))
+        p[:, 0] = 0.02*est_t  # estimate drifts 2 cm/s toward the wall
+        sonar_t = np.arange(0, 20, 0.1)
+        lines = np.column_stack([sonar_t, np.ones(len(sonar_t)), np.zeros(len(sonar_t)), np.full(len(sonar_t), 2.5)])
+        lines[(sonar_t >= 5) & (sonar_t < 12), 1:] = np.nan  # gated (inclined face) or no wall: no measurement
+        held = sonar_conflict(est_t, (est_t, R, p), lines, np.eye(4), 15.0)
+        out = sonar_conflict(est_t, (est_t, R, p), lines, np.eye(4), 15.0, hold_s=1.0)
+        gap = (est_t >= 5.95) & (est_t < 12)  # more than 1 s after the last frame at 4.9 s
+        other = (est_t < 5.85) | (est_t >= 12)
+        self.assertTrue(np.isnan(out[gap]).all())
+        self.assertAlmostEqual(held[gap, 0].max(), 0.02*4.9, delta=1e-6)  # the old hold kept a stale value
+        np.testing.assert_allclose(out[other], held[other])  # elsewhere identical
+        self.assertAlmostEqual(out[est_t >= 12, 0][0], 0.02*12, delta=1e-6)  # the cumulative value resumes in full
+        multi, _ = sonar_conflict_multi(est_t, (est_t, R, p), lines, np.eye(4), 3.0, 0.15, hold_s=1.0)
+        self.assertTrue(np.isnan(multi[gap]).all())
+
+    def test_threshold_and_scoring_leave_out_unscorable_samples(self):
+        self.assertEqual(threshold([np.nan, 1.0, 2.0, 3.0], 0.0), 3.0)
+        self.assertEqual(threshold([np.nan, np.nan], 0.01), np.inf)
+        rows = [{'early_warning_s': 0.0, 'target': 0.01, 'detector': 'D', 'run': 'r', 'normal_samples': 10,
+                 'false_alarm_fraction': 0.1, 'normal_unscorable': 2,
+                 **{f'exceed_{a}': 10 for a in AXES}, **{f'unscorable_{a}': 0 for a in AXES}, **{f'missed_{a}': 0 for a in AXES}}]
+        rows[0].update(unscorable_x=4, missed_x=3)
+        x = pooled(rows)[0]
+        self.assertAlmostEqual(x['r_miss_x'], 3/6)
+        self.assertAlmostEqual(x['r_unscorable_x'], 4/10)
+        self.assertAlmostEqual(x['normal_unscorable_fraction'], 0.2)
 
     @staticmethod
     def wall_scene(drift, surfaces):

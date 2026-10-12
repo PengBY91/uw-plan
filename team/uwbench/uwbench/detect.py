@@ -59,7 +59,7 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           'lambda_min_quantile': 0.10, 'false_alarm_targets': [0.0, 0.01, 0.05],
           'early_warning_s': [0.0, 10.0], 'budget_n_sigma': 3.0,
           'sonar_threshold': 0.25, 'sonar_inlier_m': 0.05, 'sonar_min_inliers': 20, 'sonar_gate_deg': 15.0,
-          'sonar_reference_s': 0.0, 'sonar_max_thickness': 0.2, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15,
+          'sonar_reference_s': 0.0, 'sonar_max_thickness': 0.2, 'sonar_hold_s': 1.0, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15,
           'map_voxel_m': 0.05, 'map_assoc_m': 0.3, 'map_huber_m': 0.05, 'map_min_pairs': 20,
           'map_sigma_m': 0.03, 'map_prior_m': 0.02, 'map_prior_deg': 0.02, 'map_iterations': 6,
           'map_normal_k': 12, 'map_degenerate_ratio': 0.02, 'map_lever_m': 2.0,
@@ -223,10 +223,23 @@ def sonar_lines(stamps, images, geometry, cfg=CONFIG):
     return out
 
 
-def sonar_conflict(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0):
+def hold(value_t, values, t, hold_s, width):
+    """Latest value at or before each t, NaN (not scorable) before the first one or when it is older than hold_s."""
+    out = np.full((len(t), width), np.nan)
+    if values:
+        value_t = np.asarray(value_t)
+        k = np.searchsorted(value_t, t, side='right') - 1
+        ok = k >= 0
+        ok[ok] = t[ok] - value_t[k[ok]] <= hold_s
+        out[ok] = np.asarray(values)[k[ok]]
+    return out
+
+
+def sonar_conflict(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0, hold_s=np.inf):
     """Cumulative conflict along a reference plane normal, projected on estimated body x and y, at stamps t.
 
-    The reference plane averages the lines seen in the first reference_s after the first one; zero until it is fixed.
+    The reference plane averages the lines seen in the first reference_s after the first one. NaN (not scorable) until
+    it is fixed and wherever the last measured frame is older than hold_s (gated or skipped frames are not measurements).
     """
     est_t, R, p = est[0], est[1], est[2]
     R_is, t_is = T_imu_sonar[:3, :3], T_imu_sonar[:3, 3]
@@ -246,28 +259,26 @@ def sonar_conflict(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0):
                 n_ref = np.mean([w[1] for w in window], axis=0)
                 n_ref /= np.linalg.norm(n_ref)
                 ref = (n_ref, np.mean([n_ref @ w[2] + w[3] for w in window]))
-            continue
+            if ref is None:
+                continue  # the frame that fixes the reference is measured against it below
         n_ref, h = ref
         if np.degrees(np.arccos(np.clip(n_w @ n_ref, -1, 1))) > gate_deg:
             continue
         c = abs(d - (h - n_ref @ p_s))
         value_t.append(ts)
         values.append(c*np.abs(R[j].T @ n_ref)[:2])
-    out = np.zeros((len(t), 2))
-    if values:
-        k = np.searchsorted(np.asarray(value_t), t, side='right') - 1
-        out[k >= 0] = np.asarray(values)[k[k >= 0]]
-    return out
+    return hold(value_t, values, t, hold_s, 2)
 
 
-def sonar_conflict_multi(t, est, lines, T_imu_sonar, match_deg, jump_m):
+def sonar_conflict_multi(t, est, lines, T_imu_sonar, match_deg, jump_m, hold_s=np.inf):
     """Cumulative horizontal conflict over a growing set of local planes, projected on estimated body x and y.
 
     Each frame's line is associated with a known plane if the normals (through the estimated attitude) are within
     match_deg and the conflict on that plane moved by less than jump_m since the plane was last seen: drift is slow,
     a different surface jumps. Otherwise a new plane is fixed through the current estimated pose and inherits the
     current conflict vector, so changing surfaces does not reset what has accumulated. The conflict vector is
-    carry + c * n of the plane in view; only its component along that normal is measured.
+    carry + c * n of the plane in view; only its component along that normal is measured. NaN where the last
+    associated frame is older than hold_s.
     """
     est_t, R, p = est[0], est[1], est[2]
     R_is, t_is = T_imu_sonar[:3, :3], T_imu_sonar[:3, 3]
@@ -290,17 +301,16 @@ def sonar_conflict_multi(t, est, lines, T_imu_sonar, match_deg, jump_m):
                 best, best_jump, best_c = plane, abs(c - plane['c_last']), c
         if best is None:
             planes.append({'n': n_w, 'h': n_w @ p_s + d, 'carry': current.copy(), 'c_last': 0.0})
+            value_t.append(ts)  # measured: zero on the new plane, so the conflict is the carried vector
+            values.append(np.abs(R[j].T @ current)[:2])
+            counts.append(len(planes))
             continue
         best['c_last'] = best_c
         current = best['carry'] + best_c*best['n']
         value_t.append(ts)
         values.append(np.abs(R[j].T @ current)[:2])
         counts.append(len(planes))
-    out = np.zeros((len(t), 2))
-    if values:
-        k = np.searchsorted(np.asarray(value_t), t, side='right') - 1
-        out[k >= 0] = np.asarray(values)[k[k >= 0]]
-    return out, len(planes)
+    return hold(value_t, values, t, hold_s, 2), len(planes)
 
 
 def scan_normals(points, k=12):
@@ -318,7 +328,7 @@ def rot2(angle):
 def sonar_conflict_map(t, est, scans, T_imu_sonar, cfg=CONFIG):
     """Scan-to-map sonar conflict at stamps t: columns body-x and body-y position conflict (m), heading conflict (deg).
 
-    scans: list of (stamp, [n, 2] sonar-frame points). The correction (phi, tau) maps estimated-world horizontal points
+    scans: list of (stamp, [n, 2] sonar-frame points); NaN where the last registered scan is older than sonar_hold_s. The correction (phi, tau) maps estimated-world horizontal points
     into the map frame: q_map = rot(phi) q + tau.
     """
     est_t, R, p = est[0], est[1], est[2]
@@ -356,6 +366,8 @@ def sonar_conflict_map(t, est, scans, T_imu_sonar, cfg=CONFIG):
             if map_pts is None:
                 map_t0 = ts
             add(q, nrm)
+            value_t.append(ts)  # the scans that define the map match it with zero correction
+            values.append([0.0, 0.0, 0.0])
             continue
         c = c3[:2]
         registered = True
@@ -398,11 +410,7 @@ def sonar_conflict_map(t, est, scans, T_imu_sonar, cfg=CONFIG):
             e = (rot2(phi) @ c + tau) - c
             value_t.append(ts)
             values.append([*np.abs(R[j].T @ np.array([e[0], e[1], 0.0]))[:2], abs(np.degrees(phi))])
-    out = np.zeros((len(t), 3))
-    if values:
-        k = np.searchsorted(np.asarray(value_t), t, side='right') - 1
-        out[k >= 0] = np.asarray(values)[k[k >= 0]]
-    return out, (0 if map_pts is None else len(map_pts))
+    return hold(value_t, values, t, cfg.get('sonar_hold_s', np.inf), 3), (0 if map_pts is None else len(map_pts))
 
 
 def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, true_bias=None, sonar=None):
@@ -481,9 +489,10 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
                                                       cumulative_yaw(gyro_heading(imu, true_bias[:, 0], true_bias[:, 1:]))])
     if sonar is not None:
         stats['conflict_cum_sonar'] = np.column_stack([sonar_conflict(t, est, sonar[0], sonar[1], cfg['sonar_gate_deg'],
-                                                                      cfg['sonar_reference_s']),
+                                                                      cfg['sonar_reference_s'], cfg['sonar_hold_s']),
                                                        z_cum, yaw_cum])
-        multi, n_planes = sonar_conflict_multi(t, est, sonar[0], sonar[1], cfg['sonar_match_deg'], cfg['sonar_jump_m'])
+        multi, n_planes = sonar_conflict_multi(t, est, sonar[0], sonar[1], cfg['sonar_match_deg'], cfg['sonar_jump_m'],
+                                                cfg['sonar_hold_s'])
         stats['conflict_cum_sonar_multi'] = np.column_stack([multi, z_cum, yaw_cum])
         stats['sonar_planes'] = n_planes
         if len(sonar) > 2:
@@ -557,8 +566,14 @@ def exceed_labels(errors):
 
 
 def threshold(values, target):
-    """Smallest threshold whose alarm fraction (values > thr) on these normal samples is <= target."""
+    """Smallest threshold whose alarm fraction (values > thr) on these normal samples is <= target.
+
+    NaN samples (not scorable) are left out; with none left the threshold is infinite (never alarms).
+    """
     values = np.asarray(values, dtype=float)
+    values = values[np.isfinite(values)]
+    if not len(values):
+        return np.inf
     return float(values.max()) if target <= 0 else float(np.quantile(values, 1 - target))
 
 
@@ -580,7 +595,7 @@ def evaluate(runs, cfg=CONFIG):
             lam_min = [float(np.quantile(np.nan_to_num(normal('lambda', a)), cfg['lambda_min_quantile'])) for a in range(4)]
             for r in runs:
                 r['stats']['tau'] = information_gap(r['t'], np.nan_to_num(r['stats']['lambda']), lam_min)
-            alarms = {}
+            alarms, scorable = {}, {}
             for name in ('DET-NIS', 'DET-FEAT'):
                 alarms[name] = np.repeat((test['stats'][name] > threshold(normal(name), target))[:, None], 4, axis=1)
             per_axis = target/4  # any-axis false alarms at most the target on the training normals
@@ -599,15 +614,20 @@ def evaluate(runs, cfg=CONFIG):
                 for a in SOURCE_AXES.get(key, (2, 3)):  # same per-axis budget everywhere: z and heading thresholds match
                     cum[:, a] = test['stats'][key][:, a] > threshold(normal(key, a), per_axis/2)
                 alarms[name] = cum
+                # NaN = the source has no current measurement (e.g. sonar gated on an inclined face): not scorable
+                scorable[name] = np.isfinite(test['stats'][key])
             alarms['DIR-gap+cumconflict'] = gap_half | alarms['DIR-cumconflict']
             for name, alarm in alarms.items():
+                ok = scorable.get(name, np.ones(alarm.shape, bool))
                 row = {'early_warning_s': grace, 'target': target, 'detector': name, 'run': test['name'],
                        'normal_samples': int(test['normal'].sum()),
-                       'false_alarm_fraction': float(alarm[test['normal']].any(axis=1).mean()) if test['normal'].any() else None}
+                       'false_alarm_fraction': float(alarm[test['normal']].any(axis=1).mean()) if test['normal'].any() else None,
+                       'normal_unscorable': int((test['normal'] & ~ok.all(axis=1)).sum())}
                 for a, axis in enumerate(AXES):
                     ex = test['exceed'][:, a]
                     row[f'exceed_{axis}'] = int(ex.sum())
-                    row[f'missed_{axis}'] = int((ex & ~alarm[:, a]).sum())
+                    row[f'unscorable_{axis}'] = int((ex & ~ok[:, a]).sum())  # reported apart, neither caught nor missed
+                    row[f'missed_{axis}'] = int((ex & ok[:, a] & ~alarm[:, a]).sum())
                 results.append(row)
     return results
 
@@ -618,19 +638,25 @@ def pooled(results):
         key = (row['early_warning_s'], row['target'], row['detector'])
         t = table.setdefault(key, {'early_warning_s': row['early_warning_s'], 'target': row['target'],
                                    'detector': row['detector'], 'normal': 0, 'false': 0.0,
-                                   **{f'exceed_{a}': 0 for a in AXES}, **{f'missed_{a}': 0 for a in AXES}})
+                                   'normal_unscorable': 0, **{f'exceed_{a}': 0 for a in AXES},
+                                   **{f'unscorable_{a}': 0 for a in AXES}, **{f'missed_{a}': 0 for a in AXES}})
         if row['false_alarm_fraction'] is not None:
             t['normal'] += row['normal_samples']
             t['false'] += row['false_alarm_fraction']*row['normal_samples']
+            t['normal_unscorable'] += row['normal_unscorable']
         for a in AXES:
             t[f'exceed_{a}'] += row[f'exceed_{a}']
+            t[f'unscorable_{a}'] += row[f'unscorable_{a}']
             t[f'missed_{a}'] += row[f'missed_{a}']
     out = []
     for t in table.values():
         entry = {'early_warning_s': t['early_warning_s'], 'target': t['target'], 'detector': t['detector'],
-                 'false_alarm_fraction': t['false']/t['normal'] if t['normal'] else None}
-        for a in AXES:
-            entry[f'r_miss_{a}'] = t[f'missed_{a}']/t[f'exceed_{a}'] if t[f'exceed_{a}'] else None
+                 'false_alarm_fraction': t['false']/t['normal'] if t['normal'] else None,
+                 'normal_unscorable_fraction': t['normal_unscorable']/t['normal'] if t['normal'] else None}
+        for a in AXES:  # miss rate over the scorable exceedances; the unscorable share is reported next to it
+            scored = t[f'exceed_{a}'] - t[f'unscorable_{a}']
+            entry[f'r_miss_{a}'] = t[f'missed_{a}']/scored if scored else None
+            entry[f'r_unscorable_{a}'] = t[f'unscorable_{a}']/t[f'exceed_{a}'] if t[f'exceed_{a}'] else None
         out.append(entry)
     return out
 
