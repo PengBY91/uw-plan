@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation
 
 from uwbench.detect import (ATMOSPHERE_PA, CONFIG, G, RHO, drift_budget_deg, fit_line, information_gap, parse_diag, sonar_conflict,
                             sonar_conflict_map, sonar_conflict_multi,
-                            sonar_first_returns, statistics, threshold)
+                            sonar_echo_thickness, sonar_first_returns, sonar_lines, statistics, threshold)
 
 
 def synthetic(seed=0, yaw_drift=0.0):
@@ -91,6 +91,29 @@ class DetectTest(unittest.TestCase):
         pts = sonar_first_returns(image, geometry, 0.25)
         np.testing.assert_allclose(pts[0], [2.05, 0.0], atol=1e-9)
         np.testing.assert_allclose(pts[1], 3.05*np.array([np.cos(np.radians(40)), np.sin(np.radians(40))]), atol=1e-9)
+
+    def test_echo_thickness_separates_vertical_from_inclined_faces(self):
+        geometry = {'RangeMin': 0.0, 'RangeMax': 10.0, 'Azimuth': 120.0}
+        vertical, inclined = np.zeros((100, 30)), np.zeros((100, 30))
+        vertical[20:22] = 0.8  # 2.0-2.2 m: a vertical face spans D to D/cos(10 deg) plus a bin
+        inclined[20:28] = 0.8  # 2.0-2.8 m: the elevation fan slides down a tilted face
+        inclined[29, :] = 0.8  # a one-row dropout does not end the echo
+        inclined[60, :] = 0.8  # a separate later return (after a gap) is not part of it
+        self.assertAlmostEqual(sonar_echo_thickness(vertical, geometry, 0.25), 2/20.5)
+        self.assertAlmostEqual(sonar_echo_thickness(inclined, geometry, 0.25), 10/20.5)
+        self.assertTrue(np.isnan(sonar_echo_thickness(np.zeros((100, 30)), geometry, 0.25)))
+
+    def test_sonar_lines_skip_frames_without_a_vertical_face(self):
+        geometry = {'RangeMin': 0.0, 'RangeMax': 10.0, 'Azimuth': 60.0}
+        az = np.radians(-30 + (np.arange(64) + 0.5)*60/64)
+        vertical = np.zeros((200, 64))
+        vertical[np.round(2.5/np.cos(az)/0.05 - 0.5).astype(int), np.arange(64)] = 0.8  # wall at x = 2.5 m
+        inclined = vertical.copy()
+        for k in range(1, 12):
+            inclined[np.round(2.5/np.cos(az)/0.05 - 0.5).astype(int) + k, np.arange(64)] = 0.8
+        lines = sonar_lines(np.array([0.0, 0.1]), [vertical, inclined], geometry)
+        np.testing.assert_allclose(lines[0, 1:], [1, 0, 2.5], atol=0.03)
+        self.assertTrue(np.isnan(lines[1, 1:]).all())
 
     def test_fit_line_finds_wall_despite_outliers(self):
         rng = np.random.default_rng(1)

@@ -59,7 +59,7 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           'lambda_min_quantile': 0.10, 'false_alarm_targets': [0.0, 0.01, 0.05],
           'early_warning_s': [0.0, 10.0], 'budget_n_sigma': 3.0,
           'sonar_threshold': 0.25, 'sonar_inlier_m': 0.05, 'sonar_min_inliers': 20, 'sonar_gate_deg': 15.0,
-          'sonar_reference_s': 0.0, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15,
+          'sonar_reference_s': 0.0, 'sonar_max_thickness': 0.2, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15,
           'map_voxel_m': 0.05, 'map_assoc_m': 0.3, 'map_huber_m': 0.05, 'map_min_pairs': 20,
           'map_sigma_m': 0.03, 'map_prior_m': 0.02, 'map_prior_deg': 0.02, 'map_iterations': 6,
           'map_normal_k': 12, 'map_degenerate_ratio': 0.02, 'map_lever_m': 2.0,
@@ -162,6 +162,29 @@ def sonar_first_returns(image, geometry, threshold):
     return np.column_stack([rng_m*np.cos(az), rng_m*np.sin(az)])
 
 
+def sonar_echo_thickness(image, geometry, threshold, gap_bins=3):
+    """Median over azimuth columns of the echo's range extent from the first return, relative to that range.
+
+    An imaging sonar does not measure elevation, so the first return comes from the nearest point within the elevation
+    fan. On a vertical face the fan spans ranges D to D/cos(E/2) (relative extent 1.5% for E = 20 deg, plus one range
+    bin); on a face tilted b > E/2 from vertical it spans D/cos(b - E/2) to D/cos(b + E/2), and the first return slides
+    along the face when the range changes, which a 2-D model reads as wall motion. The run ends at the first gap of
+    more than gap_bins rows. NaN without returns.
+    """
+    above = image > threshold
+    cols = np.nonzero(above.any(axis=0))[0]
+    if not len(cols):
+        return np.nan
+    bin_m = (geometry['RangeMax'] - geometry['RangeMin'])/image.shape[0]
+    rel = []
+    for c in cols:
+        rows = np.nonzero(above[:, c])[0]
+        gaps = np.nonzero(np.diff(rows) > gap_bins)[0]
+        end = rows[gaps[0]] if len(gaps) else rows[-1]
+        rel.append((end - rows[0] + 1)/(rows[0] + 0.5 + geometry['RangeMin']/bin_m))
+    return float(np.median(rel))
+
+
 def fit_line(points, inlier_m, min_inliers, rng, iterations=100):
     """RANSAC line m . p = d through 2-D points, m a unit normal pointing away from the origin; None if too few."""
     if len(points) < min_inliers:
@@ -186,11 +209,13 @@ def fit_line(points, inlier_m, min_inliers, rng, iterations=100):
 
 
 def sonar_lines(stamps, images, geometry, cfg=CONFIG):
-    """Per sonar frame: (t, m_x, m_y, d) of the dominant line, NaN where none."""
+    """Per sonar frame: (t, m_x, m_y, d) of the dominant line, NaN where none or where the echo is too thick for a vertical face."""
     rng = np.random.default_rng(0)
     out = np.full((len(stamps), 4), np.nan)
     out[:, 0] = stamps
     for i, image in enumerate(images):
+        if not sonar_echo_thickness(image, geometry, cfg['sonar_threshold']) <= cfg['sonar_max_thickness']:
+            continue  # no vertical structure in view (inclined face or nothing): elevation ambiguity, no measurement
         line = fit_line(sonar_first_returns(image, geometry, cfg['sonar_threshold']), cfg['sonar_inlier_m'],
                         cfg['sonar_min_inliers'], rng)
         if line is not None:
@@ -492,7 +517,9 @@ def load_sim_sonar(dataset, cfg=CONFIG):
     images = np.concatenate([np.load(f) for f in sorted(source.glob('sonar_[0-9]*.npy'))])
     geometry = meta['route']['sensors']['sonar']
     lines = sonar_lines(stamps, images, geometry, cfg)
-    scans = [(ts, sonar_first_returns(image, geometry, cfg['sonar_threshold'])) for ts, image in zip(stamps, images)]
+    scans = [(ts, sonar_first_returns(image, geometry, cfg['sonar_threshold'])
+              if sonar_echo_thickness(image, geometry, cfg['sonar_threshold']) <= cfg['sonar_max_thickness'] else np.zeros((0, 2)))
+             for ts, image in zip(stamps, images)]
     return lines, np.asarray(meta['socket_extrinsics_in_imu_frame']['sonar']), scans
 
 
