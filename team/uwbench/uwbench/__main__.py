@@ -35,12 +35,17 @@ def _eval_traj(argv):
     return main(argv)
 
 
+def _run_a(argv):
+    from uwbench.a1.cli import main  # needs gtsam/cv2: run with .venv-a
+    return main(argv)
+
+
 def _detect_a(argv):
     from uwbench.detect import main
     return main(argv)
 
 
-IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj, 'detect-a': _detect_a}
+IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj, 'run-a': _run_a, 'detect-a': _detect_a}
 
 
 def main(argv=None):

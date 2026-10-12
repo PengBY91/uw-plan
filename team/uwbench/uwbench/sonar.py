@@ -34,3 +34,23 @@ def effect_size_row(rho, vertical_aperture_rad, voxel_m):
             'arc_height_span_m': span, 'voxel_m': float(voxel_m),
             'b2a_vertical_voxels_per_echo': int(np.ceil(span/voxel_m - 1e-9)),
             'approximation': 'vertical extent only; ignores horizontal beam width and voxel grid phase'}
+
+
+def wrap_angle(a):
+    """Wrap angles to [-pi, pi)."""
+    return (np.asarray(a, dtype=float) + np.pi) % (2*np.pi) - np.pi
+
+
+def range_bearing_jacobian(point):
+    """2x3 Jacobian d(rho, theta)/dp of one sonar-frame point; undefined on the sonar z axis (x = y = 0)."""
+    x, y, z = np.asarray(point, dtype=float)
+    rho, h2 = np.sqrt(x*x + y*y + z*z), x*x + y*y
+    if h2 < 1e-12:
+        raise ValueError('Bearing is undefined on the sonar z axis')
+    return np.array([[x/rho, y/rho, z/rho], [-y/h2, x/h2, 0.0]])
+
+
+def elevation(points):
+    """Elevation phi = atan2(z, sqrt(x^2 + y^2)) of sonar-frame points (diagnostic only; the sonar does not measure it)."""
+    p = np.asarray(points, dtype=float)
+    return np.arctan2(p[..., 2], np.hypot(p[..., 0], p[..., 1]))

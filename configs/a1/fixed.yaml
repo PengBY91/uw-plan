@@ -1,0 +1,4 @@
+# A1 fixed weight: Gaussian sonar range-bearing factor, sigma = 0.05 m / 1 deg (about one range bin and one
+# azimuth bin of the simulated sonar), no robust kernel. Oracle association, continuous tracks only (max_gap_s).
+backend:
+  sonar: {enabled: true, sigma_range_m: 0.05, sigma_bearing_deg: 1.0, kernel: none}

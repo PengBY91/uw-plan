@@ -1,0 +1,3 @@
+# A1 control: same backend, front end, keyframes and initialisation as the sonar configurations; sonar factors off.
+backend:
+  sonar: {enabled: false}

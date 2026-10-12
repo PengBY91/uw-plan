@@ -1,0 +1,3 @@
+# A1 fixed weight + fixed Cauchy kernel (k = 1.0 whitened units).
+backend:
+  sonar: {enabled: true, sigma_range_m: 0.05, sigma_bearing_deg: 1.0, kernel: cauchy, kernel_k: 1.0}
