@@ -56,8 +56,11 @@ def main():
     entries = ['archive-entries.json'] if v101 else sorted(p.name for p in args.stage.glob('archive-entries-*.json'))
     provenance.mkdir(exist_ok=args.resume or not v101)
     for name in ['eth-item.json', 'eth-files.json', *entries]:
-        if (provenance/name).exists() and (provenance/name).read_bytes() != (args.stage/name).read_bytes():
-            raise RuntimeError('Provenance file differs from staged copy: '+name)
+        if (provenance/name).exists():
+            # locks/ keeps reformatted copies; the same JSON content keeps the original provenance bytes
+            if json.loads((provenance/name).read_text()) != json.loads((args.stage/name).read_text()):
+                raise RuntimeError('Provenance file differs from staged copy: '+name)
+            continue
         shutil.copyfile(args.stage/name, provenance/name)
     asl = root/(seq+'_asl')
     reuse_asl = asl.exists() and args.resume

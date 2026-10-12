@@ -21,9 +21,12 @@ def load(run):
     e = json.loads(m.read_text())
     out.update(estimates=e['counts']['estimate'], coverage=e['coverage']['coverage_fraction'],
                lost=[(i['start'], i['duration_s'], i['kind']) for i in e['coverage']['lost_intervals']],
-               ape_rmse=e['public']['ape_translation_m']['rmse'], rpe1_rmse=e['public']['rpe_1s']['translation_m']['rmse'],
-               risk_max={k: v['abs_error_max'] for k, v in e['risk']['axes'].items()},
-               exceed_s={k: v['exceedance']['exceed_s'] for k, v in e['risk']['axes'].items()})
+               matched=e['counts']['matched'], ape_rmse=e['public']['ape_translation_m']['rmse'],
+               rpe1_rmse=e['public']['rpe_1s'].get('translation_m', {}).get('rmse'),   # None when not evaluable
+               risk_max={k: v['abs_error_max'] for k, v in e['risk']['axes'].items()} if isinstance(e['risk'].get('axes'), dict) else None,
+               exceed_s={k: v['exceedance']['exceed_s'] for k, v in e['risk']['axes'].items()} if isinstance(e['risk'].get('axes'), dict) else None)
+    if not isinstance(e['risk'].get('axes'), dict):
+        return out
     with open(run/'eval-traj/axis_errors.csv') as f:
         rows = [r for r in csv.DictReader(f) if r['in_align_window'] == '0']
     out['_axis'] = np.array([[float(r['t_s']), float(r['err_x']), float(r['err_y']), float(r['err_z']), float(r['err_yaw'])] for r in rows])
