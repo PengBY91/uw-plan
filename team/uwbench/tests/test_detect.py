@@ -78,6 +78,21 @@ class DetectTest(unittest.TestCase):
         oracle = statistics(t, est, diag, imu, absorbed, pressure, true_bias=true_bias)['conflict_cum_true'][:, 3]
         np.testing.assert_allclose(oracle, stats['conflict_cum_frozen'][:, 3], atol=1e-6)  # frozen bias is the true one here
 
+    def test_main_detector_takes_one_source_per_axis(self):
+        t, est, diag, imu, odom, pressure = synthetic(yaw_drift=0.05)
+        sonar_t = np.arange(0, 40, 0.1)
+        lines = np.column_stack([sonar_t, np.ones(len(sonar_t)), np.zeros(len(sonar_t)), np.full(len(sonar_t), 3.0)])
+        s = statistics(t, est, diag, imu, odom, pressure, gyro_noise=(1e-4, 1e-5), sonar=(lines, np.eye(4)))
+        d = s['conflict_dir']
+        np.testing.assert_array_equal(d[:, 0], s['conflict_cum_sonar'][:, 0])  # x: single-plane sonar (NaN kept)
+        self.assertTrue(np.isnan(d[:, 1]).all())  # y: no source
+        np.testing.assert_array_equal(d[:, 2], s['conflict_cum'][:, 2])  # z: depth gauge
+        np.testing.assert_allclose(d[:, 3], s['conflict_cum_frozen'][:, 3] - s['budget_yaw_deg'])  # heading
+        self.assertGreater(s['budget_yaw_deg'][-1], 0.0)
+        online = statistics(t, est, diag, imu, odom, pressure, cfg={**CONFIG, 'dir_yaw_source': 'online'},
+                            gyro_noise=(1e-4, 1e-5), sonar=(lines, np.eye(4)))
+        np.testing.assert_array_equal(online['conflict_dir'][:, 3], online['conflict_cum'][:, 3])
+
     def test_drift_budget_grows_with_white_noise_and_bias_walk(self):
         self.assertAlmostEqual(drift_budget_deg(100.0, 1e-3, 0.0, 1.0), np.degrees(1e-2))
         self.assertAlmostEqual(drift_budget_deg(30.0, 0.0, 1e-4, 3.0), np.degrees(3e-4*np.sqrt(30.0**3/3)))

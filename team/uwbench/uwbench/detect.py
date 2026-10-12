@@ -4,6 +4,9 @@ Pilot scope, stated so nobody reads it as the M3 protocol:
 - detectors: DET-NIS, DET-COV, DET-FEAT, and two DET-DIR parts: information gap tau_k (equivalent to thresholding a
   monotone drift envelope) and cross-sensor conflict (gyro-only vs estimated heading, depth gauge vs estimated z).
   DET-SCALAR is not implemented (A2 score undefined). Sonar is not used by A0, so x/y have no conflict source.
+- DET-DIR (added after pilot round 15) combines one source per axis: single-plane sonar for x, none for y (scored
+  as unscorable), depth for z, frozen-bias gyro minus its drift budget for heading. It was assembled from results
+  on the same pilot runs, so its pilot scores are optimistic.
 - operating points: leave-one-run-out; thresholds from the other runs' normal samples, false alarms counted as the
   fraction of normal samples with any alarm (too little normal data for alarms per 10 min). With early_warning_s > 0,
   samples that far before an exceedance onset are neither normal nor exceedance (alarms there are lead time).
@@ -63,18 +66,21 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           'map_voxel_m': 0.05, 'map_assoc_m': 0.3, 'map_huber_m': 0.05, 'map_min_pairs': 20,
           'map_sigma_m': 0.03, 'map_prior_m': 0.02, 'map_prior_deg': 0.02, 'map_iterations': 6,
           'map_normal_k': 12, 'map_degenerate_ratio': 0.02, 'map_lever_m': 2.0,
-          'map_grow': False, 'map_rotation': False, 'map_init_s': 0.0, 'sonar_footprint': False}
+          'map_grow': False, 'map_rotation': False, 'map_init_s': 0.0, 'sonar_footprint': False,
+          'dir_yaw_source': 'frozen_budget'}
 DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DIR-gap': 'axis', 'DIR-conflict': 'axis',
              'DIR-gap+conflict': 'axis', 'DIR-cumconflict': 'axis', 'DIR-gap+cumconflict': 'axis',
              'DIR-cumconflict-frozen': 'axis', 'DIR-cumconflict-frozen-budget': 'axis', 'ORACLE-cumconflict-truebias': 'axis',
              'DIR-cumconflict+sonar': 'axis', 'DIR-cumconflict+sonar-multi': 'axis', 'DIR-cumconflict+sonar-map': 'axis',
-             'DIR-sonar-map+yaw': 'axis'}
+             'DIR-sonar-map+yaw': 'axis', 'DET-DIR': 'axis'}
 CUMULATIVE = {'DIR-cumconflict': 'conflict_cum', 'DIR-cumconflict-frozen': 'conflict_cum_frozen',
               'DIR-cumconflict-frozen-budget': 'conflict_cum_frozen_excess', 'ORACLE-cumconflict-truebias': 'conflict_cum_true',
               'DIR-cumconflict+sonar': 'conflict_cum_sonar', 'DIR-cumconflict+sonar-multi': 'conflict_cum_sonar_multi',
-              'DIR-cumconflict+sonar-map': 'conflict_cum_sonar_map', 'DIR-sonar-map+yaw': 'conflict_cum_sonar_map_yaw'}
+              'DIR-cumconflict+sonar-map': 'conflict_cum_sonar_map', 'DIR-sonar-map+yaw': 'conflict_cum_sonar_map_yaw',
+              'DET-DIR': 'conflict_dir'}
 SOURCE_AXES = {'conflict_cum_sonar': (0, 1, 2, 3), 'conflict_cum_sonar_multi': (0, 1, 2, 3),
-               'conflict_cum_sonar_map': (0, 1, 2, 3), 'conflict_cum_sonar_map_yaw': (0, 1, 2, 3)}  # every other cumulative form: depth for z, gyro for heading only
+               'conflict_cum_sonar_map': (0, 1, 2, 3), 'conflict_cum_sonar_map_yaw': (0, 1, 2, 3),
+               'conflict_dir': (0, 2, 3)}  # every other cumulative form: depth for z, gyro for heading only
 
 
 def parse_diag(log_path):
@@ -519,6 +525,15 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
             stats['conflict_cum_sonar_map'] = np.column_stack([m[:, :2], z_cum, yaw_cum])
             stats['conflict_cum_sonar_map_yaw'] = np.column_stack([m[:, :2], z_cum, m[:, 2]])
             stats['sonar_map_points'] = n_map
+        # DET-DIR, the pilot's main detector (pilot rounds 1-15): one source per axis, the best each axis has so far.
+        # x: single-plane sonar conflict (vertical-structure gate, NaN without a current measurement); y: no source
+        # yet (NaN, so y exceedances are reported as unscorable, not as caught or missed); z: depth gauge; heading:
+        # gyro with the bias frozen at t_0, minus its drift budget (method spec v2.2 M3.1; depends on the platform
+        # gyro, see the Allan-variance check). The other cumulative forms stay as evaluated variants.
+        # dir_yaw_source 'online' uses the estimator's online bias instead (absorbs part of the conflict, but does not
+        # depend on the gyro bias staying put); the choice waits for the platform gyro's Allan variance
+        yaw_dir = {'frozen_budget': yaw_frozen - budget, 'online': yaw_cum}[cfg.get('dir_yaw_source', 'frozen_budget')]
+        stats['conflict_dir'] = np.column_stack([stats['conflict_cum_sonar'][:, 0], np.full(len(t), np.nan), z_cum, yaw_dir])
     return stats
 
 
@@ -617,7 +632,7 @@ def evaluate(runs, cfg=CONFIG):
             lam_min = [float(np.quantile(np.nan_to_num(normal('lambda', a)), cfg['lambda_min_quantile'])) for a in range(4)]
             for r in runs:
                 r['stats']['tau'] = information_gap(r['t'], np.nan_to_num(r['stats']['lambda']), lam_min)
-            alarms, scorable = {}, {}
+            alarms, scorable, source = {}, {}, {}
             for name in ('DET-NIS', 'DET-FEAT'):
                 alarms[name] = np.repeat((test['stats'][name] > threshold(normal(name), target))[:, None], 4, axis=1)
             per_axis = target/4  # any-axis false alarms at most the target on the training normals
@@ -638,13 +653,15 @@ def evaluate(runs, cfg=CONFIG):
                 alarms[name] = cum
                 # NaN = the source has no current measurement (e.g. sonar gated on an inclined face): not scorable
                 scorable[name] = np.isfinite(test['stats'][key])
+                source[name] = list(SOURCE_AXES.get(key, (0, 1, 2, 3)))
             alarms['DIR-gap+cumconflict'] = gap_half | alarms['DIR-cumconflict']
             for name, alarm in alarms.items():
                 ok = scorable.get(name, np.ones(alarm.shape, bool))
                 row = {'early_warning_s': grace, 'target': target, 'detector': name, 'run': test['name'],
                        'normal_samples': int(test['normal'].sum()),
                        'false_alarm_fraction': float(alarm[test['normal']].any(axis=1).mean()) if test['normal'].any() else None,
-                       'normal_unscorable': int((test['normal'] & ~ok.all(axis=1)).sum())}
+                       # a normal sample is unscorable when an axis that has a source lacks a current measurement
+                       'normal_unscorable': int((test['normal'] & ~ok[:, source.get(name, slice(None))].all(axis=1)).sum())}
                 for a, axis in enumerate(AXES):
                     ex = test['exceed'][:, a]
                     row[f'exceed_{axis}'] = int(ex.sum())
