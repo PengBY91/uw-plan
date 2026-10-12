@@ -52,6 +52,36 @@ class Archive:
                 print('retry in', wait, 's after', repr(error), flush=True)
                 time.sleep(wait)
 
+    def stream_range(self, start, size, output, done, progress):
+        """Write bytes [start, start+size) to output; returns the new local offset. Resumable by the caller."""
+        end = start + size - 1
+        req = urllib.request.Request(self.url, headers={'User-Agent': 'Mozilla/5.0', 'Range': f'bytes={start}-{end}'})
+        for attempt in range(12):
+            try:
+                response = urllib.request.urlopen(req, timeout=600)
+                break
+            except urllib.error.HTTPError as error:
+                if error.code != 429 or attempt == 11:
+                    raise
+                wait = min(60 * (attempt + 1), 600)
+                print('retry in', wait, 's after', repr(error), flush=True)
+                time.sleep(wait)
+        with response:
+            if response.status != 206 or response.headers.get('Content-Range') != f'bytes {start}-{end}/{self.size}':
+                raise RuntimeError('Unexpected HTTP Range response')
+            step = 0
+            while chunk := response.read(4 * 1024 * 1024):
+                output.write(chunk)
+                done += len(chunk)
+                step += len(chunk)
+                if step >= 256 * 1024 * 1024:
+                    output.flush()
+                    progress(done)
+                    step = 0
+        output.flush()
+        progress(done)
+        return done
+
 
 def list_entries(archive):
     """Parse the ZIP64 end-of-central-directory records and the central directory."""
@@ -109,13 +139,16 @@ def download(archive, entry, stage):
     if offset > entry['compressed']:
         raise RuntimeError('Local compressed payload exceeds expected size')
     with compressed.open('ab') as output:
+        # One streamed Range request per member: the server rate-limits by request count, not bytes.
         while offset < entry['compressed']:
-            count = min(128 * 1024 * 1024, entry['compressed'] - offset)
-            data = archive.get_range(payload_start + offset, count)
-            output.write(data)
-            output.flush()
-            offset += len(data)
-            print(filename, offset, '/', entry['compressed'], flush=True)
+            try:
+                offset = archive.stream_range(payload_start + offset, entry['compressed'] - offset, output, offset,
+                                              lambda n: print(filename, n, '/', entry['compressed'], flush=True))
+            except Exception as error:
+                output.flush()
+                offset = compressed.stat().st_size
+                print('stream interrupted at', offset, repr(error), flush=True)
+                time.sleep(60)
     target = stage / filename
     if target.exists():
         raise RuntimeError('Refusing to overwrite final dataset file: ' + str(target))
