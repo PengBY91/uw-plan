@@ -34,6 +34,7 @@
 !locks/*.patch
 !locks/*.sha256
 !reports/
+!reports/*.md
 !reports/w1/
 !reports/w1/*.md
 !reports/w2/
