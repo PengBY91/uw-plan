@@ -63,7 +63,7 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           'map_voxel_m': 0.05, 'map_assoc_m': 0.3, 'map_huber_m': 0.05, 'map_min_pairs': 20,
           'map_sigma_m': 0.03, 'map_prior_m': 0.02, 'map_prior_deg': 0.02, 'map_iterations': 6,
           'map_normal_k': 12, 'map_degenerate_ratio': 0.02, 'map_lever_m': 2.0,
-          'map_grow': False, 'map_rotation': False, 'map_init_s': 0.0}
+          'map_grow': False, 'map_rotation': False, 'map_init_s': 0.0, 'sonar_footprint': False}
 DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DIR-gap': 'axis', 'DIR-conflict': 'axis',
              'DIR-gap+conflict': 'axis', 'DIR-cumconflict': 'axis', 'DIR-gap+cumconflict': 'axis',
              'DIR-cumconflict-frozen': 'axis', 'DIR-cumconflict-frozen-budget': 'axis', 'ORACLE-cumconflict-truebias': 'axis',
@@ -320,6 +320,25 @@ def scan_normals(points, k=12):
     return np.linalg.eigh(np.einsum('nki,nkj->nij', X, X))[1][:, :, 0]
 
 
+def footprint_correct(points, half_bin, k=12):
+    """Move each first return to the bearing in its azimuth bin nearest to the surface.
+
+    The first return of a bin comes from the bin edge closest to the foot of the local surface normal (or from the foot
+    itself if it lies inside the bin), not from the bin centre where the image puts it. At oblique incidence this puts
+    points about r sin(incidence) * half_bin too close (1.6 cm at 60 deg and 4.5 m with 0.94 deg bins), bending the
+    fan edges; a growing map that inserts them bends with them. Range is unchanged; the bearing moves by at most half_bin
+    toward the foot of the normal estimated from the k nearest scan points.
+    """
+    if len(points) < 3:
+        return points
+    n = scan_normals(points, k)
+    n = n*np.where(np.einsum('ij,ij->i', n, points) > 0, -1.0, 1.0)[:, None]  # normal toward the sensor
+    r, th = np.hypot(points[:, 0], points[:, 1]), np.arctan2(points[:, 1], points[:, 0])
+    foot = np.arctan2(-n[:, 1], -n[:, 0])
+    th = th + np.clip(np.angle(np.exp(1j*(foot - th))), -half_bin, half_bin)
+    return np.column_stack([r*np.cos(th), r*np.sin(th)])
+
+
 def rot2(angle):
     c, s_ = np.cos(angle), np.sin(angle)
     return np.array([[c, -s_], [s_, c]])
@@ -529,6 +548,9 @@ def load_sim_sonar(dataset, cfg=CONFIG):
     scans = [(ts, sonar_first_returns(image, geometry, cfg['sonar_threshold'])
               if sonar_echo_thickness(image, geometry, cfg['sonar_threshold']) <= cfg['sonar_max_thickness'] else np.zeros((0, 2)))
              for ts, image in zip(stamps, images)]
+    if cfg.get('sonar_footprint'):
+        half_bin = np.radians(geometry['Azimuth']/geometry['AzimuthBins'])/2
+        scans = [(ts, footprint_correct(pts, half_bin, cfg['map_normal_k'])) for ts, pts in scans]
     return lines, np.asarray(meta['socket_extrinsics_in_imu_frame']['sonar']), scans
 
 

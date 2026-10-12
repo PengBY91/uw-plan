@@ -7,7 +7,7 @@ from scipy.spatial.transform import Rotation
 
 from uwbench.detect import (ATMOSPHERE_PA, CONFIG, G, RHO, drift_budget_deg, fit_line, information_gap, parse_diag, sonar_conflict,
                             sonar_conflict_map, sonar_conflict_multi,
-                            sonar_echo_thickness, sonar_first_returns, sonar_lines, statistics, threshold, pooled, AXES)
+                            sonar_echo_thickness, sonar_first_returns, sonar_lines, statistics, threshold, pooled, AXES, footprint_correct)
 
 
 def synthetic(seed=0, yaw_drift=0.0):
@@ -235,9 +235,10 @@ class DetectTest(unittest.TestCase):
         self.assertLess(bias[0.5], bias[3.0])
 
     @staticmethod
-    def scan_scene(segments, est_offset, est_yaw_drift, duration=100.0):
+    def scan_scene(segments, est_offset, est_yaw_drift, duration=100.0, rays_per_beam=1):
         """Vehicle at x = 0 facing +x, moving along +y at 0.2 m/s past 2-D wall segments; 128-beam first returns
-        quantised to 3.8 cm. The estimate is offset by est_offset(t) (2-vector) and rotated by est_yaw_drift(t) rad."""
+        quantised to 3.8 cm. The estimate is offset by est_offset(t) (2-vector) and rotated by est_yaw_drift(t) rad.
+        rays_per_beam > 1 spreads rays across each beam's width and keeps the nearest, as the raycast sonar does."""
         est_t = np.arange(0, duration, 0.05)
         true_p = np.column_stack([0*est_t, 0.2*est_t])
         yaw = est_yaw_drift(est_t)
@@ -247,7 +248,9 @@ class DetectTest(unittest.TestCase):
         p_est = np.cumsum(np.einsum('nij,nj->ni', R[:, :2, :2], steps), axis=0) + est_offset(est_t)
         est = (est_t, R, np.column_stack([p_est, 0*est_t]))
         az = np.radians(np.linspace(-60, 60, 128))
-        d = np.column_stack([np.cos(az), np.sin(az)])
+        width = az[1] - az[0]
+        sub = az[:, None] + width*((np.arange(rays_per_beam) + 0.5)/rays_per_beam - 0.5 if rays_per_beam > 1 else np.zeros(1))
+        d = np.column_stack([np.cos(sub.ravel()), np.sin(sub.ravel())])
         a0 = np.array([seg[0] for seg in segments], float)
         a1 = np.array([seg[1] for seg in segments], float)
         scans = []
@@ -261,9 +264,10 @@ class DetectTest(unittest.TestCase):
                 r = (w[..., 0]*(-e[None, :, 1]) - w[..., 1]*(-e[None, :, 0]))/den
                 u = (d[:, None, 0]*w[..., 1] - d[:, None, 1]*w[..., 0])/den
             r = np.where((np.abs(den) > 1e-12) & (r > 0.3) & (r < 10) & (u >= 0) & (u <= 1), r, np.inf).min(axis=1)
+            r = r.reshape(len(az), -1).min(axis=1)  # nearest ray of each beam, placed at the beam centre
             hit = np.isfinite(r)
             r = (np.floor(r[hit]/0.038) + 0.5)*0.038
-            scans.append((ts, r[:, None]*d[hit]))
+            scans.append((ts, r[:, None]*np.column_stack([np.cos(az[hit]), np.sin(az[hit])])))
         return est_t, est, scans
 
     GROW = {**CONFIG, 'map_grow': True, 'map_rotation': True}
@@ -299,6 +303,30 @@ class DetectTest(unittest.TestCase):
         self.assertLess(out[:, 1].max(), 0.05)  # the degenerate direction is frozen: no slide along the wall
         self.assertGreater(out[:, 0].max(), 0.03)  # but 20 m of growth bends the wall toward the vehicle
         self.assertLess(out[:, 0].max(), 0.2)
+
+    def test_footprint_correction_puts_oblique_returns_on_the_wall(self):
+        # the nearest ray of a 0.94 deg beam at 60 deg incidence is closer than the beam centre: edge points sit in front
+        # of the wall; moving them to the bin edge nearest the wall puts them back on it
+        _, _, scans = self.scan_scene([((2, -10), (2, 40))], lambda t: np.zeros((len(t), 2)), lambda t: 0*t,
+                                      duration=0.1, rays_per_beam=16)
+        pts = scans[0][1]
+        edge = np.abs(np.degrees(np.arctan2(pts[:, 1], pts[:, 0]))) > 45
+        half_bin = np.radians(120/127)/2
+        fixed = footprint_correct(pts, half_bin)
+        self.assertLess(np.mean(pts[edge, 0] - 2), -0.01)
+        self.assertLess(abs(np.mean(fixed[edge, 0] - 2)), 0.004)
+
+    def test_growing_map_bends_less_with_footprint_correction(self):
+        # error-free estimate: with beam width the grown map bends toward the vehicle; the correction removes the bend
+        est_t, est, scans = self.scan_scene([((2, -10), (2, 40))], lambda t: np.zeros((len(t), 2)), lambda t: 0*t,
+                                            rays_per_beam=16)
+        raw, _ = sonar_conflict_map(est_t, est, scans, np.eye(4), self.GROW)
+        half_bin = np.radians(120/127)/2
+        fixed, _ = sonar_conflict_map(est_t, est, [(ts, footprint_correct(p, half_bin)) for ts, p in scans], np.eye(4), self.GROW)
+        self.assertGreater(np.nanmax(raw[:, 0]), 0.3)  # 20 m of growth: about 0.9 m and 5 deg
+        self.assertGreater(np.nanmax(raw[:, 2]), 2.0)
+        self.assertLess(np.nanmax(fixed[:, 0]), 0.05)
+        self.assertLess(np.nanmax(fixed[:, 2]), 0.5)
 
     def test_growing_map_sees_along_wall_error_at_pilasters(self):
         # pilasters every 2 m, closer than the 7 m the fan covers at 2 m, so a mapped one is always still in view
