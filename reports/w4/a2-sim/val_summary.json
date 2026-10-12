@@ -1,11 +1,41 @@
 {
   "datasets": [
+    "pilaster_wall_v1_s01",
     "stripe_wall_h_v1_s01",
-    "slope_wall_v1_s01",
-    "pilaster_wall_v1_s01"
+    "slope_wall_v1_s01"
   ],
   "runs": {
     "fixed": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_fixed_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1402.4667693899828,
+        "commit": "14734c4",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 34.35376102200826,
+        "sonar_factors": 5936,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.08057463992108403,
+        "ape_max": 0.20563935472055586,
+        "rpe1": 0.017924950893309633,
+        "rpe5": 0.03586237281968772,
+        "risk_max": {
+          "x": 0.6960449965869986,
+          "y": 0.09012531938798349,
+          "z": 0.09184803226508294,
+          "yaw": 2.605847987173794
+        },
+        "exceed_s": {
+          "x": 121.59999990463257,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.6960449965869986
+      },
       "stripe_wall_h_v1_s01": {
         "run": "sim_stripe_wall_h_v1_s01_a2_fixed_r01",
         "status": "completed",
@@ -65,39 +95,39 @@
           "yaw": 35.799999952316284
         },
         "risk_pos_max": 0.9358582689693024
-      },
+      }
+    },
+    "fixed_weight_sigma0.5": {
       "pilaster_wall_v1_s01": {
-        "run": "sim_pilaster_wall_v1_s01_a2_fixed_r01",
+        "run": "sim_pilaster_wall_v1_s01_a2_fixed_weight_sigma0.5_r01",
         "status": "completed",
         "error": null,
-        "wall_s": 1402.4667693899828,
+        "wall_s": 1740.2969936439767,
         "commit": "14734c4",
-        "config": "configs/a1/fixed.yaml",
-        "solve_max_s": 34.35376102200826,
+        "config": "configs/a2/fixed_weight_sigma0.5.yaml",
+        "solve_max_s": 55.42144869299955,
         "sonar_factors": 5936,
         "sonar_weight_mean": 1.0,
         "sonar_weight_at_min": 0.0,
         "coverage": 1.0,
-        "ape": 0.08057463992108403,
-        "ape_max": 0.20563935472055586,
-        "rpe1": 0.017924950893309633,
-        "rpe5": 0.03586237281968772,
+        "ape": 0.0915350625554147,
+        "ape_max": 0.23469939755226907,
+        "rpe1": 0.03032152821034275,
+        "rpe5": 0.03999252267763071,
         "risk_max": {
-          "x": 0.6960449965869986,
-          "y": 0.09012531938798349,
-          "z": 0.09184803226508294,
-          "yaw": 2.605847987173794
+          "x": 0.5437206045082961,
+          "y": 0.055601445147058476,
+          "z": 0.09309977375676287,
+          "yaw": 1.83218248066645
         },
         "exceed_s": {
-          "x": 121.59999990463257,
+          "x": 114.59999990463257,
           "y": 0.0,
           "z": 0.0,
           "yaw": 0.0
         },
-        "risk_pos_max": 0.6960449965869986
-      }
-    },
-    "fixed_weight_sigma0.5": {
+        "risk_pos_max": 0.5437206045082961
+      },
       "stripe_wall_h_v1_s01": {
         "run": "sim_stripe_wall_h_v1_s01_a2_fixed_weight_sigma0.5_r01",
         "status": "completed",
@@ -160,6 +190,36 @@
       }
     },
     "robust_kernel_cauchy2": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_robust_kernel_cauchy2_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 797.8239744719758,
+        "commit": "14734c4",
+        "config": "configs/a2/robust_kernel_cauchy2.yaml",
+        "solve_max_s": 17.09691624500556,
+        "sonar_factors": 5936,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.08674534567462648,
+        "ape_max": 0.2109649906230961,
+        "rpe1": 0.00970304201073627,
+        "rpe5": 0.025157496806068616,
+        "risk_max": {
+          "x": 0.7201236691144212,
+          "y": 0.0951111180711595,
+          "z": 0.08536183510543595,
+          "yaw": 2.7049383683887793
+        },
+        "exceed_s": {
+          "x": 121.79999995231628,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.7201236691144212
+      },
       "stripe_wall_h_v1_s01": {
         "run": "sim_stripe_wall_h_v1_s01_a2_robust_kernel_cauchy2_r01",
         "status": "completed",
@@ -222,6 +282,36 @@
       }
     },
     "scalar_weight_support_w0.3_n5": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_scalar_weight_support_w0.3_n5_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 972.7149794399738,
+        "commit": "14734c4",
+        "config": "configs/a2/scalar_weight_support_w0.3_n5.yaml",
+        "solve_max_s": 29.633229138009483,
+        "sonar_factors": 5936,
+        "sonar_weight_mean": 0.9764150943396226,
+        "sonar_weight_at_min": 0.013477088948787063,
+        "coverage": 1.0,
+        "ape": 0.11409432308814409,
+        "ape_max": 0.26102407949774126,
+        "rpe1": 0.015013678471318145,
+        "rpe5": 0.02759650136529197,
+        "risk_max": {
+          "x": 0.6800947379048761,
+          "y": 0.08280798383562782,
+          "z": 0.09302066220698688,
+          "yaw": 2.477547123194947
+        },
+        "exceed_s": {
+          "x": 121.90000009536743,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.6800947379048761
+      },
       "stripe_wall_h_v1_s01": {
         "run": "sim_stripe_wall_h_v1_s01_a2_scalar_weight_support_w0.3_n5_r01",
         "status": "completed",
@@ -284,6 +374,33 @@
       }
     },
     "sonar_off": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_sonar_off_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 77.378522590996,
+        "commit": "14734c4",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 0.39924072500434704,
+        "coverage": 1.0,
+        "ape": 0.062197982547968565,
+        "ape_max": 0.161280178868382,
+        "rpe1": 0.008255697391161589,
+        "rpe5": 0.02423700010097326,
+        "risk_max": {
+          "x": 0.9078479132231687,
+          "y": 0.13358960638591408,
+          "z": 0.09663355221266065,
+          "yaw": 3.3538515623158585
+        },
+        "exceed_s": {
+          "x": 124.70000004768372,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 2.3999998569488525
+        },
+        "risk_pos_max": 0.9078479132231687
+      },
       "stripe_wall_h_v1_s01": {
         "run": "sim_stripe_wall_h_v1_s01_a2_sonar_off_r01",
         "status": "completed",
@@ -337,33 +454,6 @@
           "yaw": 8.5
         },
         "risk_pos_max": 0.8728636984107111
-      },
-      "pilaster_wall_v1_s01": {
-        "run": "sim_pilaster_wall_v1_s01_a2_sonar_off_r01",
-        "status": "completed",
-        "error": null,
-        "wall_s": 77.378522590996,
-        "commit": "14734c4",
-        "config": "configs/a1/sonar_off.yaml",
-        "solve_max_s": 0.39924072500434704,
-        "coverage": 1.0,
-        "ape": 0.062197982547968565,
-        "ape_max": 0.161280178868382,
-        "rpe1": 0.008255697391161589,
-        "rpe5": 0.02423700010097326,
-        "risk_max": {
-          "x": 0.9078479132231687,
-          "y": 0.13358960638591408,
-          "z": 0.09663355221266065,
-          "yaw": 3.3538515623158585
-        },
-        "exceed_s": {
-          "x": 124.70000004768372,
-          "y": 0.0,
-          "z": 0.0,
-          "yaw": 2.3999998569488525
-        },
-        "risk_pos_max": 0.9078479132231687
       }
     }
   }
