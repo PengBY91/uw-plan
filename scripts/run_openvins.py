@@ -32,7 +32,9 @@ def main():
     if source_dirty.strip():
         parser.error('Commit OpenVINS source changes before a versioned baseline run')
     if args.dataset_audit:
-        if not json.loads(args.dataset_audit.read_text()).get('passed'):
+        audit = json.loads(args.dataset_audit.read_text())
+        # uwbench audit writes passed=true; scripts/audit_euroc.py writes status=passed.
+        if not (audit.get('passed') is True or audit.get('status') == 'passed'):
             parser.error('uwbench dataset audit has not passed')
     elif json.loads((args.lab/'reports/w1/v101-data-audit/audit.json').read_text())['status'] != 'passed':
         parser.error('Dataset audit has not passed')

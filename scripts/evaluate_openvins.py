@@ -55,6 +55,7 @@ def main():
     parser.add_argument('--audit', type=Path, required=True)
     parser.add_argument('--gt-original', type=Path, required=True)
     parser.add_argument('--gt-corrected', type=Path, required=True)
+    parser.add_argument('--sequence', default='V1_01_easy')
     args = parser.parse_args()
     export = args.run/'evaluation'
     export.mkdir(exist_ok=False)
@@ -92,7 +93,7 @@ def main():
     report = {'status': 'scored', 'outputs': outputs, 'coverage': coverage,
               'protocol': {'ape_alignment': 'full matched trajectory SE3, no scale',
                            'association_tolerance_s': 0.01, 'timestamp_offset_s': 0.0,
-                           'primary_reference': 'OpenVINS corrected V1_01_easy',
+                           'primary_reference': 'OpenVINS corrected '+args.sequence,
                            'secondary_reference': 'ETH original ASL state_groundtruth_estimate0',
                            'rpe_engine': 'evo.metrics.RPE.rpe_base, timestamp pairs, no fitted scale'},
               'references': {}}
@@ -119,7 +120,7 @@ def main():
             fig, ax = plt.subplots(1, 2, figsize=(11, 4.5))
             ax[0].plot(synced_ref.positions_xyz[:, 0], synced_ref.positions_xyz[:, 1], label='Corrected reference')
             ax[0].plot(aligned.positions_xyz[:, 0], aligned.positions_xyz[:, 1], label='OpenVINS (SE3 aligned)', alpha=0.8)
-            ax[0].set(xlabel='x [m]', ylabel='y [m]', title='V1_01_easy stereo-inertial baseline')
+            ax[0].set(xlabel='x [m]', ylabel='y [m]', title=args.sequence+' stereo-inertial baseline')
             ax[0].axis('equal'); ax[0].legend()
             ax[1].plot(synced_est.timestamps-synced_est.timestamps[0], metric.error)
             ax[1].set(xlabel='Time since first matched estimate [s]', ylabel='Translation APE [m]', title='No scale fitting')
