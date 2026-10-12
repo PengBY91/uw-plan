@@ -14,6 +14,14 @@ Pilot scope, stated so nobody reads it as the M3 protocol:
   simulation only, the simulator's true bias (an oracle bound, never a detector). The frozen form is also scored
   against its drift budget e(T) = n_sigma * sqrt(N^2 T + K^2 T^3 / 3) from the run's IMU noise density N and random
   walk K; the budget leaves out the error of the frozen bias itself, so it is optimistic.
+- sonar (when the run's dataset has sonar images): per frame, the first return above a threshold in each azimuth
+  column (range and bearing only, as an imaging sonar gives) and a RANSAC line through them. The first line after t_0
+  fixes a world plane through the estimated pose (sonar_reference_s > 0 averages the lines of that long instead; an
+  error d in the reference normal adds d times the distance travelled along the structure, and averaging over the
+  opening manoeuvre also averages in its heading error, which on the pilot runs was the larger effect); afterwards
+  the measured distance to the line is compared with the distance the estimated position predicts. The difference is a cumulative conflict along the plane normal,
+  projected on the estimated body x and y. Frames whose line normal is more than gate_deg from the reference plane
+  (seen through the estimated attitude) are skipped, so another structure does not count as conflict.
 - every statistic at time t uses only data stamped <= t; reference errors are read only to score.
 Inputs per run: estimator.log with the b64db17 [DIAG] lines, estimate_bag (poseimu + odomimu), the input bag (imu0,
 depth/pressure) recorded in run.json, and eval-traj/axis_errors.csv for labels.
@@ -38,12 +46,17 @@ SIM_EPOCH_S = 1_700_000_000  # scripts/sim_to_bag.py maps simulator t = 0 to thi
 DIAG = re.compile(r'\[DIAG\] (MSCKF|SLAM) (.*)$')
 CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conflict_window_s': 10.0,
           'lambda_min_quantile': 0.10, 'false_alarm_targets': [0.0, 0.01, 0.05],
-          'early_warning_s': [0.0, 10.0], 'budget_n_sigma': 3.0}
+          'early_warning_s': [0.0, 10.0], 'budget_n_sigma': 3.0,
+          'sonar_threshold': 0.25, 'sonar_inlier_m': 0.05, 'sonar_min_inliers': 20, 'sonar_gate_deg': 15.0,
+          'sonar_reference_s': 0.0}
 DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DIR-gap': 'axis', 'DIR-conflict': 'axis',
              'DIR-gap+conflict': 'axis', 'DIR-cumconflict': 'axis', 'DIR-gap+cumconflict': 'axis',
-             'DIR-cumconflict-frozen': 'axis', 'DIR-cumconflict-frozen-budget': 'axis', 'ORACLE-cumconflict-truebias': 'axis'}
+             'DIR-cumconflict-frozen': 'axis', 'DIR-cumconflict-frozen-budget': 'axis', 'ORACLE-cumconflict-truebias': 'axis',
+             'DIR-cumconflict+sonar': 'axis'}
 CUMULATIVE = {'DIR-cumconflict': 'conflict_cum', 'DIR-cumconflict-frozen': 'conflict_cum_frozen',
-              'DIR-cumconflict-frozen-budget': 'conflict_cum_frozen_excess', 'ORACLE-cumconflict-truebias': 'conflict_cum_true'}
+              'DIR-cumconflict-frozen-budget': 'conflict_cum_frozen_excess', 'ORACLE-cumconflict-truebias': 'conflict_cum_true',
+              'DIR-cumconflict+sonar': 'conflict_cum_sonar'}
+SOURCE_AXES = {'conflict_cum_sonar': (0, 1, 2, 3)}  # every other cumulative form: depth for z, gyro for heading only
 
 
 def parse_diag(log_path):
@@ -117,10 +130,98 @@ def drift_budget_deg(T, noise_density, random_walk, n_sigma):
     return np.degrees(n_sigma*np.sqrt(noise_density**2*T + random_walk**2*T**3/3))
 
 
-def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, true_bias=None):
+def sonar_first_returns(image, geometry, threshold):
+    """Sonar-frame (x forward, y left) points from the first return above threshold in each azimuth column.
+
+    Image layout as HoloOcean ImagingSonar: [RangeBins, AzimuthBins], row 0 at RangeMin, column 0 at -Azimuth/2.
+    """
+    above = image > threshold
+    has = above.any(axis=0)
+    row = np.argmax(above, axis=0)[has]
+    col = np.nonzero(has)[0]
+    rng_m = geometry['RangeMin'] + (row + 0.5)*(geometry['RangeMax'] - geometry['RangeMin'])/image.shape[0]
+    az = np.radians(-geometry['Azimuth']/2 + (col + 0.5)*geometry['Azimuth']/image.shape[1])
+    return np.column_stack([rng_m*np.cos(az), rng_m*np.sin(az)])
+
+
+def fit_line(points, inlier_m, min_inliers, rng, iterations=100):
+    """RANSAC line m . p = d through 2-D points, m a unit normal pointing away from the origin; None if too few."""
+    if len(points) < min_inliers:
+        return None
+    best = None
+    for _ in range(iterations):
+        a, b = points[rng.choice(len(points), 2, replace=False)]
+        direction = b - a
+        if np.linalg.norm(direction) < 1e-6:
+            continue
+        m = np.array([-direction[1], direction[0]])/np.linalg.norm(direction)
+        inliers = np.abs(points @ m - a @ m) < inlier_m
+        if best is None or inliers.sum() > best.sum():
+            best = inliers
+    if best is None or best.sum() < min_inliers:
+        return None
+    q = points[best]
+    centre = q.mean(axis=0)
+    m = np.linalg.eigh(np.cov((q - centre).T))[1][:, 0]  # least-squares refit on the inliers
+    d = centre @ m
+    return (m, d) if d > 0 else (-m, -d)
+
+
+def sonar_lines(stamps, images, geometry, cfg=CONFIG):
+    """Per sonar frame: (t, m_x, m_y, d) of the dominant line, NaN where none."""
+    rng = np.random.default_rng(0)
+    out = np.full((len(stamps), 4), np.nan)
+    out[:, 0] = stamps
+    for i, image in enumerate(images):
+        line = fit_line(sonar_first_returns(image, geometry, cfg['sonar_threshold']), cfg['sonar_inlier_m'],
+                        cfg['sonar_min_inliers'], rng)
+        if line is not None:
+            out[i, 1:3], out[i, 3] = line
+    return out
+
+
+def sonar_conflict(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0):
+    """Cumulative conflict along a reference plane normal, projected on estimated body x and y, at stamps t.
+
+    The reference plane averages the lines seen in the first reference_s after the first one; zero until it is fixed.
+    """
+    est_t, R, p = est[0], est[1], est[2]
+    R_is, t_is = T_imu_sonar[:3, :3], T_imu_sonar[:3, 3]
+    value_t, values = [], []
+    ref, window = None, []
+    for ts, mx, my, d in lines:
+        if not np.isfinite(d) or ts < est_t[0]:
+            continue
+        j = np.searchsorted(est_t, ts, side='right') - 1  # latest estimate at or before the frame
+        p_s = p[j] + R[j] @ t_is
+        n_w = R[j] @ R_is @ np.array([mx, my, 0.0])
+        if ref is None:
+            if window and np.degrees(np.arccos(np.clip(n_w @ window[0][1], -1, 1))) > gate_deg:
+                continue
+            window.append((ts, n_w, p_s, d))
+            if ts - window[0][0] >= reference_s:
+                n_ref = np.mean([w[1] for w in window], axis=0)
+                n_ref /= np.linalg.norm(n_ref)
+                ref = (n_ref, np.mean([n_ref @ w[2] + w[3] for w in window]))
+            continue
+        n_ref, h = ref
+        if np.degrees(np.arccos(np.clip(n_w @ n_ref, -1, 1))) > gate_deg:
+            continue
+        c = abs(d - (h - n_ref @ p_s))
+        value_t.append(ts)
+        values.append(c*np.abs(R[j].T @ n_ref)[:2])
+    out = np.zeros((len(t), 2))
+    if values:
+        k = np.searchsorted(np.asarray(value_t), t, side='right') - 1
+        out[k >= 0] = np.asarray(values)[k[k >= 0]]
+    return out
+
+
+def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, true_bias=None, sonar=None):
     """Detector statistics at estimate stamps t (all causal). Larger means more alarming for every column.
 
-    gyro_noise: (noise density, random walk) for the frozen-bias drift budget; true_bias: simulator (t, bias xyz), oracle.
+    gyro_noise: (noise density, random walk) for the frozen-bias drift budget; true_bias: simulator (t, bias xyz), oracle;
+    sonar: (lines from sonar_lines, 4x4 sonar pose in the IMU frame).
     """
     est_t, R, p, cov = est
     k = np.searchsorted(est_t, t)
@@ -190,6 +291,10 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
     if true_bias is not None:
         stats['conflict_cum_true'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum,
                                                       cumulative_yaw(gyro_heading(imu, true_bias[:, 0], true_bias[:, 1:]))])
+    if sonar is not None:
+        stats['conflict_cum_sonar'] = np.column_stack([sonar_conflict(t, est, sonar[0], sonar[1], cfg['sonar_gate_deg'],
+                                                                      cfg['sonar_reference_s']),
+                                                       z_cum, yaw_cum])
     return stats
 
 
@@ -205,7 +310,20 @@ def information_gap(t, lam, lam_min):
     return tau
 
 
-def load_run(run_dir):
+def load_sim_sonar(dataset, cfg=CONFIG):
+    """Sonar lines and extrinsic of a simulated dataset: the raycast replay (props) if present, else the raw images."""
+    raw = dataset/'raw'
+    if not (raw/'meta.json').exists():
+        return None
+    meta = json.loads((raw/'meta.json').read_text())
+    source = dataset/'sonar_raycast' if (dataset/'sonar_raycast'/'sonar_t.npy').exists() else raw
+    stamps = np.load(source/'sonar_t.npy') + SIM_EPOCH_S
+    images = np.concatenate([np.load(f) for f in sorted(source.glob('sonar_[0-9]*.npy'))])
+    lines = sonar_lines(stamps, images, meta['route']['sensors']['sonar'], cfg)
+    return lines, np.asarray(meta['socket_extrinsics_in_imu_frame']['sonar'])
+
+
+def load_run(run_dir, cfg=CONFIG):
     run_dir = Path(run_dir)
     record = json.loads((run_dir/'run.json').read_text())
     bag = Path(record['bag'])
@@ -227,7 +345,8 @@ def load_run(run_dir):
     data['stats'] = statistics(data['t'], est, parse_diag(run_dir/'estimator.log'),
                                read_series(bag, '/imu0', 'gyro'),
                                read_series(run_dir/'estimate_bag', '/ov_msckf/odomimu', 'twist_angular'),
-                               read_series(bag, '/depth/pressure', 'pressure'), gyro_noise=gyro_noise, true_bias=true_bias)
+                               read_series(bag, '/depth/pressure', 'pressure'), gyro_noise=gyro_noise, true_bias=true_bias,
+                               sonar=load_sim_sonar(bag.parent, cfg))
     data['gyro_noise'] = gyro_noise
     return data
 
@@ -275,9 +394,9 @@ def evaluate(runs, cfg=CONFIG):
             alarms['DIR-gap+conflict'] = gap_half | conflict
             for name, key in CUMULATIVE.items():
                 if not all(key in r['stats'] for r in runs):
-                    continue  # the oracle needs the simulator's bias in every run
+                    continue  # the oracle needs the simulator's bias, the sonar form sonar data, in every run
                 cum = np.zeros((len(test['t']), 4), bool)
-                for a in (2, 3):
+                for a in SOURCE_AXES.get(key, (2, 3)):  # same per-axis budget everywhere: z and heading thresholds match
                     cum[:, a] = test['stats'][key][:, a] > threshold(normal(key, a), per_axis/2)
                 alarms[name] = cum
             alarms['DIR-gap+cumconflict'] = gap_half | alarms['DIR-cumconflict']
@@ -323,7 +442,7 @@ def main(argv):
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args(argv)
     cfg = {**CONFIG, **(yaml.safe_load(args.config.read_text()) if args.config else {})}
-    runs = [load_run(r) for r in args.runs]
+    runs = [load_run(r, cfg) for r in args.runs]
     results = evaluate(runs, cfg)
     summary = pooled(results)
     args.out.mkdir(parents=True, exist_ok=False)
@@ -337,11 +456,13 @@ def main(argv):
                  [f'lambda_{a}' for a in AXES] + [f'tau_{a}' for a in AXES] + ['conflict_z_m', 'conflict_yaw_deg',
                                                                                 'cum_conflict_z_m', 'cum_conflict_yaw_deg',
                                                                                 'cum_conflict_yaw_frozen_deg', 'budget_yaw_deg',
-                                                                                'cum_conflict_yaw_truebias_deg']
+                                                                                'cum_conflict_yaw_truebias_deg',
+                                                                                'cum_conflict_sonar_x_m', 'cum_conflict_sonar_y_m']
         true_yaw = s['conflict_cum_true'][:, 3] if 'conflict_cum_true' in s else np.full(len(r['t']), np.nan)
+        sonar_xy = s['conflict_cum_sonar'][:, :2] if 'conflict_cum_sonar' in s else np.full((len(r['t']), 2), np.nan)
         cols = np.column_stack([r['t'], r['scored'], s['DET-NIS'], s['DET-FEAT'], s['DET-COV'], s['lambda'], s['tau'],
                                 s['conflict'][:, 2:], s['conflict_cum'][:, 2:], s['conflict_cum_frozen'][:, 3],
-                                s['budget_yaw_deg'], true_yaw])
+                                s['budget_yaw_deg'], true_yaw, sonar_xy])
         np.savetxt(args.out/f'stats_{r["name"]}.csv', cols, delimiter=',', header=','.join(header), comments='',
                    fmt=['%.6f', '%d'] + ['%.6g']*(cols.shape[1] - 2))
     tol_yaw = DEFAULTS['risk']['tolerance_yaw_deg']

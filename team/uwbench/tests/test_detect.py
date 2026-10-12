@@ -5,7 +5,8 @@ from pathlib import Path
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from uwbench.detect import ATMOSPHERE_PA, G, RHO, drift_budget_deg, information_gap, parse_diag, statistics, threshold
+from uwbench.detect import (ATMOSPHERE_PA, G, RHO, drift_budget_deg, fit_line, information_gap, parse_diag, sonar_conflict,
+                            sonar_first_returns, statistics, threshold)
 
 
 def synthetic(seed=0, yaw_drift=0.0):
@@ -80,6 +81,51 @@ class DetectTest(unittest.TestCase):
         self.assertAlmostEqual(drift_budget_deg(100.0, 1e-3, 0.0, 1.0), np.degrees(1e-2))
         self.assertAlmostEqual(drift_budget_deg(30.0, 0.0, 1e-4, 3.0), np.degrees(3e-4*np.sqrt(30.0**3/3)))
         self.assertEqual(drift_budget_deg(-1.0, 1e-3, 1e-4, 3.0), 0.0)
+
+    def test_sonar_first_returns_follow_imaging_sonar_layout(self):
+        geometry = {'RangeMin': 0.0, 'RangeMax': 10.0, 'Azimuth': 120.0}
+        image = np.zeros((100, 3))
+        image[20, 1] = image[50, 1] = 0.8  # straight ahead: first return at 2.05 m, the later one is ignored
+        image[30, 2] = 0.8  # column 2 is +40 deg, to the left (y > 0)
+        pts = sonar_first_returns(image, geometry, 0.25)
+        np.testing.assert_allclose(pts[0], [2.05, 0.0], atol=1e-9)
+        np.testing.assert_allclose(pts[1], 3.05*np.array([np.cos(np.radians(40)), np.sin(np.radians(40))]), atol=1e-9)
+
+    def test_fit_line_finds_wall_despite_outliers(self):
+        rng = np.random.default_rng(1)
+        y = np.linspace(-3, 3, 60)
+        wall = np.column_stack([np.full(60, 2.5) + rng.normal(0, 0.01, 60), y])
+        pts = np.vstack([wall, rng.uniform(0.5, 8, (10, 2))])
+        m, d = fit_line(pts, 0.05, 20, rng)
+        np.testing.assert_allclose(m, [1, 0], atol=0.02)
+        self.assertAlmostEqual(d, 2.5, delta=0.01)
+
+    def test_sonar_conflict_measures_estimated_motion_toward_a_wall_the_sonar_does_not_see(self):
+        est_t = np.arange(0, 20, 0.05)
+        R = np.tile(np.eye(3), (len(est_t), 1, 1))
+        p = np.zeros((len(est_t), 3))
+        p[:, 0] = 0.02*np.clip(est_t - 5, 0, None)  # estimate drifts 2 cm/s toward the wall after 5 s
+        sonar_t = np.arange(0, 20, 0.1)
+        lines = np.column_stack([sonar_t, np.ones(len(sonar_t)), np.zeros(len(sonar_t)), np.full(len(sonar_t), 2.5)])
+        lines[50:60, 1:3] = [0, 1]  # another structure in view: outside the gate, skipped
+        out = sonar_conflict(est_t, (est_t, R, p), lines, np.eye(4), 15.0)
+        self.assertAlmostEqual(out[-1, 0], 0.02*(est_t[-1] - 5), delta=0.01)
+        self.assertLess(out[est_t < 5, 0].max(), 1e-9)
+        np.testing.assert_allclose(out[:, 1], 0.0, atol=1e-9)
+
+    def test_sonar_reference_plane_averages_noisy_normals(self):
+        rng = np.random.default_rng(2)
+        est_t = np.arange(0, 120, 0.05)
+        R = np.tile(np.eye(3), (len(est_t), 1, 1))
+        p = np.column_stack([np.zeros_like(est_t), 0.2*est_t, np.zeros_like(est_t)])  # 24 m along the wall, no error
+        sonar_t = np.arange(0, 120, 0.1)
+        angle = rng.normal(0, np.radians(0.5), len(sonar_t))  # per-frame normal noise of the line fit
+        lines = np.column_stack([sonar_t, np.cos(angle), np.sin(angle), np.full(len(sonar_t), 2.0)])
+        single = sonar_conflict(est_t, (est_t, R, p), lines, np.eye(4), 15.0, 0.0)[:, 0]
+        averaged = sonar_conflict(est_t, (est_t, R, p), lines, np.eye(4), 15.0, 5.0)
+        self.assertLess(averaged[:, 0].max(), 0.1)
+        self.assertLess(averaged[:, 0].max(), single.max())
+        np.testing.assert_allclose(averaged[est_t < 5, 0], 0.0)  # nothing before the plane is fixed
 
     def test_depth_conflict_is_zero_when_estimate_follows_gauge(self):
         conflict_z = statistics(*synthetic())['conflict'][:, 2]
