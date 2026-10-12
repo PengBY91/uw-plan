@@ -1,0 +1,19 @@
+# uwbench manifest: V1_01 scored against the original ETH ASL ground truth (200 Hz) instead of the 20 Hz OpenVINS-corrected file; used where estimate stamps are not on camera times (W4-05 time-offset faults).
+schema_version: 1
+run_id: euroc_V1_01_easy_asl200
+data_root: /home/steve/uw-ao-lab/data/public/euroc
+split: public_pipeline_check
+raw_uri: V1_01_easy_ros2
+calibration_uri: /home/steve/uw-ao-lab/configs/euroc_v101/kalibr_imucam_chain.yaml
+reference_uri: /home/steve/uw-ao-lab/data/public/euroc/V1_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv
+clock_model_uri: {unavailable: "public dataset; hardware-synchronised header stamps, no separate clock model"}
+world_frame: vicon (gravity-aligned)
+body_frame: imu0
+checksums_uri: ros2-checksums.sha256
+streams:
+  left: {topic: /cam0/image_raw, acquisition_clock: header}
+  right: {topic: /cam1/image_raw, acquisition_clock: header, pairing_tolerance_s: 0.0}
+  imu: {topic: /imu0, units: "m/s^2, rad/s", min_rate_hz: 190}
+  sonar: {unavailable: "EuRoC has no sonar"}
+  depth: {unavailable: "EuRoC has no pressure sensor"}
+conditions: {layout: Vicon room 1, visibility: in air}

@@ -80,16 +80,13 @@ def elevation_search(T_first, T_body_sonar, measured_first, others, aperture_rad
     if not others:
         return None
     phis = np.linspace(-aperture_rad/2, aperture_rad/2, steps)
-    arc = arc_points(measured_first[0], measured_first[1], phis)
-    T_ws = T_first.compose(T_body_sonar)
-    best = None
-    for phi, q in zip(phis, arc):
-        p_w = T_ws.transformFrom(q)
-        cost = 0.0
-        for T, z in others:
-            e, _, _ = residual(T, T_body_sonar, p_w, z)
-            cost += float(np.sum((e/sigma)**2))
-        cost /= len(others)
-        if best is None or cost < best[2]:
-            best = (p_w, float(phi), cost)
-    return best
+    T_ws = T_first.compose(T_body_sonar).matrix()
+    cand = arc_points(measured_first[0], measured_first[1], phis) @ T_ws[:3, :3].T + T_ws[:3, 3]      # (steps, 3)
+    S = np.stack([T.compose(T_body_sonar).matrix() for T, _ in others])                              # (n, 4, 4)
+    z = np.array([m for _, m in others], dtype=float)                                                 # (n, 2)
+    p_s = np.einsum('nji,snj->sni', S[:, :3, :3], cand[:, None, :] - S[None, :, :3, 3])               # (steps, n, 3)
+    rho, theta = range_bearing(p_s)
+    e = np.stack([rho - z[None, :, 0], wrap_angle(theta - z[None, :, 1])], axis=-1)/np.asarray(sigma)
+    cost = np.sum(e**2, axis=(1, 2))/len(others)
+    i = int(np.argmin(cost))
+    return cand[i], float(phis[i]), float(cost[i])

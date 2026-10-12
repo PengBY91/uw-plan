@@ -1,0 +1,3 @@
+# eval-traj override for A1 outputs: one pose per 10 Hz keyframe, so a hold is available up to 0.15 s
+# (the default 0.075 s is for 20 Hz OpenVINS output and would mark every A1 hold unavailable).
+max_gap_s: 0.15
