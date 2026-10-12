@@ -1,0 +1,1623 @@
+{
+  "name": "slope_wall_v1",
+  "purpose": "W2-11 sonar elevation-ambiguity check (detect-a vertical-structure gate): the stripe_wall_h_v1 brick wall and route, with the half at x > 0 tilted 35 deg from vertical about the line y = -0.25, z = -20 (face top leaning away from the vehicle, like the Dam face, ~37 deg). The vehicle backs off from 2.5 m to 4.5 m and returns once over each half, because the elevation ambiguity only shows when the range changes; the return leg is at constant stand-off. Sonar is the raycast model from the start.",
+  "world": "OpenWater",
+  "package": "Ocean",
+  "ticks_per_sec": 200,
+  "assumptions": {
+    "imu_noise": "ASSUMPTION consumer-MEMS class per-sample sigmas at 200 Hz; replace with platform Allan-variance values after the IMU arrives",
+    "depth_sigma_m": "ASSUMPTION 2 cm per sample",
+    "sonar_elevation_deg": "ASSUMPTION 20 deg until the platform vertical aperture is measured (do not cite as the platform value)",
+    "scene_geometry": "wall from identical [10, 0.5, 1] boxes; the tilted half is a staircase of [10, 0.5, 0.1] rows set back 0.1*tan(35 deg) each (spawn_prop rotation does not tilt box faces: slope probe); riser 0.1 m is finer than the sonar elevation footprint"
+  },
+  "sensors": {
+    "imu_hz": 200,
+    "imu_noise": {
+      "AccelSigma": 0.02,
+      "AngVelSigma": 0.002,
+      "AccelBiasSigma": 0.0003,
+      "AngVelBiasSigma": 2e-05
+    },
+    "depth_hz": 50,
+    "depth_sigma_m": 0.02,
+    "camera_hz": 20,
+    "width": 640,
+    "height": 480,
+    "fov_deg": 90.0,
+    "sonar_hz": 10,
+    "sonar": {
+      "RangeBins": 256,
+      "AzimuthBins": 128,
+      "RangeMin": 0.3,
+      "RangeMax": 10,
+      "Elevation": 20,
+      "Azimuth": 120,
+      "MultSigma": 0.1,
+      "AddSigma": 0.05,
+      "MultiPath": false,
+      "ViewRegion": false
+    },
+    "sonar_model": "raycast"
+  },
+  "waypoints": [
+    {
+      "t": 0,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 6,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 8,
+      "pose": [
+        -12.7,
+        -2.5,
+        -19.7,
+        0,
+        0,
+        100
+      ]
+    },
+    {
+      "t": 10,
+      "pose": [
+        -13.3,
+        -2.5,
+        -20.3,
+        0,
+        0,
+        80
+      ]
+    },
+    {
+      "t": 12,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 27,
+      "pose": [
+        -7,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 35,
+      "pose": [
+        -5,
+        -4.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 43,
+      "pose": [
+        -3,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 58,
+      "pose": [
+        3,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 66,
+      "pose": [
+        5,
+        -4.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 74,
+      "pose": [
+        7,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 89,
+      "pose": [
+        13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 94,
+      "pose": [
+        13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 159,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 162,
+      "pose": [
+        -13,
+        -2.5,
+        -20.0,
+        0,
+        0,
+        90.0
+      ]
+    }
+  ],
+  "estimator_overrides": {
+    "values": {
+      "init_dyn_use": true,
+      "init_imu_thresh": 0.1
+    },
+    "reason": "AUV excitation is far below the drone-level EuRoC jerk threshold (tank r02)"
+  },
+  "props": [
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -24.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -23.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -22.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -21.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -20.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -19.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -18.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -17.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -16.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -5.0,
+        0,
+        -15.5
+      ],
+      "scale": [
+        10,
+        0.5,
+        1.0
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        -14.5,
+        0,
+        -20.0
+      ],
+      "scale": [
+        3,
+        0.5,
+        3
+      ],
+      "material": "cobblestone"
+    },
+    {
+      "type": "box",
+      "location": [
+        14.5,
+        0,
+        -20.0
+      ],
+      "scale": [
+        3,
+        0.5,
+        3
+      ],
+      "material": "cobblestone"
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.8358,
+        -24.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.7658,
+        -23.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.6958,
+        -23.85
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.6258,
+        -23.75
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.5558,
+        -23.65
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.4857,
+        -23.55
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.4157,
+        -23.45
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.3457,
+        -23.35
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.2757,
+        -23.25
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.2057,
+        -23.15
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.1356,
+        -23.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -2.0656,
+        -22.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.9956,
+        -22.85
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.9256,
+        -22.75
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.8555,
+        -22.65
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.7855,
+        -22.55
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.7155,
+        -22.45
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.6455,
+        -22.35
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.5755,
+        -22.25
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.5054,
+        -22.15
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.4354,
+        -22.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.3654,
+        -21.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.2954,
+        -21.85
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.2254,
+        -21.75
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.1553,
+        -21.65
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.0853,
+        -21.55
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -1.0153,
+        -21.45
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.9453,
+        -21.35
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.8753,
+        -21.25
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.8052,
+        -21.15
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.7352,
+        -21.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.6652,
+        -20.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.5952,
+        -20.85
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.5252,
+        -20.75
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.4551,
+        -20.65
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.3851,
+        -20.55
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.3151,
+        -20.45
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.2451,
+        -20.35
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.1751,
+        -20.25
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.105,
+        -20.15
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        -0.035,
+        -20.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.035,
+        -19.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.105,
+        -19.85
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.1751,
+        -19.75
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.2451,
+        -19.65
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.3151,
+        -19.55
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.3851,
+        -19.45
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.4551,
+        -19.35
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.5252,
+        -19.25
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.5952,
+        -19.15
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.6652,
+        -19.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.7352,
+        -18.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.8052,
+        -18.85
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.8753,
+        -18.75
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        0.9453,
+        -18.65
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.0153,
+        -18.55
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.0853,
+        -18.45
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.1553,
+        -18.35
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.2254,
+        -18.25
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.2954,
+        -18.15
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.3654,
+        -18.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.4354,
+        -17.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.5054,
+        -17.85
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.5755,
+        -17.75
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.6455,
+        -17.65
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.7155,
+        -17.55
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.7855,
+        -17.45
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.8555,
+        -17.35
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.9256,
+        -17.25
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        1.9956,
+        -17.15
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.0656,
+        -17.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.1356,
+        -16.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.2057,
+        -16.85
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.2757,
+        -16.75
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.3457,
+        -16.65
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.4157,
+        -16.55
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.4857,
+        -16.45
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.5558,
+        -16.35
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.6258,
+        -16.25
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.6958,
+        -16.15
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.7658,
+        -16.05
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    },
+    {
+      "type": "box",
+      "location": [
+        5.0,
+        2.8358,
+        -15.95
+      ],
+      "scale": [
+        10,
+        0.5,
+        0.1
+      ],
+      "material": "brick",
+      "slope_row": true
+    }
+  ],
+  "fog": [
+    {
+      "t": 0,
+      "density": 2.0,
+      "depth": 0.5
+    }
+  ]
+}
