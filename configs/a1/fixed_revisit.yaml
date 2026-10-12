@@ -1,0 +1,4 @@
+# Diagnostic, not part of the main comparison: fixed weight with oracle association kept across revisits
+# (max_gap_s: null), i.e. sonar gets loop-closure-like constraints the KLT front end does not have.
+backend:
+  sonar: {enabled: true, sigma_range_m: 0.05, sigma_bearing_deg: 1.0, kernel: none, max_gap_s: null}
