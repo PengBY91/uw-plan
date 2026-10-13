@@ -10,6 +10,7 @@ Team-maintained acquisition, conversion, audit, baseline and evaluation code is 
   - uwbench.metrics.occupancy: B section 6 map ratios with undefined (None) empty denominators.
   - uwbench.mapping: B0 dense tri-state voxel grid (OctoMap log-odds defaults) with per-voxel source and update time; invalid or out-of-range depth never clears, mm depth is rejected.
   - `uwbench audit` (W1-05/P03): manifest schema from runbook E6; hashes, monotonic time, back-jumps, drop estimate, stereo pairing, image shape, IMU units/gravity axis/rate, pressure units, empty sonar. Example: manifests/euroc_v101_run.yaml, evidence in reports/w1/euroc_v101_audit/.
+  - `uwbench detect-a` (W2 pilot, P18): causal replay of detector statistics over finished runs, leave-one-run-out operating points, per-axis miss / unscorable / misattribution and comparability flags; configs in configs/detect_a/, record in reports/w2/detect-a-pilot-experiments.md.
   - `uwbench eval-traj` (W1-07/P04): APE/RPE, time coverage, lost intervals, reference-invalid vs unmatched counts, v2 per-axis exceedance; empty estimates fail.
 - reports/w1/backend-decision.md (W1-09): SVIn not reused (zero-elevation single-beam sonar model, sonar/depth disabled on ROS2 main); A1 uses GTSAM 4.3.0 in a separate venv.
 - Tests: `.venv-eval/bin/python -m unittest discover -s team/uwbench/tests` with PYTHONPATH=team/uwbench, plus scripts/test_*.py from scripts/.

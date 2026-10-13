@@ -1,0 +1,6 @@
+# The pilot's evaluation (rounds 1-17): t_0 reference, single-frame sonar reference plane, fixed per-axis budget split
+# (target/4, conflict families target/8). Only the scoring columns differ from the pilot: r_miss counts unscorable
+# samples as missed, r_miss_scorable is the pilot's rate.
+conflict_reference: t0
+sonar_reference_s: 0.0
+threshold_allocation: fixed

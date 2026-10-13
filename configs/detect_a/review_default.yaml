@@ -1,0 +1,5 @@
+# Review step 3 of 3 = CONFIG defaults: window reference, sonar plane over the alignment window (10 s), union budget.
+# Kept as a file so the run records its intent.
+conflict_reference: window
+sonar_reference_s: 10.0
+threshold_allocation: union

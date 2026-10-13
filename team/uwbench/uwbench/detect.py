@@ -7,9 +7,24 @@ Pilot scope, stated so nobody reads it as the M3 protocol:
 - DET-DIR (added after pilot round 15) combines one source per axis: single-plane sonar for x, none for y (scored
   as unscorable), depth for z, frozen-bias gyro minus its drift budget for heading. It was assembled from results
   on the same pilot runs, so its pilot scores are optimistic.
+- DET-SCALAR (added after the 2026-10-12 review) folds the same per-axis sources as DET-DIR into one number
+  (max, or l2, of the tolerance-normalised conflicts) with one threshold, so DET-DIR against DET-SCALAR isolates what
+  splitting by axis contributes; the earlier scalar baselines (NIS, feature count) do not see those sensors at all.
 - operating points: leave-one-run-out; thresholds from the other runs' normal samples, false alarms counted as the
   fraction of normal samples with any alarm (too little normal data for alarms per 10 min). With early_warning_s > 0,
   samples that far before an exceedance onset are neither normal nor exceedance (alarms there are lead time).
+  threshold_allocation 'union' (default since the review) gives every detector the same nominal any-axis budget on
+  the training normals by bisection over a common per-axis quantile level; 'fixed' is the pilot's allocation (target/4
+  per axis, target/8 for the conflict families), whose union budget depended on the detector. Operating points whose
+  realised false-alarm fraction is more than comparable_tolerance (50 %) away from the target are flagged comparable:
+  false, as the ablation runbook requires; before the review that rule was only applied by hand.
+- scoring (since the review): r_miss counts an exceedance sample as missed whenever the detector did not alarm,
+  including samples where its statistic was not scorable (NaN), so every detector is scored on the same samples.
+  r_miss_scorable is the pilot's definition (unscorable samples left out), reported next to r_unscorable.
+- reference (since the review): the labels come from eval-traj's risk mode, which aligns over the first
+  align_window_s, so an error of zero means "equal to the window mean"; with conflict_reference 'window' every
+  cumulative conflict (depth, gyro, single-plane sonar) is likewise referenced to its causal mean over that window
+  instead of to t_0 ('t0', the pilot's form). The multi-plane and scan-to-map variants keep the t_0 reference.
 - conflicts come in two forms: over a trailing window (injection rate) and since the first estimate (accumulated);
   the second was added after the first pilot pass showed the windowed form peaks before onset (candidate 2 of 10).
 - the accumulated heading conflict integrates the gyro with three bias sources (method spec v2.2 M3.1): the
@@ -18,11 +33,14 @@ Pilot scope, stated so nobody reads it as the M3 protocol:
   against its drift budget e(T) = n_sigma * sqrt(N^2 T + K^2 T^3 / 3) from the run's IMU noise density N and random
   walk K; the budget leaves out the error of the frozen bias itself, so it is optimistic.
 - sonar (when the run's dataset has sonar images): per frame, the first return above a threshold in each azimuth
-  column (range and bearing only, as an imaging sonar gives) and a RANSAC line through them. The first line after t_0
-  fixes a world plane through the estimated pose (sonar_reference_s > 0 averages the lines of that long instead; an
-  error d in the reference normal adds d times the distance travelled along the structure, and averaging over the
-  opening manoeuvre also averages in its heading error, which on the pilot runs was the larger effect); afterwards
-  the measured distance to the line is compared with the distance the estimated position predicts. The difference is a cumulative conflict along the plane normal,
+  column (range and bearing only, as an imaging sonar gives) and a RANSAC line through them. The lines of the first
+  sonar_reference_s after t_0 fix a world plane through the estimated poses (default: the label alignment window,
+  align_window_s = 10 s; 0 uses the first line alone, the pilot's choice). An error d in the reference normal adds d
+  times the distance travelled along the structure; the labels fix their yaw by the mean over the alignment window,
+  so a plane fixed from one frame at t_0 differs from the label frame by the heading error at t_0 and the conflict
+  then drifts away from the label error with travel (round 18: on the vertical-stripe wall the conflict read 0.46 m
+  where the label read 0.18 m). The pilot judged the single frame better against t_0-aligned truth, which is not the
+  label reference. Afterwards the measured distance to the line is compared with the distance the estimated position predicts. The difference is a cumulative conflict along the plane normal,
   projected on the estimated body x and y. Frames whose line normal is more than gate_deg from the reference plane
   (seen through the estimated attitude) are skipped, so another structure does not count as conflict.
   The multi-plane form (sonar_conflict_multi) keeps every surface it has seen: a line is matched to a known plane by
@@ -62,13 +80,18 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           'lambda_min_quantile': 0.10, 'false_alarm_targets': [0.0, 0.01, 0.05],
           'early_warning_s': [0.0, 10.0], 'budget_n_sigma': 3.0,
           'sonar_threshold': 0.25, 'sonar_inlier_m': 0.05, 'sonar_min_inliers': 20, 'sonar_gate_deg': 15.0,
-          'sonar_reference_s': 0.0, 'sonar_max_thickness': 0.2, 'sonar_hold_s': 1.0, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15,
+          'sonar_reference_s': DEFAULTS['risk']['align_window_s'],  # reference plane over the label alignment window (pilot: 0.0)
+          'sonar_max_thickness': 0.2, 'sonar_hold_s': 1.0, 'sonar_match_deg': 3.0, 'sonar_jump_m': 0.15,
           'map_voxel_m': 0.05, 'map_assoc_m': 0.3, 'map_huber_m': 0.05, 'map_min_pairs': 20,
           'map_sigma_m': 0.03, 'map_prior_m': 0.02, 'map_prior_deg': 0.02, 'map_iterations': 6,
           'map_normal_k': 12, 'map_degenerate_ratio': 0.02, 'map_lever_m': 2.0,
           'map_grow': False, 'map_rotation': False, 'map_init_s': 0.0, 'sonar_footprint': False,
-          'dir_yaw_source': 'frozen_budget'}
-DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DIR-gap': 'axis', 'DIR-conflict': 'axis',
+          'dir_yaw_source': 'frozen_budget',
+          # review fixes (2026-10-12): see the module docstring
+          'conflict_reference': 'window', 'threshold_allocation': 'union', 'comparable_tolerance': 0.5,
+          'gyro_noise': None}  # {'noise_density': .., 'random_walk': .., 'source': 'Allan variance ...'} overrides the run's IMU chain
+DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DET-SCALAR': 'global', 'DET-SCALAR-l2': 'global',
+             'DIR-gap': 'axis', 'DIR-conflict': 'axis',
              'DIR-gap+conflict': 'axis', 'DIR-cumconflict': 'axis', 'DIR-gap+cumconflict': 'axis',
              'DIR-cumconflict-frozen': 'axis', 'DIR-cumconflict-frozen-budget': 'axis', 'ORACLE-cumconflict-truebias': 'axis',
              'DIR-cumconflict+sonar': 'axis', 'DIR-cumconflict+sonar-multi': 'axis', 'DIR-cumconflict+sonar-map': 'axis',
@@ -241,12 +264,41 @@ def hold(value_t, values, t, hold_s, width):
     return out
 
 
-def sonar_conflict(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0, hold_s=np.inf):
+def rereference(signed, window):
+    """Signed cumulative statistic minus its mean over the alignment window, computed causally.
+
+    eval-traj's risk mode aligns the estimate by yaw and translation over a predeclared initial window, so a label error
+    of zero means "equal to the window mean", whereas a cumulative conflict is zero at t_0, the first estimate.
+    Subtracting the window mean puts both on one reference. Inside the window the running mean of the window samples so
+    far is used (those samples are never scored), after it the full window mean; a column without a finite window
+    sample keeps the t_0 reference. window=None leaves the t_0 reference.
+    """
+    s = np.asarray(signed, dtype=float)
+    if window is None:
+        return s
+    flat = s.ndim == 1
+    s2 = s[:, None] if flat else s
+    use = np.asarray(window, bool)[:, None] & np.isfinite(s2)
+    count = np.cumsum(use, axis=0)
+    total = np.cumsum(np.where(use, s2, 0.0), axis=0)
+    out = s2 - np.where(count > 0, total/np.maximum(count, 1), 0.0)
+    return out[:, 0] if flat else out
+
+
+def sonar_conflict(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0, hold_s=np.inf, window=None):
     """Cumulative conflict along a reference plane normal, projected on estimated body x and y, at stamps t.
 
     The reference plane averages the lines seen in the first reference_s after the first one. NaN (not scorable) until
     it is fixed and wherever the last measured frame is older than hold_s (gated or skipped frames are not measurements).
+    window re-references the signed conflict to the alignment window (see rereference).
     """
+    c, proj = sonar_conflict_signed(t, est, lines, T_imu_sonar, gate_deg, reference_s, hold_s)
+    return np.abs(rereference(c, window))[:, None]*proj
+
+
+def sonar_conflict_signed(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0, hold_s=np.inf):
+    """Signed conflict along the reference normal (measured minus predicted distance, m) and the |R^T n_ref| body x, y
+    projection factors, held at stamps t; NaN where not scorable."""
     est_t, R, p = est[0], est[1], est[2]
     R_is, t_is = T_imu_sonar[:3, :3], T_imu_sonar[:3, 3]
     value_t, values = [], []
@@ -270,10 +322,10 @@ def sonar_conflict(t, est, lines, T_imu_sonar, gate_deg, reference_s=0.0, hold_s
         n_ref, h = ref
         if np.degrees(np.arccos(np.clip(n_w @ n_ref, -1, 1))) > gate_deg:
             continue
-        c = abs(d - (h - n_ref @ p_s))
         value_t.append(ts)
-        values.append(c*np.abs(R[j].T @ n_ref)[:2])
-    return hold(value_t, values, t, hold_s, 2)
+        values.append([d - (h - n_ref @ p_s), *np.abs(R[j].T @ n_ref)[:2]])
+    held = hold(value_t, values, t, hold_s, 3)
+    return held[:, 0], held[:, 1:]
 
 
 def sonar_conflict_multi(t, est, lines, T_imu_sonar, match_deg, jump_m, hold_s=np.inf):
@@ -438,13 +490,22 @@ def sonar_conflict_map(t, est, scans, T_imu_sonar, cfg=CONFIG):
     return hold(value_t, values, t, cfg.get('sonar_hold_s', np.inf), 3), (0 if map_pts is None else len(map_pts))
 
 
-def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, true_bias=None, sonar=None):
+def default_tolerances():
+    return np.array([DEFAULTS['risk']['tolerance_position_m']]*3 + [DEFAULTS['risk']['tolerance_yaw_deg']])
+
+
+def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, true_bias=None, sonar=None,
+               window=None, tol=None):
     """Detector statistics at estimate stamps t (all causal). Larger means more alarming for every column.
 
     gyro_noise: (noise density, random walk) for the frozen-bias drift budget; true_bias: simulator (t, bias xyz), oracle;
-    sonar: (lines from sonar_lines, 4x4 sonar pose in the IMU frame).
+    sonar: (lines from sonar_lines, 4x4 sonar pose in the IMU frame[, first-return scans]); window: boolean mask of the
+    label alignment window at t (cumulative conflicts are referenced to it when cfg['conflict_reference'] is 'window');
+    tol: per-axis tolerances [x, y, z, yaw] used by DET-COV and DET-SCALAR (eval-traj's by default).
     """
     est_t, R, p, cov = est
+    tol = default_tolerances() if tol is None else np.asarray(tol, dtype=float)
+    ref = window if cfg.get('conflict_reference', 'window') == 'window' else None
     k = np.searchsorted(est_t, t)
     R_t, p_t, cov_t = R[k], p[k], cov[k]
     rows, gains = diag
@@ -459,7 +520,6 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
     accepted = np.bincount(inverse, weights=rows[:, 2] - rows[:, 3])
     feat = windowed(stamps, accepted, t, cfg['feat_window_s'], np.min)
     stats['DET-FEAT'] = -np.nan_to_num(feat, nan=0.0)
-    tol = np.array([DEFAULTS['risk']['tolerance_position_m']]*3 + [DEFAULTS['risk']['tolerance_yaw_deg']])
     stats['DET-COV'] = body_axis_sigma(R_t, cov_t)/tol
     # information gain per body axis: position along estimated body axes, heading = world z in the local error frame
     ku = np.clip(np.searchsorted(est_t, ut, side='right') - 1, 0, None)
@@ -489,33 +549,36 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
     z_conflict = np.abs((p_t[:, 2] - p[k0, 2]) - (z_depth[zi1] - z_depth[zi0]))
     stats['conflict'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_conflict, yaw_conflict])
     # cumulative versions since the first estimate: heading is unobservable in VIO, so drift that vision injected
-    # stays in the estimate; the windowed form measures the injection rate, this one the accumulated amount
+    # stays in the estimate; the windowed form measures the injection rate, this one the accumulated amount.
+    # Signed first, then referenced to the label alignment window (rereference), then folded to a magnitude.
     q_first = np.clip(np.searchsorted(imu[:, 0], est_t[0], side='right') - 1, 0, None)
-    dR_gyro0 = np.swapaxes(Q[q_first], -1, -2) @ Q[qi1]
     dR_est0 = np.swapaxes(R[0], -1, -2) @ R_t
-    e0 = Rotation.from_matrix(np.swapaxes(dR_gyro0, 1, 2) @ dR_est0).as_rotvec()
-    yaw_cum = np.degrees(np.abs(np.einsum('nij,nj->ni', R_t, e0)[:, 2]))
-    z_first = np.clip(np.searchsorted(pressure[:, 0], est_t[0], side='right') - 1, 0, None)
-    z_cum = np.abs((p_t[:, 2] - p[0, 2]) - (z_depth[zi1] - z_depth[z_first]))
-    stats['conflict_cum'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum, yaw_cum])
 
-    def cumulative_yaw(Q_alt):
+    def cumulative_yaw(Q_alt):  # signed, degrees, about world z
         dR = np.swapaxes(Q_alt[q_first], -1, -2) @ Q_alt[qi1]
         e = Rotation.from_matrix(np.swapaxes(dR, 1, 2) @ dR_est0).as_rotvec()
-        return np.degrees(np.abs(np.einsum('nij,nj->ni', R_t, e)[:, 2]))
+        return np.degrees(np.einsum('nij,nj->ni', R_t, e)[:, 2])
+    yaw_cum = np.abs(rereference(cumulative_yaw(Q), ref))
+    z_first = np.clip(np.searchsorted(pressure[:, 0], est_t[0], side='right') - 1, 0, None)
+    z_cum = np.abs(rereference((p_t[:, 2] - p[0, 2]) - (z_depth[zi1] - z_depth[z_first]), ref))
+    stats['conflict_cum'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum, yaw_cum])
     # the online bias follows the estimate, so wrong vision information partly moves into it; freeze it at t_0
-    yaw_frozen = cumulative_yaw(gyro_heading(imu, bias_t[:1], bias[:1]))
+    yaw_frozen = np.abs(rereference(cumulative_yaw(gyro_heading(imu, bias_t[:1], bias[:1])), ref))
     stats['conflict_cum_frozen'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum, yaw_frozen])
     budget = np.zeros(len(t)) if gyro_noise is None else drift_budget_deg(t - est_t[0], *gyro_noise, cfg['budget_n_sigma'])
     stats['budget_yaw_deg'] = budget
     stats['conflict_cum_frozen_excess'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum, yaw_frozen - budget])
     if true_bias is not None:
-        stats['conflict_cum_true'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum,
-                                                      cumulative_yaw(gyro_heading(imu, true_bias[:, 0], true_bias[:, 1:]))])
+        yaw_true = np.abs(rereference(cumulative_yaw(gyro_heading(imu, true_bias[:, 0], true_bias[:, 1:])), ref))
+        stats['conflict_cum_true'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum, yaw_true])
+    sonar_x = np.full(len(t), np.nan)
     if sonar is not None:
-        stats['conflict_cum_sonar'] = np.column_stack([sonar_conflict(t, est, sonar[0], sonar[1], cfg['sonar_gate_deg'],
-                                                                      cfg['sonar_reference_s'], cfg['sonar_hold_s']),
-                                                       z_cum, yaw_cum])
+        c_signed, proj = sonar_conflict_signed(t, est, sonar[0], sonar[1], cfg['sonar_gate_deg'], cfg['sonar_reference_s'],
+                                               cfg['sonar_hold_s'])
+        xy = np.abs(rereference(c_signed, ref))[:, None]*proj
+        stats['conflict_cum_sonar'] = np.column_stack([xy, z_cum, yaw_cum])
+        sonar_x = xy[:, 0]
+        # evaluated variants (negative results in the pilot): kept on the t_0 reference as they were scored
         multi, n_planes = sonar_conflict_multi(t, est, sonar[0], sonar[1], cfg['sonar_match_deg'], cfg['sonar_jump_m'],
                                                 cfg['sonar_hold_s'])
         stats['conflict_cum_sonar_multi'] = np.column_stack([multi, z_cum, yaw_cum])
@@ -525,15 +588,22 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
             stats['conflict_cum_sonar_map'] = np.column_stack([m[:, :2], z_cum, yaw_cum])
             stats['conflict_cum_sonar_map_yaw'] = np.column_stack([m[:, :2], z_cum, m[:, 2]])
             stats['sonar_map_points'] = n_map
-        # DET-DIR, the pilot's main detector (pilot rounds 1-15): one source per axis, the best each axis has so far.
-        # x: single-plane sonar conflict (vertical-structure gate, NaN without a current measurement); y: no source
-        # yet (NaN, so y exceedances are reported as unscorable, not as caught or missed); z: depth gauge; heading:
-        # gyro with the bias frozen at t_0, minus its drift budget (method spec v2.2 M3.1; depends on the platform
-        # gyro, see the Allan-variance check). The other cumulative forms stay as evaluated variants.
-        # dir_yaw_source 'online' uses the estimator's online bias instead (absorbs part of the conflict, but does not
-        # depend on the gyro bias staying put); the choice waits for the platform gyro's Allan variance
-        yaw_dir = {'frozen_budget': yaw_frozen - budget, 'online': yaw_cum}[cfg.get('dir_yaw_source', 'frozen_budget')]
-        stats['conflict_dir'] = np.column_stack([stats['conflict_cum_sonar'][:, 0], np.full(len(t), np.nan), z_cum, yaw_dir])
+    # DET-DIR, the pilot's main detector (pilot rounds 1-15): one source per axis, the best each axis has so far.
+    # x: single-plane sonar conflict (vertical-structure gate, NaN without a current measurement, NaN throughout when
+    # the run has no sonar); y: no source yet (NaN, scored as missed in r_miss and left out of r_miss_scorable); z: depth
+    # gauge; heading: gyro with the bias frozen at t_0, minus its drift budget (method spec v2.2 M3.1; depends on the
+    # platform gyro, see the Allan-variance check). dir_yaw_source 'online' uses the estimator's online bias instead
+    # (absorbs part of the conflict, but does not depend on the gyro bias staying put).
+    yaw_dir = {'frozen_budget': yaw_frozen - budget, 'online': yaw_cum}[cfg.get('dir_yaw_source', 'frozen_budget')]
+    stats['conflict_dir'] = np.column_stack([sonar_x, np.full(len(t), np.nan), z_cum, yaw_dir])
+    # DET-SCALAR: the same sources folded into one number with one threshold, so DET-DIR against DET-SCALAR isolates
+    # what splitting by axis contributes; tolerance-normalised so metres and degrees can be combined
+    norm = stats['conflict_dir']/tol
+    finite = np.isfinite(norm)
+    none = ~finite.any(axis=1)
+    stats['DET-SCALAR'] = np.where(none, np.nan, np.max(np.where(finite, norm, -np.inf), axis=1))
+    # l2 over the positive parts only: a conflict below its drift budget (negative excess) is no evidence
+    stats['DET-SCALAR-l2'] = np.where(none, np.nan, np.sqrt(np.sum(np.where(finite, np.maximum(norm, 0.0), 0.0)**2, axis=1)))
     return stats
 
 
@@ -549,8 +619,9 @@ def information_gap(t, lam, lam_min):
     return tau
 
 
-def load_sim_sonar(dataset, cfg=CONFIG):
-    """Sonar lines, extrinsic and first-return scans of a simulated dataset (raycast replay if present, else raw)."""
+def load_sim_sonar_images(dataset):
+    """(stamps, images, geometry, 4x4 sonar pose in the IMU frame) of a simulated dataset (raycast replay if present, else raw); None without."""
+    dataset = Path(dataset)
     raw = dataset/'raw'
     if not (raw/'meta.json').exists():
         return None
@@ -558,7 +629,11 @@ def load_sim_sonar(dataset, cfg=CONFIG):
     source = dataset/'sonar_raycast' if (dataset/'sonar_raycast'/'sonar_t.npy').exists() else raw
     stamps = np.load(source/'sonar_t.npy') + SIM_EPOCH_S
     images = np.concatenate([np.load(f) for f in sorted(source.glob('sonar_[0-9]*.npy'))])
-    geometry = meta['route']['sensors']['sonar']
+    return stamps, images, meta['route']['sensors']['sonar'], np.asarray(meta['socket_extrinsics_in_imu_frame']['sonar'])
+
+
+def sonar_products(stamps, images, geometry, T_imu_sonar, cfg=CONFIG):
+    """Sonar lines, extrinsic and first-return scans for the detector from loaded sonar images."""
     lines = sonar_lines(stamps, images, geometry, cfg)
     scans = [(ts, sonar_first_returns(image, geometry, cfg['sonar_threshold'])
               if sonar_echo_thickness(image, geometry, cfg['sonar_threshold']) <= cfg['sonar_max_thickness'] else np.zeros((0, 2)))
@@ -566,10 +641,27 @@ def load_sim_sonar(dataset, cfg=CONFIG):
     if cfg.get('sonar_footprint'):
         half_bin = np.radians(geometry['Azimuth']/geometry['AzimuthBins'])/2
         scans = [(ts, footprint_correct(pts, half_bin, cfg['map_normal_k'])) for ts, pts in scans]
-    return lines, np.asarray(meta['socket_extrinsics_in_imu_frame']['sonar']), scans
+    return lines, T_imu_sonar, scans
 
 
-def load_run(run_dir, cfg=CONFIG):
+def load_sim_sonar(dataset, cfg=CONFIG):
+    """Sonar lines, extrinsic and first-return scans of a simulated dataset; None without sonar images."""
+    loaded = load_sim_sonar_images(dataset)
+    return None if loaded is None else sonar_products(*loaded, cfg=cfg)
+
+
+def read_tolerances(run_dir):
+    """Per-axis tolerances the labels were scored with (eval-traj/metrics.json), else the shared defaults."""
+    metrics = Path(run_dir)/'eval-traj'/'metrics.json'
+    if metrics.exists():
+        tol = json.loads(metrics.read_text()).get('risk', {}).get('tolerances')
+        if tol:
+            return np.array([float(tol[a]) for a in AXES])
+    return default_tolerances()
+
+
+def load_inputs(run_dir):
+    """Everything detect-a reads from a finished run that does not depend on the detector configuration."""
     run_dir = Path(run_dir)
     record = json.loads((run_dir/'run.json').read_text())
     bag = Path(record['bag'])
@@ -580,26 +672,46 @@ def load_run(run_dir, cfg=CONFIG):
     chain = Path(record['config_dir'])/'kalibr_imu_chain.yaml'
     text = chain.read_text()
     imu0 = yaml.safe_load(text.split('\n', 1)[1] if text.startswith('%YAML') else text)['imu0']
-    gyro_noise = (imu0['gyroscope_noise_density'], imu0['gyroscope_random_walk'])
-    raw = bag.parent/'raw'/'imu.npy'  # simulator output: columns t, accel, gyro, accel bias, gyro bias (same frame as /imu0)
+    dataset = bag.parent
+    manifest = dataset/'manifest.yaml'
+    assumed = manifest.exists() and 'imu_noise: ASSUMPTION' in manifest.read_text()
+    source = ('simulator noise configuration (ASSUMPTION, not a measured Allan variance)' if assumed else 'run config') + f': {chain}'
+    raw = dataset/'raw'/'imu.npy'  # simulator output: columns t, accel, gyro, accel bias, gyro bias (same frame as /imu0)
     true_bias = None
     if raw.exists():
         r = np.load(raw)
         true_bias = np.column_stack([r[:, 0] + SIM_EPOCH_S, r[:, 10:13]])
-    data = {'name': run_dir.name, 't': labels['t_s'], 'scored': labels['in_align_window'] == 0,
-            'errors': np.column_stack([labels[f'err_{a}'] for a in AXES])}
-    data['stats'] = statistics(data['t'], est, parse_diag(run_dir/'estimator.log'),
-                               read_series(bag, '/imu0', 'gyro'),
-                               read_series(run_dir/'estimate_bag', '/ov_msckf/odomimu', 'twist_angular'),
-                               read_series(bag, '/depth/pressure', 'pressure'), cfg=cfg, gyro_noise=gyro_noise,
-                               true_bias=true_bias, sonar=load_sim_sonar(bag.parent, cfg))
-    data['gyro_noise'] = gyro_noise
+    return {'name': run_dir.name, 'dataset': dataset, 't': labels['t_s'], 'scored': labels['in_align_window'] == 0,
+            'window': labels['in_align_window'] == 1, 'errors': np.column_stack([labels[f'err_{a}'] for a in AXES]),
+            'tol': read_tolerances(run_dir), 'est': est, 'diag': parse_diag(run_dir/'estimator.log'),
+            'imu': read_series(bag, '/imu0', 'gyro'),
+            'odom': read_series(run_dir/'estimate_bag', '/ov_msckf/odomimu', 'twist_angular'),
+            'pressure': read_series(bag, '/depth/pressure', 'pressure'),
+            'gyro_noise': (imu0['gyroscope_noise_density'], imu0['gyroscope_random_walk']), 'gyro_noise_source': source,
+            'true_bias': true_bias}
+
+
+def compute_run(inputs, cfg=CONFIG, sonar=None):
+    """Detector statistics for one run under cfg; sonar from sonar_products (or None)."""
+    gyro_noise, source = inputs['gyro_noise'], inputs['gyro_noise_source']
+    if cfg.get('gyro_noise'):
+        g = cfg['gyro_noise']
+        gyro_noise, source = (float(g['noise_density']), float(g['random_walk'])), g.get('source', 'config override')
+    data = {k: inputs[k] for k in ('name', 't', 'scored', 'window', 'errors', 'tol')}
+    data['stats'] = statistics(inputs['t'], inputs['est'], inputs['diag'], inputs['imu'], inputs['odom'], inputs['pressure'],
+                               cfg=cfg, gyro_noise=gyro_noise, true_bias=inputs['true_bias'], sonar=sonar,
+                               window=inputs['window'], tol=inputs['tol'])
+    data['gyro_noise'], data['gyro_noise_source'] = gyro_noise, source
     return data
 
 
-def exceed_labels(errors):
-    tol = np.array([DEFAULTS['risk']['tolerance_position_m']]*3 + [DEFAULTS['risk']['tolerance_yaw_deg']])
-    return np.abs(errors) > tol
+def load_run(run_dir, cfg=CONFIG):
+    inputs = load_inputs(run_dir)
+    return compute_run(inputs, cfg, load_sim_sonar(inputs['dataset'], cfg))
+
+
+def exceed_labels(errors, tol=None):
+    return np.abs(errors) > (default_tolerances() if tol is None else np.asarray(tol, dtype=float))
 
 
 def threshold(values, target):
@@ -608,18 +720,73 @@ def threshold(values, target):
     NaN samples (not scorable) are left out; with none left the threshold is infinite (never alarms).
     """
     values = np.asarray(values, dtype=float)
-    values = values[np.isfinite(values)]
+    values = np.sort(values[np.isfinite(values)])[::-1]
     if not len(values):
         return np.inf
-    return float(values.max()) if target <= 0 else float(np.quantile(values, 1 - target))
+    # the (k+1)-th largest value, k = floor(target n): at most k samples lie strictly above it. (The pilot used the
+    # interpolated (1 - target) quantile, which with ties or discrete statistics could let a few more through.)
+    return float(values[min(int(np.floor(target*len(values) + 1e-12)), len(values) - 1)])
+
+
+def union_false_alarm(columns, thresholds):
+    """Fraction of samples where any channel exceeds its threshold (NaN never alarms)."""
+    hit = np.zeros(len(columns[0]), bool)
+    for c, h in zip(columns, thresholds):
+        hit |= c > h
+    return float(hit.mean()) if len(hit) else 0.0
+
+
+def union_thresholds(columns, target, allocation='union', fractions=None, iterations=30):
+    """Per-channel thresholds for a detector that alarms when any channel exceeds its own threshold.
+
+    columns: the training normal samples of each channel (equal length, NaN = not scorable). 'union': the largest common
+    per-channel quantile level whose any-channel alarm fraction on these samples is <= target (bisection), so every
+    detector spends the same nominal false-alarm budget whatever its number of channels. 'fixed': channel i at
+    fractions[i] (the pilot's allocation), whose union budget depends on the detector.
+    """
+    cols = [np.asarray(c, dtype=float) for c in columns]
+    if allocation == 'fixed':
+        return [threshold(c, f) for c, f in zip(cols, fractions)]
+    if allocation != 'union':
+        raise ValueError(f'unknown threshold_allocation {allocation!r}')
+    if len(cols) == 1:
+        return [threshold(cols[0], target)]
+    thr = [threshold(c, target) for c in cols]
+    if union_false_alarm(cols, thr) <= target:
+        return thr
+    lo, hi, best = 0.0, float(target), [threshold(c, 0.0) for c in cols]
+    for _ in range(iterations):
+        mid = (lo + hi)/2
+        cand = [threshold(c, mid) for c in cols]
+        if union_false_alarm(cols, cand) <= target:
+            lo, best = mid, cand
+        else:
+            hi = mid
+    return best
+
+
+def comparable(false_alarm, target, tolerance):
+    """Ablation-runbook rule: an operating point counts only when its realised false-alarm fraction is within
+    tolerance (relative) of the target; at target 0 only zero false alarms qualify."""
+    if false_alarm is None:
+        return None
+    return bool(false_alarm == 0.0) if target <= 0 else bool(abs(false_alarm - target) <= tolerance*target)
 
 
 def evaluate(runs, cfg=CONFIG):
-    """Leave-one-run-out operating points; returns per-run and pooled miss/false-alarm tables."""
+    """Leave-one-run-out operating points; returns per-run miss/false-alarm rows (pooled() aggregates them).
+
+    Every detector is expressed as channels (training normal values, test values, axis or None for global, pilot
+    fraction); its alarm on an axis is the union of its channels on that axis. Scoring is identical for all detectors:
+    a sample is missed when it exceeds and the detector did not alarm, whatever the reason (including an unscorable,
+    NaN statistic); unscorable counts are reported apart so the pilot's scorable-only rate can still be formed.
+    """
+    allocation = cfg.get('threshold_allocation', 'union')
+    tol_rel = cfg.get('comparable_tolerance', 0.5)
     results = []
     for grace, target in [(g, f) for g in cfg['early_warning_s'] for f in cfg['false_alarm_targets']]:
         for r in runs:
-            r['exceed'] = exceed_labels(r['errors']) & r['scored'][:, None]
+            r['exceed'] = exceed_labels(r['errors'], r.get('tol')) & r['scored'][:, None]
             any_exceed = r['exceed'].any(axis=1)
             onsets = r['t'][any_exceed & ~np.r_[False, any_exceed[:-1]]]
             warning = np.zeros(len(r['t']), bool)
@@ -632,72 +799,99 @@ def evaluate(runs, cfg=CONFIG):
             lam_min = [float(np.quantile(np.nan_to_num(normal('lambda', a)), cfg['lambda_min_quantile'])) for a in range(4)]
             for r in runs:
                 r['stats']['tau'] = information_gap(r['t'], np.nan_to_num(r['stats']['lambda']), lam_min)
-            alarms, scorable, source = {}, {}, {}
-            for name in ('DET-NIS', 'DET-FEAT'):
-                alarms[name] = np.repeat((test['stats'][name] > threshold(normal(name), target))[:, None], 4, axis=1)
-            per_axis = target/4  # any-axis false alarms at most the target on the training normals
-            alarms['DET-COV'] = np.column_stack([test['stats']['DET-COV'][:, a] > threshold(normal('DET-COV', a), per_axis) for a in range(4)])
-            alarms['DIR-gap'] = np.column_stack([test['stats']['tau'][:, a] > threshold(normal('tau', a), per_axis) for a in range(4)])
-            conflict = np.zeros((len(test['t']), 4), bool)
-            for a in (2, 3):  # depth for z, gyro for heading; x and y have no independent sensor in A0
-                conflict[:, a] = test['stats']['conflict'][:, a] > threshold(normal('conflict', a), per_axis/2)
-            alarms['DIR-conflict'] = conflict
-            gap_half = np.column_stack([test['stats']['tau'][:, a] > threshold(normal('tau', a), per_axis/2) for a in range(4)])
-            alarms['DIR-gap+conflict'] = gap_half | conflict
+            per_axis = target/4  # the pilot's fixed allocation: any-axis false alarms at most the target on the training normals
+            channels = {}
+
+            def axis_channels(key, axes, fraction):
+                return [(normal(key, a), test['stats'][key][:, a], a, fraction) for a in axes]
+            for name in ('DET-NIS', 'DET-FEAT', 'DET-SCALAR', 'DET-SCALAR-l2'):
+                if all(name in r['stats'] for r in runs):
+                    channels[name] = [(normal(name), test['stats'][name], None, target)]
+            channels['DET-COV'] = axis_channels('DET-COV', range(4), per_axis)
+            channels['DIR-gap'] = axis_channels('tau', range(4), per_axis)
+            channels['DIR-conflict'] = axis_channels('conflict', (2, 3), per_axis/2)  # depth for z, gyro for heading
+            channels['DIR-gap+conflict'] = axis_channels('tau', range(4), per_axis/2) + channels['DIR-conflict']
             for name, key in CUMULATIVE.items():
                 if not all(key in r['stats'] for r in runs):
-                    continue  # the oracle needs the simulator's bias, the sonar form sonar data, in every run
-                cum = np.zeros((len(test['t']), 4), bool)
-                for a in SOURCE_AXES.get(key, (2, 3)):  # same per-axis budget everywhere: z and heading thresholds match
-                    cum[:, a] = test['stats'][key][:, a] > threshold(normal(key, a), per_axis/2)
-                alarms[name] = cum
-                # NaN = the source has no current measurement (e.g. sonar gated on an inclined face): not scorable
-                scorable[name] = np.isfinite(test['stats'][key])
-                source[name] = list(SOURCE_AXES.get(key, (0, 1, 2, 3)))
-            alarms['DIR-gap+cumconflict'] = gap_half | alarms['DIR-cumconflict']
-            for name, alarm in alarms.items():
-                ok = scorable.get(name, np.ones(alarm.shape, bool))
+                    continue  # the oracle needs the simulator's bias, the sonar forms sonar data, in every run
+                channels[name] = axis_channels(key, SOURCE_AXES.get(key, (2, 3)), per_axis/2)
+            if 'DIR-cumconflict' in channels:
+                channels['DIR-gap+cumconflict'] = axis_channels('tau', range(4), per_axis/2) + channels['DIR-cumconflict']
+            n = len(test['t'])
+            for name, chans in channels.items():
+                thr = union_thresholds([c[0] for c in chans], target, allocation, [c[3] for c in chans])
+                train_fa = union_false_alarm([c[0] for c in chans], thr)
+                alarm, finite = np.zeros((n, 4), bool), np.zeros((n, 4), bool)
+                for (_, values, axis, _), h in zip(chans, thr):
+                    for a in (range(4) if axis is None else (axis,)):
+                        alarm[:, a] |= values > h
+                        finite[:, a] |= np.isfinite(values)
+                sourced = sorted({a for c in chans for a in (range(4) if c[2] is None else (c[2],))})
+                fa = float(alarm[test['normal']].any(axis=1).mean()) if test['normal'].any() else None
                 row = {'early_warning_s': grace, 'target': target, 'detector': name, 'run': test['name'],
-                       'normal_samples': int(test['normal'].sum()),
-                       'false_alarm_fraction': float(alarm[test['normal']].any(axis=1).mean()) if test['normal'].any() else None,
+                       'normal_samples': int(test['normal'].sum()), 'false_alarm_fraction': fa,
+                       'train_false_alarm_fraction': train_fa, 'comparable': comparable(fa, target, tol_rel),
                        # a normal sample is unscorable when an axis that has a source lacks a current measurement
-                       'normal_unscorable': int((test['normal'] & ~ok[:, source.get(name, slice(None))].all(axis=1)).sum())}
+                       'normal_unscorable': int((test['normal'] & ~finite[:, sourced].all(axis=1)).sum())}
+                failing = test['scored'] & ~test['normal']  # some axis exceeds (or is about to): attribution is at stake
                 for a, axis in enumerate(AXES):
                     ex = test['exceed'][:, a]
                     row[f'exceed_{axis}'] = int(ex.sum())
-                    row[f'unscorable_{axis}'] = int((ex & ~ok[:, a]).sum())  # reported apart, neither caught nor missed
-                    row[f'missed_{axis}'] = int((ex & ok[:, a] & ~alarm[:, a]).sum())
+                    row[f'unscorable_{axis}'] = int((ex & ~finite[:, a]).sum())
+                    row[f'missed_{axis}'] = int((ex & ~alarm[:, a]).sum())  # includes the unscorable ones
+                    # attribution: alarms on an axis that is within tolerance while another axis is failing. A global
+                    # detector alarms every axis at once, so it "catches" co-occurring exceedances on all axes; this
+                    # column is what a per-axis detector buys in exchange for its per-axis misses
+                    row[f'offaxis_base_{axis}'] = int((failing & ~ex).sum())
+                    row[f'offaxis_alarm_{axis}'] = int((failing & ~ex & alarm[:, a]).sum())
                 results.append(row)
     return results
 
 
-def pooled(results):
+def pooled(results, comparable_tolerance=0.5):
     table = {}
     for row in results:
         key = (row['early_warning_s'], row['target'], row['detector'])
         t = table.setdefault(key, {'early_warning_s': row['early_warning_s'], 'target': row['target'],
-                                   'detector': row['detector'], 'normal': 0, 'false': 0.0,
+                                   'detector': row['detector'], 'normal': 0, 'false': 0.0, 'runs': 0, 'runs_comparable': 0,
                                    'normal_unscorable': 0, **{f'exceed_{a}': 0 for a in AXES},
-                                   **{f'unscorable_{a}': 0 for a in AXES}, **{f'missed_{a}': 0 for a in AXES}})
+                                   **{f'unscorable_{a}': 0 for a in AXES}, **{f'missed_{a}': 0 for a in AXES},
+                                   **{f'offaxis_base_{a}': 0 for a in AXES}, **{f'offaxis_alarm_{a}': 0 for a in AXES}})
         if row['false_alarm_fraction'] is not None:
             t['normal'] += row['normal_samples']
             t['false'] += row['false_alarm_fraction']*row['normal_samples']
             t['normal_unscorable'] += row['normal_unscorable']
+            t['runs'] += 1
+            t['runs_comparable'] += bool(row.get('comparable'))
         for a in AXES:
             t[f'exceed_{a}'] += row[f'exceed_{a}']
             t[f'unscorable_{a}'] += row[f'unscorable_{a}']
             t[f'missed_{a}'] += row[f'missed_{a}']
+            t[f'offaxis_base_{a}'] += row.get(f'offaxis_base_{a}', 0)
+            t[f'offaxis_alarm_{a}'] += row.get(f'offaxis_alarm_{a}', 0)
     out = []
     for t in table.values():
+        fa = t['false']/t['normal'] if t['normal'] else None
         entry = {'early_warning_s': t['early_warning_s'], 'target': t['target'], 'detector': t['detector'],
-                 'false_alarm_fraction': t['false']/t['normal'] if t['normal'] else None,
+                 'false_alarm_fraction': fa, 'comparable': comparable(fa, t['target'], comparable_tolerance),
+                 'runs_comparable': f"{t['runs_comparable']}/{t['runs']}",
                  'normal_unscorable_fraction': t['normal_unscorable']/t['normal'] if t['normal'] else None}
-        for a in AXES:  # miss rate over the scorable exceedances; the unscorable share is reported next to it
-            scored = t[f'exceed_{a}'] - t[f'unscorable_{a}']
-            entry[f'r_miss_{a}'] = t[f'missed_{a}']/scored if scored else None
-            entry[f'r_unscorable_{a}'] = t[f'unscorable_{a}']/t[f'exceed_{a}'] if t[f'exceed_{a}'] else None
+        for a in AXES:
+            ex, un, miss = t[f'exceed_{a}'], t[f'unscorable_{a}'], t[f'missed_{a}']
+            entry[f'r_miss_{a}'] = miss/ex if ex else None  # unscorable counted as missed: same denominator for every detector
+            entry[f'r_miss_scorable_{a}'] = (miss - un)/(ex - un) if ex - un else None  # the pilot's definition
+            entry[f'r_unscorable_{a}'] = un/ex if ex else None
+            base = t[f'offaxis_base_{a}']
+            entry[f'r_offaxis_{a}'] = t[f'offaxis_alarm_{a}']/base if base else None  # misattribution while another axis fails
         out.append(entry)
     return out
+
+
+def budget_horizon_s(gyro_noise, n_sigma, tol_yaw):
+    """Seconds until the frozen-bias drift budget reaches the heading tolerance; None when it never does."""
+    if not any(gyro_noise) or drift_budget_deg(1e7, *gyro_noise, n_sigma) < tol_yaw:
+        return None
+    return float(brentq(lambda T: drift_budget_deg(T, *gyro_noise, n_sigma) - tol_yaw, 1e-6, 1e7))
 
 
 def main(argv):
@@ -707,10 +901,10 @@ def main(argv):
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args(argv)
     cfg = {**CONFIG, **(yaml.safe_load(args.config.read_text()) if args.config else {})}
+    args.out.mkdir(parents=True, exist_ok=False)  # before the slow loading, so an existing directory fails early
     runs = [load_run(r, cfg) for r in args.runs]
     results = evaluate(runs, cfg)
-    summary = pooled(results)
-    args.out.mkdir(parents=True, exist_ok=False)
+    summary = pooled(results, cfg.get('comparable_tolerance', 0.5))
     with (args.out/'per_run.csv').open('w', newline='') as f:
         writer = csv.DictWriter(f, fieldnames=list(results[0]))
         writer.writeheader()
@@ -727,7 +921,9 @@ def main(argv):
                                                                                 'cum_conflict_sonar_multi_y_m',
                                                                                 'cum_conflict_sonar_map_x_m',
                                                                                 'cum_conflict_sonar_map_y_m',
-                                                                                'sonar_map_yaw_deg']
+                                                                                'sonar_map_yaw_deg',
+                                                                                'dir_x_m', 'dir_z_m', 'dir_yaw_deg',
+                                                                                'scalar_max', 'scalar_l2']
         true_yaw = s['conflict_cum_true'][:, 3] if 'conflict_cum_true' in s else np.full(len(r['t']), np.nan)
         sonar_xy = s['conflict_cum_sonar'][:, :2] if 'conflict_cum_sonar' in s else np.full((len(r['t']), 2), np.nan)
         multi_xy = s['conflict_cum_sonar_multi'][:, :2] if 'conflict_cum_sonar_multi' in s else np.full((len(r['t']), 2), np.nan)
@@ -735,16 +931,22 @@ def main(argv):
                    if 'conflict_cum_sonar_map' in s else np.full((len(r['t']), 3), np.nan))
         cols = np.column_stack([r['t'], r['scored'], s['DET-NIS'], s['DET-FEAT'], s['DET-COV'], s['lambda'], s['tau'],
                                 s['conflict'][:, 2:], s['conflict_cum'][:, 2:], s['conflict_cum_frozen'][:, 3],
-                                s['budget_yaw_deg'], true_yaw, sonar_xy, multi_xy, map_xyh])
+                                s['budget_yaw_deg'], true_yaw, sonar_xy, multi_xy, map_xyh,
+                                s['conflict_dir'][:, [0, 2, 3]], s['DET-SCALAR'], s['DET-SCALAR-l2']])
         np.savetxt(args.out/f'stats_{r["name"]}.csv', cols, delimiter=',', header=','.join(header), comments='',
                    fmt=['%.6f', '%d'] + ['%.6g']*(cols.shape[1] - 2))
     tol_yaw = DEFAULTS['risk']['tolerance_yaw_deg']
-    horizon = {r['name']: float(brentq(lambda T: drift_budget_deg(T, *r['gyro_noise'], cfg['budget_n_sigma']) - tol_yaw, 1e-6, 1e7))
-               for r in runs}
+    horizon = {r['name']: budget_horizon_s(r['gyro_noise'], cfg['budget_n_sigma'], tol_yaw) for r in runs}
     record = {'pilot': True, 'config': cfg, 'runs': [str(r) for r in args.runs], 'pooled': summary,
+              'tolerances': {r['name']: [float(x) for x in r['tol']] for r in runs},
+              'gyro_noise': {r['name']: {'noise_density': r['gyro_noise'][0], 'random_walk': r['gyro_noise'][1],
+                                         'source': r['gyro_noise_source']} for r in runs},
               'frozen_budget_reaches_yaw_tolerance_s': horizon,
               'sonar_planes': {r['name']: r['stats'].get('sonar_planes') for r in runs},
               'sonar_map_points': {r['name']: r['stats'].get('sonar_map_points') for r in runs},
+              'scoring': 'r_miss counts unscorable (NaN) exceedance samples as missed, same denominator for every detector; '
+                         'r_miss_scorable leaves them out (pilot definition); comparable = realised false-alarm fraction '
+                         f"within {cfg.get('comparable_tolerance', 0.5):.0%} of the target (ablation runbook)",
               'notes': 'tau in the last LORO fold is what stats_*.csv holds; false alarms are normal-sample fractions'}
     (args.out/'summary.json').write_text(json.dumps(record, indent=2) + '\n')
     for e in summary:

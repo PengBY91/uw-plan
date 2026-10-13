@@ -1,0 +1,4 @@
+# Review step 1 of 3: union-calibrated false-alarm budget, still t_0 reference and single-frame plane (isolates the budget change).
+conflict_reference: t0
+sonar_reference_s: 0.0
+threshold_allocation: union

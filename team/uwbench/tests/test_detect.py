@@ -7,7 +7,8 @@ from scipy.spatial.transform import Rotation
 
 from uwbench.detect import (ATMOSPHERE_PA, CONFIG, G, RHO, drift_budget_deg, fit_line, information_gap, parse_diag, sonar_conflict,
                             sonar_conflict_map, sonar_conflict_multi,
-                            sonar_echo_thickness, sonar_first_returns, sonar_lines, statistics, threshold, pooled, AXES, footprint_correct)
+                            sonar_echo_thickness, sonar_first_returns, sonar_lines, statistics, threshold, pooled, AXES, footprint_correct,
+                            rereference, union_thresholds, union_false_alarm, comparable, evaluate, budget_horizon_s)
 
 
 def synthetic(seed=0, yaw_drift=0.0):
@@ -44,13 +45,169 @@ def truncate(data, t_cut):
 class DetectTest(unittest.TestCase):
     def test_statistics_are_causal(self):
         full = synthetic(yaw_drift=0.5)
-        s_full = statistics(*full)
-        for t_cut in (12.0, 25.0):
+        t = full[0]
+        sonar_t = np.arange(0, 40, 0.1)
+        lines = np.column_stack([sonar_t, np.ones(len(sonar_t)), np.zeros(len(sonar_t)), np.full(len(sonar_t), 3.0)])
+        true_bias = np.column_stack([full[3][:, 0], np.zeros((len(full[3]), 3))])
+        window = t < 11.0  # the label alignment window: first 10 s after the first estimate at t = 1
+        extras = dict(gyro_noise=(1e-4, 1e-5))
+        s_full = statistics(*full, sonar=(lines, np.eye(4)), true_bias=true_bias, window=window, **extras)
+        for t_cut in (6.0, 12.0, 25.0):  # inside the window, just after it, late
             cut = truncate(full, t_cut)
-            s_cut = statistics(*cut)
             n = len(cut[0])
+            s_cut = statistics(*cut, sonar=(lines[sonar_t <= t_cut], np.eye(4)), true_bias=true_bias[true_bias[:, 0] <= t_cut],
+                               window=window[:n], **extras)
             for key in s_cut:
+                if np.ndim(s_cut[key]) == 0:
+                    continue  # counts such as sonar_planes
                 np.testing.assert_allclose(np.nan_to_num(s_full[key][:n]), np.nan_to_num(s_cut[key]), atol=1e-9, err_msg=key)
+
+    def test_rereference_subtracts_the_causal_window_mean(self):
+        signed = np.array([1.0, 3.0, np.nan, 5.0, 10.0, 20.0])
+        window = np.array([True, True, True, True, False, False])
+        out = rereference(signed, window)
+        np.testing.assert_allclose(out[:2], [0.0, 1.0])  # running mean inside the window: 1, then 2
+        self.assertTrue(np.isnan(out[2]))
+        np.testing.assert_allclose(out[3:], [5 - 3, 10 - 3, 20 - 3])  # full window mean (1, 3, 5) afterwards
+        np.testing.assert_allclose(rereference(signed, None), signed)
+        np.testing.assert_allclose(rereference(signed, np.zeros(6, bool)), signed)  # no window sample: t_0 reference
+        two = rereference(np.column_stack([signed, -signed]), window)
+        np.testing.assert_allclose(two[:, 1], -out)
+
+    def test_window_reference_matches_what_the_labels_measure(self):
+        # estimated z drifts 1 cm/s away from the gauge during the first 10 s, then stays: the label (aligned over that
+        # window) reads 0.1 - mean(drift over the window) = 0.05 m, the t_0 reference reads 0.1 m
+        t, est, diag, imu, odom, pressure = synthetic()
+        est_t, R, p, cov = est
+        p = p.copy()
+        p[:, 2] += 0.01*np.clip(est_t - 1, 0, 10)
+        window = est_t < 11.0
+        legacy = statistics(t, (est_t, R, p, cov), diag, imu, odom, pressure, cfg={**CONFIG, 'conflict_reference': 't0'}, window=window)
+        aligned = statistics(t, (est_t, R, p, cov), diag, imu, odom, pressure, window=window)
+        self.assertAlmostEqual(legacy['conflict_cum'][-1, 2], 0.10, delta=0.003)
+        self.assertAlmostEqual(aligned['conflict_cum'][-1, 2], 0.10 - np.mean(0.01*np.clip(est_t[window] - 1, 0, 10)), delta=0.003)
+        np.testing.assert_allclose(aligned['conflict'], legacy['conflict'])  # the windowed form is untouched
+        # a wall at world x = 100 m with normal +x; the vehicle yaws at 2 deg/s, so the sonar-frame normal turns the other way
+        sonar_t = np.arange(0, 40, 0.1)
+        yaw = np.radians(2.0)*sonar_t
+        lines = np.column_stack([sonar_t, np.cos(yaw), -np.sin(yaw), 100 - 0.1*sonar_t])
+        p2 = est[2].copy()
+        p2[:, 0] += 0.02*np.clip(est_t - 1, 0, 5)  # 0.1 m toward the wall inside the window, mean over the window 0.075
+        s = statistics(t, (est_t, R, p2, cov), diag, imu, odom, pressure, sonar=(lines, np.eye(4)), window=window)
+        # the vehicle has yawed 80 deg by the end, so the conflict along the wall normal is split over body x and y
+        self.assertAlmostEqual(np.hypot(*s['conflict_cum_sonar'][-1, :2]), 0.1 - np.mean(0.02*np.clip(est_t[window] - 1, 0, 5)), delta=0.005)
+
+    def test_scalar_baseline_folds_the_main_detector_sources(self):
+        t, est, diag, imu, odom, pressure = synthetic(yaw_drift=0.5)
+        sonar_t = np.arange(0, 40, 0.1)
+        lines = np.column_stack([sonar_t, np.ones(len(sonar_t)), np.zeros(len(sonar_t)), np.full(len(sonar_t), 3.0)])
+        tol = np.array([0.15, 0.15, 0.15, 3.0])
+        s = statistics(t, est, diag, imu, odom, pressure, cfg={**CONFIG, 'dir_yaw_source': 'online'}, sonar=(lines, np.eye(4)), tol=tol)
+        norm = s['conflict_dir']/tol
+        expect = np.nanmax(norm, axis=1)
+        np.testing.assert_allclose(s['DET-SCALAR'], expect)
+        np.testing.assert_allclose(s['DET-SCALAR-l2'], np.sqrt(np.nansum(np.maximum(norm, 0)**2, axis=1)))
+        self.assertGreater(s['DET-SCALAR'][-1], 3.0)  # 10 deg of heading drift is 3.3 tolerances
+        # with the frozen-bias heading minus its budget the heading column goes negative while the gyro drifts less
+        # than the budget allows; that must not count as evidence in the l2 form
+        frozen = statistics(t, est, diag, imu, odom, pressure, gyro_noise=(1e-2, 1e-2), sonar=(lines, np.eye(4)), tol=tol)
+        neg = frozen['conflict_dir'][:, 3] < 0
+        self.assertTrue(neg.any())
+        xz = np.nanmax(np.abs(frozen['conflict_dir'][neg][:, [0, 2]])/tol[[0, 2]], axis=1)
+        self.assertTrue((frozen['DET-SCALAR-l2'][neg] <= np.sqrt(2)*xz + 1e-12).all())
+        without = statistics(t, est, diag, imu, odom, pressure, tol=tol)  # no sonar: DET-DIR and DET-SCALAR still exist
+        self.assertTrue(np.isnan(without['conflict_dir'][:, 0]).all())
+        np.testing.assert_allclose(without['conflict_dir'][:, 2], without['conflict_cum'][:, 2])
+        self.assertTrue(np.isfinite(without['DET-SCALAR']).all())
+
+    def test_union_thresholds_spend_one_budget_whatever_the_channel_count(self):
+        rng = np.random.default_rng(3)
+        cols = [rng.normal(size=4000) for _ in range(4)]
+        cols[1][::7] = np.nan  # an unscorable share never alarms
+        for target in (0.0, 0.01, 0.05):
+            thr = union_thresholds(cols, target)
+            fa = union_false_alarm(cols, thr)
+            self.assertLessEqual(fa, target)
+            if target > 0:  # and not needlessly strict: a slightly larger common level would overshoot
+                looser = [threshold(c, target/4*1.5) for c in cols]
+                self.assertGreater(union_false_alarm(cols, looser), fa)
+        fixed = union_thresholds(cols, 0.01, 'fixed', [0.01/4]*4)
+        np.testing.assert_allclose(fixed, [threshold(c, 0.01/4) for c in cols])
+        self.assertEqual(union_thresholds([cols[0]], 0.01), [threshold(cols[0], 0.01)])
+        self.assertTrue(comparable(0.012, 0.01, 0.5))
+        self.assertFalse(comparable(0.02, 0.01, 0.5))
+        self.assertTrue(comparable(0.0, 0.0, 0.5))
+        self.assertFalse(comparable(0.001, 0.0, 0.5))
+        self.assertIsNone(comparable(None, 0.01, 0.5))
+
+    @staticmethod
+    def toy_runs(n_runs=3, n=600, seed=0):
+        """Runs with precomputed statistics: an exceedance on x and yaw in the second half, a NaN detector column on x
+        for one run (the sonar sees nothing), y never sourced."""
+        rng = np.random.default_rng(seed)
+        runs = []
+        for i in range(n_runs):
+            t = 1700000000 + np.arange(n)*0.05
+            errors = np.zeros((n, 4))
+            errors[n//2:, 0] = 0.3
+            errors[n//2:, 1] = 0.2  # y exceeds too; no detector has a y source
+            errors[n//2:, 3] = 5.0
+            ramp = np.clip((np.arange(n) - n//2)/50.0, 0, None)
+            stats = {'DET-NIS': rng.uniform(0, 1, n), 'DET-FEAT': -rng.integers(20, 40, n).astype(float),  # blind to the failure
+                     'DET-COV': rng.uniform(0.1, 0.3, (n, 4)), 'lambda': rng.uniform(1, 10, (n, 4)),
+                     'conflict': np.column_stack([np.zeros(n), np.zeros(n), rng.uniform(0, 0.01, n), rng.uniform(0, 0.1, n)])}
+            cum = np.column_stack([np.zeros(n), np.zeros(n), rng.uniform(0, 0.01, n), 0.05*rng.uniform(0, 1, n) + 4.0*ramp])
+            stats['conflict_cum'] = cum
+            stats['conflict_cum_frozen'] = cum.copy()
+            stats['conflict_cum_frozen_excess'] = cum.copy()
+            x = 0.01*rng.uniform(0, 1, n) + 0.25*ramp
+            if i == 0:
+                x[n//2:] = np.nan  # no measurement during the exceedance in this run
+            stats['conflict_dir'] = np.column_stack([x, np.full(n, np.nan), cum[:, 2], cum[:, 3]])
+            tol = np.array([0.15, 0.15, 0.15, 3.0])
+            norm = stats['conflict_dir']/tol
+            stats['DET-SCALAR'] = np.nanmax(norm, axis=1)
+            stats['DET-SCALAR-l2'] = np.sqrt(np.nansum(norm**2, axis=1))
+            runs.append({'name': f'r{i}', 't': t, 'scored': np.r_[np.zeros(40, bool), np.ones(n - 40, bool)],
+                         'errors': errors, 'tol': tol, 'stats': stats})
+        return runs
+
+    def test_evaluate_scores_every_detector_on_the_same_samples(self):
+        runs = self.toy_runs()
+        cfg = {**CONFIG, 'false_alarm_targets': [0.01], 'early_warning_s': [0.0]}
+        rows = evaluate(runs, cfg)
+        by = {(r['detector'], r['run']): r for r in rows}
+        detectors = {r['detector'] for r in rows}
+        self.assertTrue({'DET-NIS', 'DET-COV', 'DET-SCALAR', 'DET-SCALAR-l2', 'DET-DIR', 'DIR-cumconflict'} <= detectors)
+        for run in ('r0', 'r1', 'r2'):
+            exceed = {d: tuple(by[(d, run)][f'exceed_{a}'] for a in AXES) for d in detectors}
+            self.assertEqual(len(set(exceed.values())), 1)  # identical denominators
+            for d in detectors:
+                row = by[(d, run)]
+                for a in AXES:  # missed never exceeds exceed, and includes the unscorable share
+                    self.assertLessEqual(row[f'unscorable_{a}'], row[f'missed_{a}'])
+                    self.assertLessEqual(row[f'missed_{a}'], row[f'exceed_{a}'])
+                self.assertIn('comparable', row)
+        dir0 = by[('DET-DIR', 'r0')]
+        self.assertEqual(dir0['unscorable_x'], dir0['exceed_x'])  # the sonar saw nothing: all x exceedances unscorable
+        self.assertEqual(dir0['missed_x'], dir0['exceed_x'])  # and therefore counted as missed, not dropped
+        self.assertEqual(dir0['missed_y'], dir0['exceed_y'])
+        dir1 = by[('DET-DIR', 'r1')]
+        self.assertLess(dir1['missed_x'], 0.2*dir1['exceed_x'])  # with a measurement the x exceedance is caught
+        self.assertLess(dir1['missed_yaw'], 0.2*dir1['exceed_yaw'])
+        self.assertGreater(by[('DET-NIS', 'r1')]['missed_x'], 0.5*dir1['exceed_x'])
+        table = {e['detector']: e for e in pooled(rows)}
+        # x, y and yaw fail together while z stays within tolerance: a global detector alarms z too (misattribution),
+        # the per-axis detector does not
+        self.assertGreater(table['DET-SCALAR']['r_offaxis_z'], 0.8)
+        self.assertLess(table['DET-DIR']['r_offaxis_z'], 0.05)
+        self.assertAlmostEqual(table['DET-DIR']['r_miss_y'], 1.0)
+        self.assertIsNone(table['DET-DIR']['r_miss_scorable_y'])
+        self.assertGreater(table['DET-DIR']['r_miss_x'], table['DET-DIR']['r_miss_scorable_x'])
+        for e in table.values():  # the union calibration keeps the training false alarms at or under the target
+            self.assertLessEqual(max(r['train_false_alarm_fraction'] for r in rows if r['detector'] == e['detector']), 0.01 + 1e-12)
+        legacy = {e['detector']: e for e in pooled(evaluate(runs, {**cfg, 'threshold_allocation': 'fixed'}))}
+        self.assertEqual(set(legacy), set(table))
 
     def test_heading_conflict_sees_drift_that_the_gyro_does_not_explain(self):
         quiet = statistics(*synthetic(yaw_drift=0.0))['conflict'][:, 3]
@@ -189,13 +346,18 @@ class DetectTest(unittest.TestCase):
         self.assertEqual(threshold([np.nan, 1.0, 2.0, 3.0], 0.0), 3.0)
         self.assertEqual(threshold([np.nan, np.nan], 0.01), np.inf)
         rows = [{'early_warning_s': 0.0, 'target': 0.01, 'detector': 'D', 'run': 'r', 'normal_samples': 10,
-                 'false_alarm_fraction': 0.1, 'normal_unscorable': 2,
+                 'false_alarm_fraction': 0.1, 'normal_unscorable': 2, 'comparable': False,
                  **{f'exceed_{a}': 10 for a in AXES}, **{f'unscorable_{a}': 0 for a in AXES}, **{f'missed_{a}': 0 for a in AXES}}]
-        rows[0].update(unscorable_x=4, missed_x=3)
+        rows[0].update(unscorable_x=4, missed_x=7)  # 4 unscorable (missed by definition) + 3 missed with a measurement
         x = pooled(rows)[0]
-        self.assertAlmostEqual(x['r_miss_x'], 3/6)
+        self.assertAlmostEqual(x['r_miss_x'], 7/10)  # same denominator as every other detector
+        self.assertAlmostEqual(x['r_miss_scorable_x'], 3/6)  # the pilot's definition
         self.assertAlmostEqual(x['r_unscorable_x'], 4/10)
         self.assertAlmostEqual(x['normal_unscorable_fraction'], 0.2)
+        self.assertFalse(x['comparable'])  # 10 % realised against a 1 % target
+        self.assertEqual(x['runs_comparable'], '0/1')
+        self.assertIsNone(budget_horizon_s((0.0, 0.0), 3.0, 3.0))
+        self.assertAlmostEqual(budget_horizon_s((0.0, 2.83e-4), 3.0, 3.0), 22.5, delta=0.5)  # the pilot's sim gyro
 
     @staticmethod
     def wall_scene(drift, surfaces):

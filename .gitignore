@@ -19,6 +19,8 @@
 !configs/euroc_v101/*.yaml
 !configs/sim/
 !configs/sim/*.json
+!configs/detect_a/
+!configs/detect_a/*.yaml
 !team/sim/
 !team/sim/*.py
 !manifests/

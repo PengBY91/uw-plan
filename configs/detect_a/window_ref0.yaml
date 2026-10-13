@@ -1,0 +1,4 @@
+# Review step 2 of 3: cumulative conflicts referenced to the label alignment window, sonar plane still from the first frame.
+conflict_reference: window
+sonar_reference_s: 0.0
+threshold_allocation: union

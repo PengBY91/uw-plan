@@ -1,0 +1,5 @@
+# Review defaults with DET-DIR / DET-SCALAR heading from the estimator's online bias instead of frozen bias minus budget.
+conflict_reference: window
+sonar_reference_s: 10.0
+threshold_allocation: union
+dir_yaw_source: online
