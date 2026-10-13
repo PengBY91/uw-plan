@@ -26,6 +26,8 @@ DEFAULTS = {
               'bias_sigma_acc': 0.05, 'bias_sigma_gyro': 0.005},
     'gravity_mps2': 9.8,
     'isam_relinearize_threshold': 0.01,
+    'isam_factorization': 'CHOLESKY',   # or 'QR': slower, numerically more robust elimination
+    'isam_recover_indeterminate': True,  # rebuild iSAM2 from the full graph when an update hits an indeterminate system
 }
 
 
@@ -75,9 +77,11 @@ class Smoother:
         self.sonar_model = factors.noise_model(*self.sonar_sigma, kernel=s['kernel'], k=s['kernel_k'])
         self.weighting = ScalarWeight(s['weight'])
         self._models = {}
-        params = gtsam.ISAM2Params()
-        params.setRelinearizeThreshold(cfg['isam_relinearize_threshold'])
-        self.isam = gtsam.ISAM2(params)
+        if cfg['isam_factorization'] not in ('CHOLESKY', 'QR'):
+            raise ValueError('isam_factorization must be CHOLESKY or QR')
+        self.isam = gtsam.ISAM2(self._isam_params())
+        self._estimate = gtsam.Values()   # estimate after the last successful update (recovery starts from it)
+        self.rebuilds = []                # (keyframe, stage, error head) of every recovery
         self.visual_pending, self.visual_added, self.visual_pruned = {}, set(), set()
         self.visual_factor_idx = {}   # landmark id -> iSAM2 factor indices of its stereo factors
         self.sonar_buffer, self.sonar_added, self.sonar_rejected, self.sonar_attempts = {}, set(), set(), {}
@@ -85,6 +89,52 @@ class Smoother:
         self.counts = []
         self.poses_causal, self.k = [], -1
         self.state = None
+
+    def _isam_params(self):
+        params = gtsam.ISAM2Params()
+        params.setRelinearizeThreshold(self.cfg['isam_relinearize_threshold'])
+        params.setFactorization(self.cfg['isam_factorization'])
+        return params
+
+    def _update(self, graph, values, remove=(), stage='keyframe'):
+        """iSAM2 update; returns the iSAM2 indices of the new factors in `graph`.
+
+        Incremental re-elimination can declare a system indeterminate that a batch solve of the same graph handles
+        (seen after mass visual pruning: cached linearisations plus a large factor removal). On that error the
+        smoother is rebuilt: a fresh iSAM2 receives every remaining factor plus `graph` in one update, starting from
+        the estimate of the last successful update plus the new `values`. The model is unchanged; every rebuild is
+        logged. Runs that never hit the error are numerically identical to running without this recovery."""
+        n_before = self.isam.getFactorsUnsafe().size()
+        try:
+            result = self.isam.update(graph, values, list(remove)) if len(remove) else self.isam.update(graph, values)
+            new_idx = [int(i) for i in result.getNewFactorsIndices()]
+        except RuntimeError as e:
+            if not self.cfg['isam_recover_indeterminate'] or 'Indeterminate' not in str(e):
+                raise
+            new_idx = self._rebuild(graph, values, set(remove), n_before, stage, str(e))
+        self._estimate = self.isam.calculateEstimate()
+        return new_idx
+
+    def _rebuild(self, graph, values, remove, n_before, stage, error):
+        old = self.isam.getFactorsUnsafe()
+        full, remap = gtsam.NonlinearFactorGraph(), {}
+        for i in range(n_before):   # factors that existed before the failed update; later slots are its own additions
+            f = old.at(i)
+            if f is None or i in remove:
+                continue
+            remap[i] = full.size()
+            full.add(f)
+        new_idx = list(range(full.size(), full.size() + graph.size()))
+        for i in range(graph.size()):
+            full.add(graph.at(i))
+        theta = gtsam.Values(self._estimate)
+        theta.insert(values)
+        self.isam = gtsam.ISAM2(self._isam_params())
+        self.isam.update(full, theta)
+        self.visual_factor_idx = {lid: [remap[i] for i in idx if i in remap] for lid, idx in self.visual_factor_idx.items()}
+        head = [ln for ln in error.splitlines() if ln.strip()][:2]
+        self.rebuilds.append({'keyframe': self.k, 'stage': stage, 'error': ' '.join(head)})
+        return new_idx
 
     def _project(self, pose, p):
         """(uL, uR, v, depth) of world point p seen from body pose."""
@@ -117,7 +167,7 @@ class Smoother:
             graph.add(gtsam.PriorFactorPoint3(L(tid), self.isam.calculateEstimatePoint3(L(tid)),
                                               gtsam.noiseModel.Isotropic.Sigma(3, v['pruned_prior_sigma_m'])))
             self.visual_pruned.add(tid)
-        self.isam.update(graph, gtsam.Values(), remove)
+        self._update(graph, gtsam.Values(), remove, stage='prune')
         return len(bad)
 
     def _triangulate(self, pose, uL, uR, v):
@@ -166,12 +216,11 @@ class Smoother:
         self._add_vision(k, pose, tracks, graph, values, c)
         if self.cfg['sonar']['enabled']:
             self._add_sonar(k, pose, sonar_obs, graph, values, c)
-        result = self.isam.update(graph.graph, values)
-        for (kind, lid), idx in zip(graph.tags, result.getNewFactorsIndices()):
+        for (kind, lid), idx in zip(graph.tags, self._update(graph.graph, values)):
             if kind == 'vis':
                 self.visual_factor_idx.setdefault(lid, []).append(int(idx))
         c['pruned_visual_landmarks'] = self._prune(k, tracks)
-        est = self.isam.calculateEstimate()
+        est = self._estimate   # calculateEstimate() after the last successful update (keyframe or prune)
         self.state = (est.atPose3(X(k)), est.atVector(V(k)), est.atConstantBias(B(k)))
         self.poses_causal.append((t, self.state[0].matrix()))
         c['solve_s'] = time.perf_counter() - wall

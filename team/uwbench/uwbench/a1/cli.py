@@ -209,8 +209,9 @@ def main(argv):
     summary['factor_counts'] = totals
     summary['zero_sonar_factor_keyframes'] = int(sum(c['sonar_factors'] == 0 for c in sm.counts)) if sm.counts else 0
     summary['solve_s'] = stats([c['solve_s'] for c in sm.counts])
+    summary['isam_rebuilds'] = sm.rebuilds   # recoveries from indeterminate iSAM2 updates (keyframe, stage)
     (args.out/'summary.json').write_text(json.dumps(summary, indent=2, default=float) + '\n')
-    print(json.dumps({k: summary.get(k) for k in ['status', 'error', 'wall_s', 'keyframes', 'factor_counts', 'sonar_diagnostics']},
+    print(json.dumps({k: summary.get(k) for k in ['status', 'error', 'wall_s', 'keyframes', 'factor_counts', 'sonar_diagnostics', 'isam_rebuilds']},
                      indent=2, default=float))
     return 0 if status == 'completed' else 1
 

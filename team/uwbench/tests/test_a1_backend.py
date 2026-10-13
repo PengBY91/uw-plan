@@ -85,6 +85,37 @@ def run(scene, sonar_cfg, sonar_fn=lambda k, t, obs: obs):
     return sm
 
 
+class FailOnce:
+    """Wraps an ISAM2 and raises the GTSAM indeterminate-system error on the n-th update call."""
+    def __init__(self, isam, fail_at):
+        self._i, self.calls, self.fail_at = isam, 0, fail_at
+
+    def __getattr__(self, name):
+        return getattr(self._i, name)
+
+    def update(self, *args):
+        self.calls += 1
+        if self.calls == self.fail_at:
+            raise RuntimeError('\nIndeterminate linear system detected while working near variable\n1 (Symbol: v9).\n')
+        return self._i.update(*args)
+
+
+def run_with_failure(scene, fail_at, recover=True, corrupt=None):
+    """Sonar-off run whose iSAM2 raises once; `corrupt` = (keyframe, track id) gets a 10 px offset to force a prune."""
+    cfg = backend.merge(backend.DEFAULTS, {'sonar': {'enabled': False}, 'isam_recover_indeterminate': recover})
+    sm = backend.Smoother(cfg, K, BASE, scene.T_bc, scene.T_bs, NOISE, np.radians(20))
+    sm.isam = FailOnce(sm.isam, fail_at)
+    for k in range(scene.n):
+        t = k*DT
+        seg = scene.imu((k - 1)*DT, t) if k else np.zeros((0, 7))
+        init = (T(scene.R, scene.p(0)), scene.v(0)) if k == 0 else None
+        tracks = scene.stereo(t)
+        if corrupt and k >= corrupt[0]:
+            tracks = [(i, uL + 10, uR + 10, v) if i == corrupt[1] else (i, uL, uR, v) for i, uL, uR, v in tracks]
+        sm.add_keyframe(t, seg, tracks, [], init)
+    return sm
+
+
 @unittest.skipIf(gtsam is None, 'gtsam not installed (use .venv-a)')
 class BackendTests(unittest.TestCase):
     @classmethod
@@ -174,6 +205,31 @@ class BackendTests(unittest.TestCase):
     def test_bad_kernel_rejected(self):
         with self.assertRaises(ValueError):
             run(Scene(n=2), {'enabled': True, 'kernel': 'tukey'})
+
+
+    def test_indeterminate_update_is_recovered_by_rebuild(self):
+        sm = run_with_failure(self.scene, fail_at=10)
+        self.assertEqual(len(sm.rebuilds), 1)
+        self.assertEqual(sm.rebuilds[0]['stage'], 'keyframe')
+        self.assertEqual(len(sm.poses_causal), self.scene.n)
+        np.testing.assert_allclose(self.positions(sm), self.positions(self.off), atol=1e-3)
+
+    def test_recovery_can_be_disabled(self):
+        with self.assertRaises(RuntimeError):
+            run_with_failure(self.scene, fail_at=10, recover=False)
+
+    def test_prune_after_rebuild_removes_only_that_landmark(self):
+        tid = next(i for i, *_ in self.scene.stereo(20*DT) if any(j == i for j, *_ in self.scene.stereo(5*DT)))
+        sm = run_with_failure(self.scene, fail_at=10, corrupt=(20, tid))
+        self.assertIn(tid, sm.visual_pruned)
+        self.assertEqual(sum(c['pruned_visual_landmarks'] for c in sm.counts), 1)
+        from gtsam.symbol_shorthand import L
+        fs = sm.isam.getFactorsUnsafe()
+        live = [fs.at(i) for i in range(fs.size()) if fs.at(i) is not None]
+        stereo_on_tid = [f for f in live if L(tid) in f.keys() and len(f.keys()) == 2]
+        self.assertEqual(stereo_on_tid, [])   # its stereo factors are gone after the rebuild-remapped removal
+        self.assertTrue(all(len(sm.visual_factor_idx.get(l, [1])) > 0 for l in sm.visual_added - sm.visual_pruned))
+        np.testing.assert_allclose(self.positions(sm), self.positions(self.off), atol=5e-3)
 
 
 if __name__ == '__main__':
