@@ -154,7 +154,7 @@ cd team/sim && python.exe holoocean_sonar_replay.py <data/sim/<ds>/raw 的 Windo
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m unittest discover -s team/uwbench/tests
 ```
 
-代码版本：第 18 轮为 2026-10-12 的工作区改动（评审建议 1，见 2.18；提交号待补）、`5cffe96`（DET-DIR 主检测器）、`619a097`（方位修正 `sonar_footprint`）、`c0df304`（detect-a 先导版）、`e696adc`（冻结零偏、漂移预算、真零偏上界）、`ce7e463`（射线声呐与回放）、`9dc4c2c`（声呐单平面冲突）、`1ea5f04`（多平面变体）、`39f81c2`（扫描对地图变体；修复 `--config` 覆盖未传入 `statistics` 的缺陷，此前各轮均用默认参数，结果不受影响）、`c26cf37`（竖直结构门控，`sonar_max_thickness` 默认 0.2）、`2ddf8dc`（门控等无测量期间输出不可评，`sonar_hold_s` 默认 1 s）。
+代码版本：`35a6d86`（第 18 轮，评审建议 1 的评估公平性修正，见 2.18）、`5cffe96`（DET-DIR 主检测器）、`619a097`（方位修正 `sonar_footprint`）、`c0df304`（detect-a 先导版）、`e696adc`（冻结零偏、漂移预算、真零偏上界）、`ce7e463`（射线声呐与回放）、`9dc4c2c`（声呐单平面冲突）、`1ea5f04`（多平面变体）、`39f81c2`（扫描对地图变体；修复 `--config` 覆盖未传入 `statistics` 的缺陷，此前各轮均用默认参数，结果不受影响）、`c26cf37`（竖直结构门控，`sonar_max_thickness` 默认 0.2）、`2ddf8dc`（门控等无测量期间输出不可评，`sonar_hold_s` 默认 1 s）。
 
 ```bash
 # 主检测器 DET-DIR 随默认配置一起输出；航向改用在线零偏：配置文件内容为 "dir_yaw_source: online"
