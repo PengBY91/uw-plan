@@ -1,0 +1,460 @@
+{
+  "datasets": [
+    "pilaster_wall_v1_s01",
+    "stripe_wall_h_v1_s01",
+    "slope_wall_v1_s01"
+  ],
+  "runs": {
+    "fixed": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_fixed_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1402.4667693899828,
+        "commit": "14734c4",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 34.35376102200826,
+        "sonar_factors": 5936,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.08057463992108403,
+        "ape_max": 0.20563935472055586,
+        "rpe1": 0.017924950893309633,
+        "rpe5": 0.03586237281968772,
+        "risk_max": {
+          "x": 0.6960449965869986,
+          "y": 0.09012531938798349,
+          "z": 0.09184803226508294,
+          "yaw": 2.605847987173794
+        },
+        "exceed_s": {
+          "x": 121.59999990463257,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.6960449965869986
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a2_fixed_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 283.66725070399116,
+        "commit": "14734c4",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 5.956540917017264,
+        "sonar_factors": 1409,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.11417407807746224,
+        "ape_max": 0.19350751348098136,
+        "rpe1": 0.010521263507888663,
+        "rpe5": 0.02888048701328425,
+        "risk_max": {
+          "x": 1.3529008788327566,
+          "y": 0.314331938404074,
+          "z": 0.15017000268824354,
+          "yaw": 5.512437477452217
+        },
+        "exceed_s": {
+          "x": 104.59999990463257,
+          "y": 62.40000009536743,
+          "z": 0.0,
+          "yaw": 69.49999952316284
+        },
+        "risk_pos_max": 1.3529008788327566
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a2_fixed_r01",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8646911284551353633 (Symbol: x1313).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 317.3168563170184,
+        "commit": "14734c4",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 6.778027994005242,
+        "sonar_factors": 1483,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 0.8135802466192363,
+        "ape": 0.08061570092184979,
+        "ape_max": 0.2502939862894921,
+        "rpe1": 0.019505031284137327,
+        "rpe5": 0.0347992435854517,
+        "risk_max": {
+          "x": 0.9358582689693024,
+          "y": 0.1920539846076672,
+          "z": 0.05189978271778364,
+          "yaw": 4.515944969012415
+        },
+        "exceed_s": {
+          "x": 99.79999995231628,
+          "y": 32.799999952316284,
+          "z": 0.0,
+          "yaw": 35.799999952316284
+        },
+        "risk_pos_max": 0.9358582689693024
+      }
+    },
+    "fixed_weight_sigma0.5": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_fixed_weight_sigma0.5_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1740.2969936439767,
+        "commit": "14734c4",
+        "config": "configs/a2/fixed_weight_sigma0.5.yaml",
+        "solve_max_s": 55.42144869299955,
+        "sonar_factors": 5936,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.0915350625554147,
+        "ape_max": 0.23469939755226907,
+        "rpe1": 0.03032152821034275,
+        "rpe5": 0.03999252267763071,
+        "risk_max": {
+          "x": 0.5437206045082961,
+          "y": 0.055601445147058476,
+          "z": 0.09309977375676287,
+          "yaw": 1.83218248066645
+        },
+        "exceed_s": {
+          "x": 114.59999990463257,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.5437206045082961
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a2_fixed_weight_sigma0.5_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 533.4901144059841,
+        "commit": "14734c4",
+        "config": "configs/a2/fixed_weight_sigma0.5.yaml",
+        "solve_max_s": 13.195185771997785,
+        "sonar_factors": 1409,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.106911966273324,
+        "ape_max": 0.23398291266078966,
+        "rpe1": 0.026109613093218367,
+        "rpe5": 0.03484703892505733,
+        "risk_max": {
+          "x": 1.1112289798804016,
+          "y": 0.25539574417607985,
+          "z": 0.15203117955722562,
+          "yaw": 4.676980738953894
+        },
+        "exceed_s": {
+          "x": 101.19999980926514,
+          "y": 48.09999990463257,
+          "z": 0.6000001430511475,
+          "yaw": 53.40000009536743
+        },
+        "risk_pos_max": 1.1112289798804016
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a2_fixed_weight_sigma0.5_r01",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8646911284551353296 (Symbol: x976).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 689.2627657910052,
+        "commit": "14734c4",
+        "config": "configs/a2/fixed_weight_sigma0.5.yaml",
+        "solve_max_s": 12.929623348987661,
+        "sonar_factors": 1515,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 0.8716049385659489,
+        "ape": 0.059393883961586375,
+        "ape_max": 0.5692920358219816,
+        "rpe1": 0.05873826538388754,
+        "rpe5": 0.0650376271422334,
+        "risk_max": {
+          "x": 0.8528833577777882,
+          "y": 0.41382200554061327,
+          "z": 0.2189104534430666,
+          "yaw": 6.43034713271575
+        },
+        "exceed_s": {
+          "x": 101.29999995231628,
+          "y": 1.8999998569488525,
+          "z": 0.5999999046325684,
+          "yaw": 3.0
+        },
+        "risk_pos_max": 0.8528833577777882
+      }
+    },
+    "robust_kernel_cauchy2": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_robust_kernel_cauchy2_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 797.8239744719758,
+        "commit": "14734c4",
+        "config": "configs/a2/robust_kernel_cauchy2.yaml",
+        "solve_max_s": 17.09691624500556,
+        "sonar_factors": 5936,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.08674534567462648,
+        "ape_max": 0.2109649906230961,
+        "rpe1": 0.00970304201073627,
+        "rpe5": 0.025157496806068616,
+        "risk_max": {
+          "x": 0.7201236691144212,
+          "y": 0.0951111180711595,
+          "z": 0.08536183510543595,
+          "yaw": 2.7049383683887793
+        },
+        "exceed_s": {
+          "x": 121.79999995231628,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.7201236691144212
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a2_robust_kernel_cauchy2_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 229.34622304499499,
+        "commit": "14734c4",
+        "config": "configs/a2/robust_kernel_cauchy2.yaml",
+        "solve_max_s": 3.121089418011252,
+        "sonar_factors": 1409,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.11758862549756474,
+        "ape_max": 0.18649594652478788,
+        "rpe1": 0.009605720671632201,
+        "rpe5": 0.028305894119288806,
+        "risk_max": {
+          "x": 1.3414047995061131,
+          "y": 0.30450722730026136,
+          "z": 0.15545834213023882,
+          "yaw": 5.391092796980821
+        },
+        "exceed_s": {
+          "x": 107.59999990463257,
+          "y": 61.59999990463257,
+          "z": 1.9000000953674316,
+          "yaw": 67.79999995231628
+        },
+        "risk_pos_max": 1.3414047995061131
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a2_robust_kernel_cauchy2_r01",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8646911284551353292 (Symbol: x972).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 94.73909134199494,
+        "commit": "14734c4",
+        "config": "configs/a2/robust_kernel_cauchy2.yaml",
+        "solve_max_s": 1.6019706779916305,
+        "sonar_factors": 1210,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 0.600000000294344,
+        "ape": 0.04776190570854593,
+        "ape_max": 0.11000889089872369,
+        "rpe1": 0.011395509662781557,
+        "rpe5": 0.029470598316223545,
+        "risk_max": {
+          "x": 0.9273719035406244,
+          "y": 0.19287231427751336,
+          "z": 0.05405045276334461,
+          "yaw": 3.776949656786826
+        },
+        "exceed_s": {
+          "x": 67.39999985694885,
+          "y": 8.800000429153442,
+          "z": 0.0,
+          "yaw": 2.1000001430511475
+        },
+        "risk_pos_max": 0.9273719035406244
+      }
+    },
+    "scalar_weight_support_w0.3_n5": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_scalar_weight_support_w0.3_n5_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 972.7149794399738,
+        "commit": "14734c4",
+        "config": "configs/a2/scalar_weight_support_w0.3_n5.yaml",
+        "solve_max_s": 29.633229138009483,
+        "sonar_factors": 5936,
+        "sonar_weight_mean": 0.9764150943396226,
+        "sonar_weight_at_min": 0.013477088948787063,
+        "coverage": 1.0,
+        "ape": 0.11409432308814409,
+        "ape_max": 0.26102407949774126,
+        "rpe1": 0.015013678471318145,
+        "rpe5": 0.02759650136529197,
+        "risk_max": {
+          "x": 0.6800947379048761,
+          "y": 0.08280798383562782,
+          "z": 0.09302066220698688,
+          "yaw": 2.477547123194947
+        },
+        "exceed_s": {
+          "x": 121.90000009536743,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.6800947379048761
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a2_scalar_weight_support_w0.3_n5_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 239.53385671100114,
+        "commit": "14734c4",
+        "config": "configs/a2/scalar_weight_support_w0.3_n5.yaml",
+        "solve_max_s": 4.146300344000338,
+        "sonar_factors": 1409,
+        "sonar_weight_mean": 0.9751596877217885,
+        "sonar_weight_at_min": 0.014194464158977998,
+        "coverage": 1.0,
+        "ape": 0.11459871184649432,
+        "ape_max": 0.1802956845697641,
+        "rpe1": 0.010685249684553672,
+        "rpe5": 0.02894534201280804,
+        "risk_max": {
+          "x": 1.363959456149031,
+          "y": 0.3170106662494813,
+          "z": 0.1524153991770413,
+          "yaw": 5.561394827886496
+        },
+        "exceed_s": {
+          "x": 108.29999995231628,
+          "y": 62.0,
+          "z": 0.20000004768371582,
+          "yaw": 67.49999976158142
+        },
+        "risk_pos_max": 1.363959456149031
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a2_scalar_weight_support_w0.3_n5_r01",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8646911284551352715 (Symbol: x395).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 78.14345187897561,
+        "commit": "14734c4",
+        "config": "configs/a2/scalar_weight_support_w0.3_n5.yaml",
+        "solve_max_s": 1.3947040340281092,
+        "sonar_factors": 1055,
+        "sonar_weight_mean": 0.9751184834123223,
+        "sonar_weight_at_min": 0.014218009478672985,
+        "coverage": 0.5518518524405397,
+        "ape": 0.04703972978715625,
+        "ape_max": 0.10588279231941027,
+        "rpe1": 0.011973012227884118,
+        "rpe5": 0.030139877361434343,
+        "risk_max": {
+          "x": 0.9293956885552277,
+          "y": 0.1920214700827649,
+          "z": 0.05045642970011397,
+          "yaw": 2.8583498547320123
+        },
+        "exceed_s": {
+          "x": 59.30000019073486,
+          "y": 7.000000238418579,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.9293956885552277
+      }
+    },
+    "sonar_off": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a2_sonar_off_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 77.378522590996,
+        "commit": "14734c4",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 0.39924072500434704,
+        "coverage": 1.0,
+        "ape": 0.062197982547968565,
+        "ape_max": 0.161280178868382,
+        "rpe1": 0.008255697391161589,
+        "rpe5": 0.02423700010097326,
+        "risk_max": {
+          "x": 0.9078479132231687,
+          "y": 0.13358960638591408,
+          "z": 0.09663355221266065,
+          "yaw": 3.3538515623158585
+        },
+        "exceed_s": {
+          "x": 124.70000004768372,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 2.3999998569488525
+        },
+        "risk_pos_max": 0.9078479132231687
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a2_sonar_off_r01",
+        "status": "completed",
+        "error": null,
+        "wall_s": 56.11392333600088,
+        "commit": "14734c4",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 0.27055104199098423,
+        "coverage": 1.0,
+        "ape": 0.12169122579722605,
+        "ape_max": 0.20032519367555307,
+        "rpe1": 0.009975152429811049,
+        "rpe5": 0.029691946269998767,
+        "risk_max": {
+          "x": 1.550580493518711,
+          "y": 0.35117985240366056,
+          "z": 0.16213497999537088,
+          "yaw": 5.983010530165813
+        },
+        "exceed_s": {
+          "x": 114.5,
+          "y": 69.40000009536743,
+          "z": 3.799999952316284,
+          "yaw": 80.10000014305115
+        },
+        "risk_pos_max": 1.550580493518711
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a2_sonar_off_r01",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8502796096475497211 (Symbol: v763).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 28.845126489002723,
+        "commit": "14734c4",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 0.18529874298837967,
+        "coverage": 0.4734567904178007,
+        "ape": 0.05699094957494306,
+        "ape_max": 0.11756503740264537,
+        "rpe1": 0.010973318418560366,
+        "rpe5": 0.030825447980250817,
+        "risk_max": {
+          "x": 0.8728636984107111,
+          "y": 0.23846226269674048,
+          "z": 0.052467298026651385,
+          "yaw": 3.2786972389446563
+        },
+        "exceed_s": {
+          "x": 51.5,
+          "y": 16.100000381469727,
+          "z": 0.0,
+          "yaw": 8.5
+        },
+        "risk_pos_max": 0.8728636984107111
+      }
+    }
+  }
+}

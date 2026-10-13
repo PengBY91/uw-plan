@@ -35,12 +35,33 @@ def _eval_traj(argv):
     return main(argv)
 
 
+def _run_a(argv):
+    from uwbench.a1.cli import main  # needs gtsam/cv2: run with .venv-a
+    return main(argv)
+
+
+def _depth(argv):
+    from uwbench.b.depth import main  # needs cv2: run with .venv-a
+    return main(argv)
+
+
+def _map(argv):
+    from uwbench.b.cli import map_main
+    return map_main(argv)
+
+
+def _eval_map(argv):
+    from uwbench.b.cli import eval_main
+    return eval_main(argv)
+
+
 def _detect_a(argv):
     from uwbench.detect import main
     return main(argv)
 
 
-IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj, 'detect-a': _detect_a}
+IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj, 'depth': _depth, 'map': _map, 'eval-map': _eval_map,
+               'run-a': _run_a, 'detect-a': _detect_a}
 
 
 def main(argv=None):

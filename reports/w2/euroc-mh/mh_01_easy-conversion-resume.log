@@ -1,0 +1,3 @@
+['/home/steve/uw-ao-lab-m1/.venv-eval/bin/rosbags-convert', '--src', '/home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy.bag', '--dst', '/home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy_ros2', '--dst-version', '9', '--dst-storage', 'mcap', '--dst-typestore', 'ros2_jazzy']
+
+EXIT 0

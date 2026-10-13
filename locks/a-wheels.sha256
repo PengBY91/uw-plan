@@ -1,0 +1,10 @@
+b8f227ae3ec96641d511e64fd2d26e2804f4ba94e67d0272fbdaad2b0dca5455  gtsam-4.3.0-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+9121e2c1fdb355232495be3194c8dfe87ccc2d5dee45947b78e68f499790d7a7  iniconfig-2.3.1-py3-none-any.whl
+fbde6962867ee75b48b0ee29b2b9372ec5d617799dbaf38e82dc0596f2f7738a  numpy-2.5.4-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl
+ed709fdf9aa0bd1f2ed8549e71d19449b03a675bb581eb292285f6861953be37  opencv_python_headless-5.0.0.93-cp37-abi3-manylinux_2_28_x86_64.whl
+d7193f7c8e4e93f444fde0262bf90af30e16fa0ad0ad44cb553c87339b23cd1c  packaging-26.3-py3-none-any.whl
+e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746  pluggy-1.6.0-py3-none-any.whl
+2363c69b61c4a97c838da3b130dcd6468f4848992b21a82f2a63ec34377137d9  pygments-2.21.0-py3-none-any.whl
+37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c  pytest-9.1.1-py3-none-any.whl
+ba1cc08a7ccde2d2ec775841541641e4548226580ab850948cbfda66a1befcdc  pyyaml-6.0.3-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+f55fa87b6c612ecd6b058f167c53231b1d14e412efe361d3d6e38b3631c73218  scipy-1.18.1-cp312-cp312-manylinux_2_27_x86_64.manylinux_2_28_x86_64.whl

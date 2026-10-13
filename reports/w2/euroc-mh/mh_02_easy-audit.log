@@ -1,0 +1,87 @@
+['/home/steve/uw-ao-lab-m1/.venv-eval/bin/python', '/home/steve/uw-ao-lab-m1/scripts/audit_euroc.py', '--bag', '/home/steve/uw-ao-lab-m1/data/public/euroc/MH_02_easy.bag', '--ros2', '/home/steve/uw-ao-lab-m1/data/public/euroc/MH_02_easy_ros2', '--asl', '/home/steve/uw-ao-lab-m1/data/public/euroc/MH_02_easy_asl/mav0', '--report', 'reports/w2/euroc-mh/mh_02_easy-data-audit']
+{
+  "status": "passed",
+  "topics": {
+    "/leica/position": {
+      "msgtype": "geometry_msgs/msg/PointStamped",
+      "count": 2487,
+      "first_receive_ns": 1403636856854208384,
+      "last_receive_ns": 1403637010108069619,
+      "first_sample_ns": 1403636856829881191,
+      "last_sample_ns": 1403637010088881254,
+      "sample_non_increasing": 0,
+      "content_sha256": "b39abb5f9aa078fc069b3a58b82be9cec36f4e161f2a2aae41dbbf0db0d18f39",
+      "sample_interval_s": {
+        "min": 0.04399991,
+        "median": 0.05099988,
+        "max": 0.700000048
+      }
+    },
+    "/imu0": {
+      "msgtype": "sensor_msgs/msg/Imu",
+      "count": 30400,
+      "first_receive_ns": 1403636858696596029,
+      "last_receive_ns": 1403637010636698340,
+      "first_sample_ns": 1403636858631666500,
+      "last_sample_ns": 1403637010626666500,
+      "sample_non_increasing": 0,
+      "content_sha256": "ea28ba4d1e0f412e281d132085581f1f2788eb06eff618900a8a9073b13c8106",
+      "sample_interval_s": {
+        "min": 0.005,
+        "median": 0.005,
+        "max": 0.005
+      }
+    },
+    "/cam1/image_raw": {
+      "msgtype": "sensor_msgs/msg/Image",
+      "count": 3040,
+      "first_receive_ns": 1403636858697295943,
+      "last_receive_ns": 1403637010635868182,
+      "first_sample_ns": 1403636858651666500,
+      "last_sample_ns": 1403637010601666500,
+      "sample_non_increasing": 0,
+      "content_sha256": "1cfd036f89ddc163ca834fbf84780972fc7c8f9c2f70fef6ddeddc4ad2f2fd9e",
+      "sample_interval_s": {
+        "min": 0.05,
+        "median": 0.05,
+        "max": 0.05
+      }
+    },
+    "/cam0/image_raw": {
+      "msgtype": "sensor_msgs/msg/Image",
+      "count": 3040,
+      "first_receive_ns": 1403636858726223271,
+      "last_receive_ns": 1403637010630997819,
+      "first_sample_ns": 1403636858651666500,
+      "last_sample_ns": 1403637010601666500,
+      "sample_non_increasing": 0,
+      "content_sha256": "774081bae438ce00d5d75a4d9066ec4bf41a474ed5479d52e9ec8b54dd592a00",
+      "sample_interval_s": {
+        "min": 0.05,
+        "median": 0.05,
+        "max": 0.05
+      }
+    }
+  },
+  "asl_checks": {
+    "cam0": {
+      "timestamp_max_abs_delta_ns": 68,
+      "timestamp_tolerance_ns": 128,
+      "png_count": 3040
+    },
+    "cam1": {
+      "timestamp_max_abs_delta_ns": 68,
+      "timestamp_tolerance_ns": 128,
+      "png_count": 3040
+    },
+    "imu0": {
+      "timestamp_max_abs_delta_ns": 124,
+      "timestamp_tolerance_ns": 128,
+      "max_abs_value_difference": 0.0,
+      "value_tolerance": 1e-06,
+      "finite_values": true
+    }
+  }
+}
+
+EXIT 0

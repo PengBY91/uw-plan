@@ -17,6 +17,10 @@
 !configs/*.yaml
 !configs/euroc_v101/
 !configs/euroc_v101/*.yaml
+!configs/a1/
+!configs/a1/*.yaml
+!configs/a2/
+!configs/a2/*.yaml
 !configs/sim/
 !configs/sim/*.json
 !configs/detect_a/
@@ -32,10 +36,25 @@
 !locks/*.patch
 !locks/*.sha256
 !reports/
+!reports/*.md
 !reports/w1/
 !reports/w1/*.md
 !reports/w2/
 !reports/w2/*.md
+!reports/w2/euroc-mh/
+!reports/w2/euroc-mh/*
+!reports/w2/euroc-mh/*/
+!reports/w2/euroc-mh/*/*
+!reports/w3/
+!reports/w3/*.md
+!reports/w4/
+!reports/w4/*.md
+!reports/w3/a1-sim/
+!reports/w3/a1-sim/*
+!reports/w3/b-sim/
+!reports/w3/b-sim/*
+!reports/w4/a2-sim/
+!reports/w4/a2-sim/*
 !reports/w1/euroc_v101_audit/
 !reports/w1/euroc_v101_audit/*
 

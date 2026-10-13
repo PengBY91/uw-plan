@@ -1,0 +1,122 @@
+[
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b0_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 5627,
+    "occupied_outside_band": 0.014572596410165275,
+    "occupied_in_surface_band": 0.7604407321841123,
+    "occupied_interior_beyond_band": 0.2249866714057224,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.35828084475731753
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b1_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 5805,
+    "occupied_outside_band": 0.016020671834625324,
+    "occupied_in_surface_band": 0.7631352282515074,
+    "occupied_interior_beyond_band": 0.22084409991386736,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.37106335679881436
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b2a_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 9438,
+    "occupied_outside_band": 0.14420428056791693,
+    "occupied_in_surface_band": 0.7128628946810766,
+    "occupied_interior_beyond_band": 0.14293282475100658,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.5730826231937755
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b2c_gt_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 11659,
+    "occupied_outside_band": 0.1394630757354833,
+    "occupied_in_surface_band": 0.6865082768676559,
+    "occupied_interior_beyond_band": 0.1740286473968608,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.6864579473879214
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b0_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 7358,
+    "occupied_outside_band": 0.20739331340038053,
+    "occupied_in_surface_band": 0.555449850502854,
+    "occupied_interior_beyond_band": 0.23715683609676544,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.30372360133382736
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b1_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 7610,
+    "occupied_outside_band": 0.20972404730617608,
+    "occupied_in_surface_band": 0.5541392904073588,
+    "occupied_interior_beyond_band": 0.23613666228646518,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.31335679881437567
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b2a_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 11345,
+    "occupied_outside_band": 0.323402379903041,
+    "occupied_in_surface_band": 0.47033935654473336,
+    "occupied_interior_beyond_band": 0.20625826355222565,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.3956094849944424
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b2c_a0_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 12599,
+    "occupied_outside_band": 0.36812445432177154,
+    "occupied_in_surface_band": 0.4294785300420668,
+    "occupied_interior_beyond_band": 0.2023970156361616,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.3933864394220081
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b0_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 7406,
+    "occupied_outside_band": 0.38981906562246826,
+    "occupied_in_surface_band": 0.43734809613826625,
+    "occupied_interior_beyond_band": 0.17283283823926546,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.2223045572434235
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b1_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 7733,
+    "occupied_outside_band": 0.3829044355360145,
+    "occupied_in_surface_band": 0.43566533040217253,
+    "occupied_interior_beyond_band": 0.18143023406181302,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.23304927751018895
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b2a_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 11415,
+    "occupied_outside_band": 0.4673674989049496,
+    "occupied_in_surface_band": 0.38501971090670173,
+    "occupied_interior_beyond_band": 0.14761279018834866,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.3088180807706558
+  },
+  {
+    "map": "runs/sim_stripe_beam_v1_s01_b2c_a1off_r01/map",
+    "band_m": 0.1,
+    "predicted_occupied": 13173,
+    "occupied_outside_band": 0.4799210506338723,
+    "occupied_in_surface_band": 0.36354664844758217,
+    "occupied_interior_beyond_band": 0.1565323009185455,
+    "visible_surface_voxels": 10796,
+    "visible_surface_recall": 0.33530937384216375
+  }
+]

@@ -1,0 +1,576 @@
+{
+  "datasets": [
+    "pilaster_wall_v1_s01",
+    "stripe_wall_h_v1_s01",
+    "stripe_beam_v1_s01",
+    "slope_wall_v1_s01"
+  ],
+  "runs": {
+    "cauchy": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a1_cauchy_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1354.9914091169921,
+        "commit": "2a0b60c",
+        "config": "configs/a1/cauchy.yaml",
+        "solve_max_s": 20.60418263899919,
+        "sonar_factors": 5936,
+        "coverage": 1.0,
+        "ape": 0.08968492092055723,
+        "ape_max": 0.20300573220113874,
+        "rpe1": 0.009405908580697475,
+        "rpe5": 0.024160066730335612,
+        "risk_max": {
+          "x": 0.6828452117489597,
+          "y": 0.09137768169012406,
+          "z": 0.08133651605161259,
+          "yaw": 2.6402662320463244
+        },
+        "exceed_s": {
+          "x": 122.0,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.6828452117489597
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a1_cauchy_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 380.23677515199233,
+        "commit": "2a0b60c",
+        "config": "configs/a1/cauchy.yaml",
+        "solve_max_s": 4.875287600996671,
+        "sonar_factors": 1409,
+        "coverage": 1.0,
+        "ape": 0.1159287230057079,
+        "ape_max": 0.1854791088812902,
+        "rpe1": 0.009565317334726429,
+        "rpe5": 0.02821005630727916,
+        "risk_max": {
+          "x": 1.378950199684606,
+          "y": 0.31226671598677036,
+          "z": 0.1510256669084917,
+          "yaw": 5.487320331130784
+        },
+        "exceed_s": {
+          "x": 107.5,
+          "y": 62.200000047683716,
+          "z": 0.5999999046325684,
+          "yaw": 69.5
+        },
+        "risk_pos_max": 1.378950199684606
+      },
+      "stripe_beam_v1_s01": {
+        "run": "sim_stripe_beam_v1_s01_a1_cauchy_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1207.6447110139998,
+        "commit": "2a0b60c",
+        "config": "configs/a1/cauchy.yaml",
+        "solve_max_s": 26.929776880002464,
+        "sonar_factors": 1409,
+        "coverage": 1.0,
+        "ape": 0.44624329221152714,
+        "ape_max": 0.7322318830465175,
+        "rpe1": 0.02526489929756046,
+        "rpe5": 0.0818375371660138,
+        "risk_max": {
+          "x": 3.4525510877058374,
+          "y": 1.5122848283904438,
+          "z": 0.03071010796751545,
+          "yaw": 16.360139455495652
+        },
+        "exceed_s": {
+          "x": 111.5,
+          "y": 112.5,
+          "z": 0.0,
+          "yaw": 111.5
+        },
+        "risk_pos_max": 3.4525510877058374
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_cauchy_r02",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8646911284551352526 (Symbol: x206).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 180.50074334400415,
+        "commit": "2a0b60c",
+        "config": "configs/a1/cauchy.yaml",
+        "solve_max_s": 2.804608710008324,
+        "sonar_factors": 1057,
+        "coverage": 0.5524691358024691,
+        "ape": 0.04892456904724038,
+        "ape_max": 0.10891516152759538,
+        "rpe1": 0.010778903124074373,
+        "rpe5": 0.029010403899274406,
+        "risk_max": {
+          "x": 0.9349191134036094,
+          "y": 0.19395278876770222,
+          "z": 0.0531179450007941,
+          "yaw": 2.992982279197571
+        },
+        "exceed_s": {
+          "x": 60.40000009536743,
+          "y": 7.599999904632568,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.9349191134036094
+      }
+    },
+    "fixed": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a1_fixed_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1913.7473476739979,
+        "commit": "2a0b60c",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 67.88484969000274,
+        "sonar_factors": 5936,
+        "coverage": 1.0,
+        "ape": 0.08057463992108403,
+        "ape_max": 0.20563935472055586,
+        "rpe1": 0.017924950893309633,
+        "rpe5": 0.03586237281968772,
+        "risk_max": {
+          "x": 0.6960449965869986,
+          "y": 0.09012531938798349,
+          "z": 0.09184803226508294,
+          "yaw": 2.605847987173794
+        },
+        "exceed_s": {
+          "x": 121.59999990463257,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.6960449965869986
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a1_fixed_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 405.80380230699666,
+        "commit": "2a0b60c",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 9.188555569999153,
+        "sonar_factors": 1409,
+        "coverage": 1.0,
+        "ape": 0.11417407807746224,
+        "ape_max": 0.19350751348098136,
+        "rpe1": 0.010521263507888663,
+        "rpe5": 0.02888048701328425,
+        "risk_max": {
+          "x": 1.3529008788327566,
+          "y": 0.314331938404074,
+          "z": 0.15017000268824354,
+          "yaw": 5.512437477452217
+        },
+        "exceed_s": {
+          "x": 104.59999990463257,
+          "y": 62.40000009536743,
+          "z": 0.0,
+          "yaw": 69.49999952316284
+        },
+        "risk_pos_max": 1.3529008788327566
+      },
+      "stripe_beam_v1_s01": {
+        "run": "sim_stripe_beam_v1_s01_a1_fixed_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 553.2139457760059,
+        "commit": "2a0b60c",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 8.102872792995186,
+        "sonar_factors": 1409,
+        "coverage": 1.0,
+        "ape": 0.44235127481672504,
+        "ape_max": 0.7088087292475354,
+        "rpe1": 0.026049965554744505,
+        "rpe5": 0.07609013308747209,
+        "risk_max": {
+          "x": 3.429246943197074,
+          "y": 1.4584896530378308,
+          "z": 0.02542850107856802,
+          "yaw": 15.830377170121459
+        },
+        "exceed_s": {
+          "x": 115.90000033378601,
+          "y": 115.89999985694885,
+          "z": 0.0,
+          "yaw": 114.10000014305115
+        },
+        "risk_pos_max": 3.429246943197074
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_fixed_r02",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8646911284551353633 (Symbol: x1313).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 291.6868341569934,
+        "commit": "2a0b60c",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 6.044601273009903,
+        "sonar_factors": 1483,
+        "coverage": 0.8135802466192363,
+        "ape": 0.08061570092184979,
+        "ape_max": 0.2502939862894921,
+        "rpe1": 0.019505031284137327,
+        "rpe5": 0.0347992435854517,
+        "risk_max": {
+          "x": 0.9358582689693024,
+          "y": 0.1920539846076672,
+          "z": 0.05189978271778364,
+          "yaw": 4.515944969012415
+        },
+        "exceed_s": {
+          "x": 99.79999995231628,
+          "y": 32.799999952316284,
+          "z": 0.0,
+          "yaw": 35.799999952316284
+        },
+        "risk_pos_max": 0.9358582689693024
+      }
+    },
+    "fixed_revisit": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a1_fixed_revisit_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 2313.7991117100028,
+        "commit": "2a0b60c",
+        "config": "configs/a1/fixed_revisit.yaml",
+        "solve_max_s": 112.56200003701088,
+        "sonar_factors": 6051,
+        "coverage": 1.0,
+        "ape": 0.03257195341932576,
+        "ape_max": 0.08660426218395958,
+        "rpe1": 0.008071558417296724,
+        "rpe5": 0.02166468053814235,
+        "risk_max": {
+          "x": 0.8000938832346441,
+          "y": 0.09333942077667282,
+          "z": 0.08227924197653695,
+          "yaw": 2.660470449828581
+        },
+        "exceed_s": {
+          "x": 107.69999980926514,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.8000938832346441
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a1_fixed_revisit_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 651.6432155880029,
+        "commit": "2a0b60c",
+        "config": "configs/a1/fixed_revisit.yaml",
+        "solve_max_s": 24.741839114998584,
+        "sonar_factors": 1514,
+        "coverage": 1.0,
+        "ape": 0.12642278822307343,
+        "ape_max": 0.2035688956063124,
+        "rpe1": 0.014007280184836735,
+        "rpe5": 0.03665185277012852,
+        "risk_max": {
+          "x": 1.3973994745809621,
+          "y": 0.3039827452956778,
+          "z": 0.15741396054947376,
+          "yaw": 5.372935169759672
+        },
+        "exceed_s": {
+          "x": 103.7999997138977,
+          "y": 69.29999995231628,
+          "z": 2.1999998092651367,
+          "yaw": 80.40000009536743
+        },
+        "risk_pos_max": 1.3973994745809621
+      },
+      "stripe_beam_v1_s01": {
+        "run": "sim_stripe_beam_v1_s01_a1_fixed_revisit_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1410.3657814049948,
+        "commit": "2a0b60c",
+        "config": "configs/a1/fixed_revisit.yaml",
+        "solve_max_s": 27.305078078003135,
+        "sonar_factors": 1514,
+        "coverage": 1.0,
+        "ape": 0.45226753939319203,
+        "ape_max": 0.7165114329228393,
+        "rpe1": 0.029156418051026176,
+        "rpe5": 0.08531739176797418,
+        "risk_max": {
+          "x": 3.5239802238486226,
+          "y": 1.4501107595791327,
+          "z": 0.03450098013825112,
+          "yaw": 15.658259472641326
+        },
+        "exceed_s": {
+          "x": 111.5,
+          "y": 109.89999985694885,
+          "z": 0.0,
+          "yaw": 109.40000009536743
+        },
+        "risk_pos_max": 3.5239802238486226
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_fixed_revisit_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1588.497381011999,
+        "commit": "2a0b60c",
+        "config": "configs/a1/fixed_revisit.yaml",
+        "solve_max_s": 58.45089638700301,
+        "sonar_factors": 1932,
+        "coverage": 1.0,
+        "ape": 0.05493682718265842,
+        "ape_max": 0.1639371865818073,
+        "rpe1": 0.019870963713881303,
+        "rpe5": 0.04272283862276342,
+        "risk_max": {
+          "x": 0.9565820383678157,
+          "y": 0.2597522429924202,
+          "z": 0.06598425553577854,
+          "yaw": 4.170796108642961
+        },
+        "exceed_s": {
+          "x": 113.89999985694885,
+          "y": 21.90000057220459,
+          "z": 0.0,
+          "yaw": 21.100000143051147
+        },
+        "risk_pos_max": 0.9565820383678157
+      }
+    },
+    "huber": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a1_huber_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1764.5286960399972,
+        "commit": "2a0b60c",
+        "config": "configs/a1/huber.yaml",
+        "solve_max_s": 37.30127099000674,
+        "sonar_factors": 5936,
+        "coverage": 1.0,
+        "ape": 0.09509794000540031,
+        "ape_max": 0.25879889733878253,
+        "rpe1": 0.009765093973150238,
+        "rpe5": 0.02623213144548276,
+        "risk_max": {
+          "x": 0.6673438394244251,
+          "y": 0.08595363422294307,
+          "z": 0.09165125880902276,
+          "yaw": 2.541120839055128
+        },
+        "exceed_s": {
+          "x": 121.59999990463257,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 0.0
+        },
+        "risk_pos_max": 0.6673438394244251
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a1_huber_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 426.8992892899987,
+        "commit": "2a0b60c",
+        "config": "configs/a1/huber.yaml",
+        "solve_max_s": 6.890903961000731,
+        "sonar_factors": 1409,
+        "coverage": 1.0,
+        "ape": 0.11777277176200482,
+        "ape_max": 0.18662349787584218,
+        "rpe1": 0.009686308311444913,
+        "rpe5": 0.02856700436359517,
+        "risk_max": {
+          "x": 1.3521384655080617,
+          "y": 0.30584561435992874,
+          "z": 0.15736958947511942,
+          "yaw": 5.411420080066315
+        },
+        "exceed_s": {
+          "x": 105.89999985694885,
+          "y": 62.40000009536743,
+          "z": 2.4000000953674316,
+          "yaw": 69.69999957084656
+        },
+        "risk_pos_max": 1.3521384655080617
+      },
+      "stripe_beam_v1_s01": {
+        "run": "sim_stripe_beam_v1_s01_a1_huber_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 922.5507902190002,
+        "commit": "2a0b60c",
+        "config": "configs/a1/huber.yaml",
+        "solve_max_s": 18.664426974006346,
+        "sonar_factors": 1409,
+        "coverage": 1.0,
+        "ape": 0.4427126973053228,
+        "ape_max": 0.7092806205758172,
+        "rpe1": 0.0361592886780535,
+        "rpe5": 0.08433367619055784,
+        "risk_max": {
+          "x": 3.3818855953134537,
+          "y": 1.4350357387156878,
+          "z": 0.0275818466291185,
+          "yaw": 15.554941237894166
+        },
+        "exceed_s": {
+          "x": 114.09999966621399,
+          "y": 112.2999997138977,
+          "z": 0.0,
+          "yaw": 109.10000014305115
+        },
+        "risk_pos_max": 3.3818855953134537
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_huber_r02",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8502796096475497040 (Symbol: v592).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 167.50902561099792,
+        "commit": "2a0b60c",
+        "config": "configs/a1/huber.yaml",
+        "solve_max_s": 3.4227472679922357,
+        "sonar_factors": 1043,
+        "coverage": 0.5481481478538042,
+        "ape": 0.04899934539198452,
+        "ape_max": 0.10718437528902929,
+        "rpe1": 0.013383592747933422,
+        "rpe5": 0.029762005366204207,
+        "risk_max": {
+          "x": 0.9108747750728365,
+          "y": 0.1914824252793207,
+          "z": 0.053665075740238016,
+          "yaw": 3.175745835327887
+        },
+        "exceed_s": {
+          "x": 58.5,
+          "y": 7.900000095367432,
+          "z": 0.0,
+          "yaw": 1.0
+        },
+        "risk_pos_max": 0.9108747750728365
+      }
+    },
+    "sonar_off": {
+      "pilaster_wall_v1_s01": {
+        "run": "sim_pilaster_wall_v1_s01_a1_sonar_off_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 66.5616329350014,
+        "commit": "2a0b60c",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 0.5624204740015557,
+        "coverage": 1.0,
+        "ape": 0.062197982547968565,
+        "ape_max": 0.161280178868382,
+        "rpe1": 0.008255697391161589,
+        "rpe5": 0.02423700010097326,
+        "risk_max": {
+          "x": 0.9078479132231687,
+          "y": 0.13358960638591408,
+          "z": 0.09663355221266065,
+          "yaw": 3.3538515623158585
+        },
+        "exceed_s": {
+          "x": 124.70000004768372,
+          "y": 0.0,
+          "z": 0.0,
+          "yaw": 2.3999998569488525
+        },
+        "risk_pos_max": 0.9078479132231687
+      },
+      "stripe_wall_h_v1_s01": {
+        "run": "sim_stripe_wall_h_v1_s01_a1_sonar_off_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 91.06221196200931,
+        "commit": "2a0b60c",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 0.34328821300005075,
+        "coverage": 1.0,
+        "ape": 0.12169122579722605,
+        "ape_max": 0.20032519367555307,
+        "rpe1": 0.009975152429811049,
+        "rpe5": 0.029691946269998767,
+        "risk_max": {
+          "x": 1.550580493518711,
+          "y": 0.35117985240366056,
+          "z": 0.16213497999537088,
+          "yaw": 5.983010530165813
+        },
+        "exceed_s": {
+          "x": 114.5,
+          "y": 69.40000009536743,
+          "z": 3.799999952316284,
+          "yaw": 80.10000014305115
+        },
+        "risk_pos_max": 1.550580493518711
+      },
+      "stripe_beam_v1_s01": {
+        "run": "sim_stripe_beam_v1_s01_a1_sonar_off_r02",
+        "status": "completed",
+        "error": null,
+        "wall_s": 366.6369760259986,
+        "commit": "2a0b60c",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 4.328013974998612,
+        "coverage": 1.0,
+        "ape": 0.457992310647529,
+        "ape_max": 0.7328767318661901,
+        "rpe1": 0.024035261588176402,
+        "rpe5": 0.07932492516941429,
+        "risk_max": {
+          "x": 3.6266360752575775,
+          "y": 1.5864270034147123,
+          "z": 0.029706564470490658,
+          "yaw": 16.674112072003226
+        },
+        "exceed_s": {
+          "x": 115.79999995231628,
+          "y": 123.80000019073486,
+          "z": 0.0,
+          "yaw": 122.39999961853027
+        },
+        "risk_pos_max": 3.6266360752575775
+      },
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_sonar_off_r02",
+        "status": "failed",
+        "error": "RuntimeError('\\nIndeterminate linear system detected while working near variable\\n8502796096475497211 (Symbol: v763).\\n\\nThrown when a linear system is ill-posed.  The most common cause for this\\nerror is having underconstrained variables, but the exception is also raised\\nfor nearly indeterminate systems that are too poorly conditioned to solve\\nreliably.  See the GTSAM Doxygen documentation for\\ngtsam::IndeterminateSystemException and the user\\nguide at\\nhttps://github.com/borglab/gtsam/blob/develop/gtsam/linear/doc/IndeterminateSystemException.ipynb\\nfor more information.')",
+        "wall_s": 126.36240988901409,
+        "commit": "2a0b60c",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 0.6685768690076657,
+        "coverage": 0.4734567904178007,
+        "ape": 0.05699094957494306,
+        "ape_max": 0.11756503740264537,
+        "rpe1": 0.010973318418560366,
+        "rpe5": 0.030825447980250817,
+        "risk_max": {
+          "x": 0.8728636984107111,
+          "y": 0.23846226269674048,
+          "z": 0.052467298026651385,
+          "yaw": 3.2786972389446563
+        },
+        "exceed_s": {
+          "x": 51.5,
+          "y": 16.100000381469727,
+          "z": 0.0,
+          "yaw": 8.5
+        },
+        "risk_pos_max": 0.8728636984107111
+      }
+    }
+  }
+}
