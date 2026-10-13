@@ -1,0 +1,164 @@
+{
+  "datasets": [
+    "slope_wall_v1_s01"
+  ],
+  "runs": {
+    "cauchy": {
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_cauchy_r03",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1464.7143520950049,
+        "commit": "d58e76e",
+        "config": "configs/a1/cauchy.yaml",
+        "solve_max_s": 50.27430030101095,
+        "sonar_factors": 1826,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.14230777113655416,
+        "ape_max": 0.3052590310711248,
+        "rpe1": 0.01583452878372335,
+        "rpe5": 0.03271016050944737,
+        "risk_max": {
+          "x": 1.0004157328913033,
+          "y": 0.19889037084031067,
+          "z": 0.0531179450007941,
+          "yaw": 4.558743472794216
+        },
+        "exceed_s": {
+          "x": 121.60000038146973,
+          "y": 42.09999990463257,
+          "z": 0.0,
+          "yaw": 50.60000014305115
+        },
+        "risk_pos_max": 1.0004157328913033
+      }
+    },
+    "fixed": {
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_fixed_r03",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1753.462966956984,
+        "commit": "d58e76e",
+        "config": "configs/a1/fixed.yaml",
+        "solve_max_s": 46.23728554099216,
+        "sonar_factors": 1826,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.13399911276900894,
+        "ape_max": 0.25320061345354195,
+        "rpe1": 0.020432108172077707,
+        "rpe5": 0.03501787763798662,
+        "risk_max": {
+          "x": 0.9358582689693024,
+          "y": 0.1920539846076672,
+          "z": 0.05189978271778364,
+          "yaw": 4.515944969012415
+        },
+        "exceed_s": {
+          "x": 118.79999995231628,
+          "y": 36.59999990463257,
+          "z": 0.0,
+          "yaw": 48.799999952316284
+        },
+        "risk_pos_max": 0.9358582689693024
+      }
+    },
+    "fixed_revisit": {
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_fixed_revisit_r03",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1549.9404770000256,
+        "commit": "d58e76e",
+        "config": "configs/a1/fixed_revisit.yaml",
+        "solve_max_s": 57.99419944098918,
+        "sonar_factors": 1932,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.05493682718265842,
+        "ape_max": 0.1639371865818073,
+        "rpe1": 0.019870963713881303,
+        "rpe5": 0.04272283862276342,
+        "risk_max": {
+          "x": 0.9565820383678157,
+          "y": 0.2597522429924202,
+          "z": 0.06598425553577854,
+          "yaw": 4.170796108642961
+        },
+        "exceed_s": {
+          "x": 113.89999985694885,
+          "y": 21.90000057220459,
+          "z": 0.0,
+          "yaw": 21.100000143051147
+        },
+        "risk_pos_max": 0.9565820383678157
+      }
+    },
+    "huber": {
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_huber_r03",
+        "status": "completed",
+        "error": null,
+        "wall_s": 1736.5254862389993,
+        "commit": "d58e76e",
+        "config": "configs/a1/huber.yaml",
+        "solve_max_s": 24.507029481988866,
+        "sonar_factors": 1826,
+        "sonar_weight_mean": 1.0,
+        "sonar_weight_at_min": 0.0,
+        "coverage": 1.0,
+        "ape": 0.13383898700439384,
+        "ape_max": 0.2777849323196819,
+        "rpe1": 0.01759848509622824,
+        "rpe5": 0.03424425664358937,
+        "risk_max": {
+          "x": 0.9811792211476181,
+          "y": 0.19453033061144873,
+          "z": 0.053665075740238016,
+          "yaw": 4.34024835282621
+        },
+        "exceed_s": {
+          "x": 120.0,
+          "y": 35.19999980926514,
+          "z": 0.0,
+          "yaw": 44.40000033378601
+        },
+        "risk_pos_max": 0.9811792211476181
+      }
+    },
+    "sonar_off": {
+      "slope_wall_v1_s01": {
+        "run": "sim_slope_wall_v1_s01_a1_sonar_off_r03",
+        "status": "completed",
+        "error": null,
+        "wall_s": 415.4230923750147,
+        "commit": "d58e76e",
+        "config": "configs/a1/sonar_off.yaml",
+        "solve_max_s": 4.779644156980794,
+        "coverage": 1.0,
+        "ape": 0.2535227277921189,
+        "ape_max": 0.49861116643189773,
+        "rpe1": 0.01342107915722333,
+        "rpe5": 0.034759389688653525,
+        "risk_max": {
+          "x": 1.1696088430041582,
+          "y": 0.2644384323870782,
+          "z": 0.052467298026651385,
+          "yaw": 5.9754060435935425
+        },
+        "exceed_s": {
+          "x": 128.89999985694885,
+          "y": 81.70000076293945,
+          "z": 0.0,
+          "yaw": 82.40000009536743
+        },
+        "risk_pos_max": 1.1696088430041582
+      }
+    }
+  }
+}

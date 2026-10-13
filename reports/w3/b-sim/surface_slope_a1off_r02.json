@@ -1,0 +1,42 @@
+[
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b0_a1off_r02/map",
+    "band_m": 0.1,
+    "predicted_occupied": 26730,
+    "occupied_outside_band": 0.23524130190796858,
+    "occupied_in_surface_band": 0.7003741114852226,
+    "occupied_interior_beyond_band": 0.06438458660680883,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.5186450750259991
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b1_a1off_r02/map",
+    "band_m": 0.1,
+    "predicted_occupied": 28443,
+    "occupied_outside_band": 0.2540168055409064,
+    "occupied_in_surface_band": 0.6826987307949232,
+    "occupied_interior_beyond_band": 0.06328446366417044,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.5329074431733769
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b2a_a1off_r02/map",
+    "band_m": 0.1,
+    "predicted_occupied": 46088,
+    "occupied_outside_band": 0.42180177052595036,
+    "occupied_in_surface_band": 0.5336096163860441,
+    "occupied_interior_beyond_band": 0.04458861308800555,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.6226043678502451
+  },
+  {
+    "map": "runs/sim_slope_wall_v1_s01_b2c_a1off_r02/map",
+    "band_m": 0.1,
+    "predicted_occupied": 51230,
+    "occupied_outside_band": 0.45254733554557874,
+    "occupied_in_surface_band": 0.4970134686707008,
+    "occupied_interior_beyond_band": 0.05043919578372048,
+    "visible_surface_voxels": 26924,
+    "visible_surface_recall": 0.6450007428316743
+  }
+]
