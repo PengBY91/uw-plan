@@ -40,8 +40,8 @@ Pilot scope, stated so nobody reads it as the M3 protocol:
   so a plane fixed from one frame at t_0 differs from the label frame by the heading error at t_0 and the conflict
   then drifts away from the label error with travel (round 18: on the vertical-stripe wall the conflict read 0.46 m
   where the label read 0.18 m). The pilot judged the single frame better against t_0-aligned truth, which is not the
-  label reference. Afterwards the measured distance to the line is compared with the distance the estimated position predicts. The difference is a cumulative conflict along the plane normal,
-  projected on the estimated body x and y. Frames whose line normal is more than gate_deg from the reference plane
+  label reference. Afterwards the measured distance to the line is compared with the distance the estimated position
+  predicts. The difference is a cumulative conflict along the plane normal, projected on the estimated body x and y. Frames whose line normal is more than gate_deg from the reference plane
   (seen through the estimated attitude) are skipped, so another structure does not count as conflict.
   The multi-plane form (sonar_conflict_multi) keeps every surface it has seen: a line is matched to a known plane by
   normal (sonar_match_deg) and by a small change of that plane's conflict since it was last seen (sonar_jump_m);
@@ -61,6 +61,7 @@ import argparse
 import csv
 import json
 import re
+from collections import namedtuple
 from pathlib import Path
 
 import numpy as np
@@ -412,8 +413,8 @@ def rot2(angle):
 def sonar_conflict_map(t, est, scans, T_imu_sonar, cfg=CONFIG):
     """Scan-to-map sonar conflict at stamps t: columns body-x and body-y position conflict (m), heading conflict (deg).
 
-    scans: list of (stamp, [n, 2] sonar-frame points); NaN where the last registered scan is older than sonar_hold_s. The correction (phi, tau) maps estimated-world horizontal points
-    into the map frame: q_map = rot(phi) q + tau.
+    scans: list of (stamp, [n, 2] sonar-frame points); NaN where the last registered scan is older than sonar_hold_s.
+    The correction (phi, tau) maps estimated-world horizontal points into the map frame: q_map = rot(phi) q + tau.
     """
     est_t, R, p = est[0], est[1], est[2]
     R_is, t_is = T_imu_sonar[:3, :3], T_imu_sonar[:3, 3]
@@ -780,40 +781,81 @@ def comparable(false_alarm, target, tolerance):
     return bool(false_alarm == 0.0) if target <= 0 else bool(abs(false_alarm - target) <= tolerance*target)
 
 
+Channel = namedtuple('Channel', 'train test axis fraction')  # training normals, test values, axis (None = global), pilot fraction
+
+
+def score_detector(test, name, chans, target, allocation, grace, tol_rel):
+    """One per-run row for a detector given as channels; the alarm on an axis is the union of its channels there."""
+    thr = union_thresholds([c.train for c in chans], target, allocation, [c.fraction for c in chans])
+    train_fa = union_false_alarm([c.train for c in chans], thr)
+    n = len(test['t'])
+    alarm, finite = np.zeros((n, 4), bool), np.zeros((n, 4), bool)
+    for c, h in zip(chans, thr):
+        for a in (range(4) if c.axis is None else (c.axis,)):
+            alarm[:, a] |= c.test > h
+            finite[:, a] |= np.isfinite(c.test)
+    sourced = sorted({a for c in chans for a in (range(4) if c.axis is None else (c.axis,))})
+    fa = float(alarm[test['normal']].any(axis=1).mean()) if test['normal'].any() else None
+    row = {'early_warning_s': grace, 'target': target, 'detector': name, 'run': test['name'],
+           'normal_samples': int(test['normal'].sum()), 'false_alarm_fraction': fa,
+           'train_false_alarm_fraction': train_fa, 'comparable': comparable(fa, target, tol_rel),
+           # a normal sample is unscorable when an axis that has a source lacks a current measurement
+           'normal_unscorable': int((test['normal'] & ~finite[:, sourced].all(axis=1)).sum())}
+    failing = test['scored'] & ~test['normal']  # some axis exceeds (or is about to): attribution is at stake
+    for a, axis in enumerate(AXES):
+        ex = test['exceed'][:, a]
+        row[f'exceed_{axis}'] = int(ex.sum())
+        row[f'unscorable_{axis}'] = int((ex & ~finite[:, a]).sum())
+        row[f'missed_{axis}'] = int((ex & ~alarm[:, a]).sum())  # includes the unscorable ones
+        # attribution: alarms on an axis that is within tolerance while another axis is failing. A global detector
+        # alarms every axis at once, so it "catches" co-occurring exceedances on all axes; this column is what a
+        # per-axis detector buys in exchange for its per-axis misses
+        row[f'offaxis_base_{axis}'] = int((failing & ~ex).sum())
+        row[f'offaxis_alarm_{axis}'] = int((failing & ~ex & alarm[:, a]).sum())
+    return row
+
+
+def label_runs(runs, grace, tol_default=None):
+    """Exceedance, early-warning and normal masks per run for one lead-time setting."""
+    for r in runs:
+        r['exceed'] = exceed_labels(r['errors'], r.get('tol', tol_default)) & r['scored'][:, None]
+        any_exceed = r['exceed'].any(axis=1)
+        onsets = r['t'][any_exceed & ~np.r_[False, any_exceed[:-1]]]
+        warning = np.zeros(len(r['t']), bool)
+        for onset in onsets:
+            warning |= (r['t'] >= onset - grace) & (r['t'] < onset)
+        r['normal'] = r['scored'] & ~any_exceed & ~warning
+
+
 def evaluate(runs, cfg=CONFIG):
     """Leave-one-run-out operating points; returns per-run miss/false-alarm rows (pooled() aggregates them).
 
-    Every detector is expressed as channels (training normal values, test values, axis or None for global, pilot
-    fraction); its alarm on an axis is the union of its channels on that axis. Scoring is identical for all detectors:
-    a sample is missed when it exceeds and the detector did not alarm, whatever the reason (including an unscorable,
-    NaN statistic); unscorable counts are reported apart so the pilot's scorable-only rate can still be formed.
+    Every detector is expressed as Channels; its alarm on an axis is the union of its channels on that axis. Scoring is
+    identical for all detectors: a sample is missed when it exceeds and the detector did not alarm, whatever the reason
+    (including an unscorable, NaN statistic); unscorable counts are reported apart so the pilot's scorable-only rate can
+    still be formed.
     """
     allocation = cfg.get('threshold_allocation', 'union')
     tol_rel = cfg.get('comparable_tolerance', 0.5)
     results = []
     for grace, target in [(g, f) for g in cfg['early_warning_s'] for f in cfg['false_alarm_targets']]:
-        for r in runs:
-            r['exceed'] = exceed_labels(r['errors'], r.get('tol')) & r['scored'][:, None]
-            any_exceed = r['exceed'].any(axis=1)
-            onsets = r['t'][any_exceed & ~np.r_[False, any_exceed[:-1]]]
-            warning = np.zeros(len(r['t']), bool)
-            for onset in onsets:
-                warning |= (r['t'] >= onset - grace) & (r['t'] < onset)
-            r['normal'] = r['scored'] & ~any_exceed & ~warning
+        label_runs(runs, grace)
         for test in runs:
             train = [r for r in runs if r is not test]
-            normal = lambda key, col=None: np.concatenate([(r['stats'][key] if col is None else r['stats'][key][:, col])[r['normal']] for r in train])
+
+            def normal(key, col=None):
+                return np.concatenate([(r['stats'][key] if col is None else r['stats'][key][:, col])[r['normal']] for r in train])
             lam_min = [float(np.quantile(np.nan_to_num(normal('lambda', a)), cfg['lambda_min_quantile'])) for a in range(4)]
             for r in runs:
                 r['stats']['tau'] = information_gap(r['t'], np.nan_to_num(r['stats']['lambda']), lam_min)
             per_axis = target/4  # the pilot's fixed allocation: any-axis false alarms at most the target on the training normals
-            channels = {}
 
             def axis_channels(key, axes, fraction):
-                return [(normal(key, a), test['stats'][key][:, a], a, fraction) for a in axes]
+                return [Channel(normal(key, a), test['stats'][key][:, a], a, fraction) for a in axes]
+            channels = {}
             for name in ('DET-NIS', 'DET-FEAT', 'DET-SCALAR', 'DET-SCALAR-l2'):
                 if all(name in r['stats'] for r in runs):
-                    channels[name] = [(normal(name), test['stats'][name], None, target)]
+                    channels[name] = [Channel(normal(name), test['stats'][name], None, target)]
             channels['DET-COV'] = axis_channels('DET-COV', range(4), per_axis)
             channels['DIR-gap'] = axis_channels('tau', range(4), per_axis)
             channels['DIR-conflict'] = axis_channels('conflict', (2, 3), per_axis/2)  # depth for z, gyro for heading
@@ -824,34 +866,8 @@ def evaluate(runs, cfg=CONFIG):
                 channels[name] = axis_channels(key, SOURCE_AXES.get(key, (2, 3)), per_axis/2)
             if 'DIR-cumconflict' in channels:
                 channels['DIR-gap+cumconflict'] = axis_channels('tau', range(4), per_axis/2) + channels['DIR-cumconflict']
-            n = len(test['t'])
             for name, chans in channels.items():
-                thr = union_thresholds([c[0] for c in chans], target, allocation, [c[3] for c in chans])
-                train_fa = union_false_alarm([c[0] for c in chans], thr)
-                alarm, finite = np.zeros((n, 4), bool), np.zeros((n, 4), bool)
-                for (_, values, axis, _), h in zip(chans, thr):
-                    for a in (range(4) if axis is None else (axis,)):
-                        alarm[:, a] |= values > h
-                        finite[:, a] |= np.isfinite(values)
-                sourced = sorted({a for c in chans for a in (range(4) if c[2] is None else (c[2],))})
-                fa = float(alarm[test['normal']].any(axis=1).mean()) if test['normal'].any() else None
-                row = {'early_warning_s': grace, 'target': target, 'detector': name, 'run': test['name'],
-                       'normal_samples': int(test['normal'].sum()), 'false_alarm_fraction': fa,
-                       'train_false_alarm_fraction': train_fa, 'comparable': comparable(fa, target, tol_rel),
-                       # a normal sample is unscorable when an axis that has a source lacks a current measurement
-                       'normal_unscorable': int((test['normal'] & ~finite[:, sourced].all(axis=1)).sum())}
-                failing = test['scored'] & ~test['normal']  # some axis exceeds (or is about to): attribution is at stake
-                for a, axis in enumerate(AXES):
-                    ex = test['exceed'][:, a]
-                    row[f'exceed_{axis}'] = int(ex.sum())
-                    row[f'unscorable_{axis}'] = int((ex & ~finite[:, a]).sum())
-                    row[f'missed_{axis}'] = int((ex & ~alarm[:, a]).sum())  # includes the unscorable ones
-                    # attribution: alarms on an axis that is within tolerance while another axis is failing. A global
-                    # detector alarms every axis at once, so it "catches" co-occurring exceedances on all axes; this
-                    # column is what a per-axis detector buys in exchange for its per-axis misses
-                    row[f'offaxis_base_{axis}'] = int((failing & ~ex).sum())
-                    row[f'offaxis_alarm_{axis}'] = int((failing & ~ex & alarm[:, a]).sum())
-                results.append(row)
+                results.append(score_detector(test, name, chans, target, allocation, grace, tol_rel))
     return results
 
 
@@ -901,6 +917,31 @@ def budget_horizon_s(gyro_noise, n_sigma, tol_yaw):
     return float(brentq(lambda T: drift_budget_deg(T, *gyro_noise, n_sigma) - tol_yaw, 1e-6, 1e7))
 
 
+STATS_COLUMNS = (['t_s', 'scored', 'nis', 'neg_min_features'] + [f'cov_ratio_{a}' for a in AXES] + [f'lambda_{a}' for a in AXES]
+                 + [f'tau_{a}' for a in AXES]
+                 + ['conflict_z_m', 'conflict_yaw_deg', 'cum_conflict_z_m', 'cum_conflict_yaw_deg', 'cum_conflict_yaw_frozen_deg',
+                    'budget_yaw_deg', 'cum_conflict_yaw_truebias_deg', 'cum_conflict_sonar_x_m', 'cum_conflict_sonar_y_m',
+                    'cum_conflict_sonar_multi_x_m', 'cum_conflict_sonar_multi_y_m', 'cum_conflict_sonar_map_x_m',
+                    'cum_conflict_sonar_map_y_m', 'sonar_map_yaw_deg', 'dir_x_m', 'dir_z_m', 'dir_yaw_deg', 'scalar_max', 'scalar_l2'])
+
+
+def write_stats(path, run):
+    """Per-sample statistics of one run as CSV (STATS_COLUMNS); optional sources are NaN where the run lacks them."""
+    s, n = run['stats'], len(run['t'])
+
+    def opt(key, cols, width):
+        return s[key][:, cols] if key in s else np.full((n, width), np.nan)
+    map_xyh = (np.column_stack([s['conflict_cum_sonar_map'][:, :2], s['conflict_cum_sonar_map_yaw'][:, 3]])
+               if 'conflict_cum_sonar_map' in s else np.full((n, 3), np.nan))
+    cols = np.column_stack([run['t'], run['scored'], s['DET-NIS'], s['DET-FEAT'], s['DET-COV'], s['lambda'], s['tau'],
+                            s['conflict'][:, 2:], s['conflict_cum'][:, 2:], s['conflict_cum_frozen'][:, 3], s['budget_yaw_deg'],
+                            opt('conflict_cum_true', [3], 1), opt('conflict_cum_sonar', [0, 1], 2),
+                            opt('conflict_cum_sonar_multi', [0, 1], 2), map_xyh,
+                            s['conflict_dir'][:, [0, 2, 3]], s['DET-SCALAR'], s['DET-SCALAR-l2']])
+    assert cols.shape[1] == len(STATS_COLUMNS)
+    np.savetxt(path, cols, delimiter=',', header=','.join(STATS_COLUMNS), comments='', fmt=['%.6f', '%d'] + ['%.6g']*(cols.shape[1] - 2))
+
+
 def main(argv):
     parser = argparse.ArgumentParser(prog='uwbench detect-a')
     parser.add_argument('--runs', type=Path, nargs='+', required=True, help='run directories (diagnostic OpenVINS build)')
@@ -917,31 +958,7 @@ def main(argv):
         writer.writeheader()
         writer.writerows(results)
     for r in runs:
-        s = r['stats']
-        header = ['t_s', 'scored', 'nis', 'neg_min_features'] + [f'cov_ratio_{a}' for a in AXES] + \
-                 [f'lambda_{a}' for a in AXES] + [f'tau_{a}' for a in AXES] + ['conflict_z_m', 'conflict_yaw_deg',
-                                                                                'cum_conflict_z_m', 'cum_conflict_yaw_deg',
-                                                                                'cum_conflict_yaw_frozen_deg', 'budget_yaw_deg',
-                                                                                'cum_conflict_yaw_truebias_deg',
-                                                                                'cum_conflict_sonar_x_m', 'cum_conflict_sonar_y_m',
-                                                                                'cum_conflict_sonar_multi_x_m',
-                                                                                'cum_conflict_sonar_multi_y_m',
-                                                                                'cum_conflict_sonar_map_x_m',
-                                                                                'cum_conflict_sonar_map_y_m',
-                                                                                'sonar_map_yaw_deg',
-                                                                                'dir_x_m', 'dir_z_m', 'dir_yaw_deg',
-                                                                                'scalar_max', 'scalar_l2']
-        true_yaw = s['conflict_cum_true'][:, 3] if 'conflict_cum_true' in s else np.full(len(r['t']), np.nan)
-        sonar_xy = s['conflict_cum_sonar'][:, :2] if 'conflict_cum_sonar' in s else np.full((len(r['t']), 2), np.nan)
-        multi_xy = s['conflict_cum_sonar_multi'][:, :2] if 'conflict_cum_sonar_multi' in s else np.full((len(r['t']), 2), np.nan)
-        map_xyh = (np.column_stack([s['conflict_cum_sonar_map'][:, :2], s['conflict_cum_sonar_map_yaw'][:, 3]])
-                   if 'conflict_cum_sonar_map' in s else np.full((len(r['t']), 3), np.nan))
-        cols = np.column_stack([r['t'], r['scored'], s['DET-NIS'], s['DET-FEAT'], s['DET-COV'], s['lambda'], s['tau'],
-                                s['conflict'][:, 2:], s['conflict_cum'][:, 2:], s['conflict_cum_frozen'][:, 3],
-                                s['budget_yaw_deg'], true_yaw, sonar_xy, multi_xy, map_xyh,
-                                s['conflict_dir'][:, [0, 2, 3]], s['DET-SCALAR'], s['DET-SCALAR-l2']])
-        np.savetxt(args.out/f'stats_{r["name"]}.csv', cols, delimiter=',', header=','.join(header), comments='',
-                   fmt=['%.6f', '%d'] + ['%.6g']*(cols.shape[1] - 2))
+        write_stats(args.out/f'stats_{r["name"]}.csv', r)
     tol_yaw = DEFAULTS['risk']['tolerance_yaw_deg']
     horizon = {r['name']: budget_horizon_s(r['gyro_noise'], cfg['budget_n_sigma'], tol_yaw) for r in runs}
     record = {'pilot': True, 'config': cfg, 'runs': [str(r) for r in args.runs], 'pooled': summary,

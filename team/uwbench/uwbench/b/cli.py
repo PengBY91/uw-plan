@@ -22,7 +22,7 @@ import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation, Slerp
 
-from uwbench.mapping import FREE, OCCUPIED, UNKNOWN, VoxelGrid, truth_from_boxes
+from uwbench.mapping import VoxelGrid, truth_from_boxes
 from uwbench.metrics.occupancy import map_ratios
 
 DEFAULTS = {'resolution_m': 0.10, 'stereo_pixel_stride': 4, 'max_stereo_range_m': 6.0, 'sonar_stride': 5,
@@ -88,17 +88,23 @@ def route_roi(ds, cfg, boxes):
     return lo, shape, z0
 
 
-def sonar_images(ds):
-    folder = ds.root/'sonar_raycast' if (ds.root/'sonar_raycast/sonar_0000.npy').exists() else ds.raw
+def chunked_images(folder, prefix='sonar', chunk=200):
+    """image(i) over <prefix>_XXXX.npy chunk files (chunk frames each), keeping one chunk memory-mapped at a time."""
     cache = {}
 
     def image(i):
-        c = i//200
+        c = i//chunk
         if c not in cache:
             cache.clear()
-            cache[c] = np.load(folder/f'sonar_{c:04d}.npy', mmap_mode='r')
-        return np.asarray(cache[c][i % 200])
-    return image, str(folder)
+            cache[c] = np.load(Path(folder)/f'{prefix}_{c:04d}.npy', mmap_mode='r')
+        return np.asarray(cache[c][i % chunk])
+    return image
+
+
+def sonar_images(ds):
+    """Sonar image reader of a dataset (raycast replay if present, else raw) and the folder used."""
+    folder = ds.root/'sonar_raycast' if (ds.root/'sonar_raycast/sonar_0000.npy').exists() else ds.raw
+    return chunked_images(folder), str(folder)
 
 
 def map_main(argv):

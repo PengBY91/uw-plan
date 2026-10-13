@@ -60,7 +60,8 @@ class RawDataset:
         src = self.root/'sonar_raycast' if (self.root/'sonar_raycast'/'sonar_t.npy').exists() else self.raw
         self.sonar_t = np.load(src/'sonar_t.npy')
         self._src = src
-        self._chunks = {}
+        from uwbench.b.cli import chunked_images
+        self.image = chunked_images(src)
 
     def gt_pose(self, t):
         i = int(round(t*self.route['ticks_per_sec']))
@@ -73,13 +74,6 @@ class RawDataset:
             if p.exists():
                 return p
         return None
-
-    def image(self, i):
-        c = i//200
-        if c not in self._chunks:
-            self._chunks.clear()
-            self._chunks[c] = np.load(self._src/f'sonar_{c:04d}.npy', mmap_mode='r')
-        return np.asarray(self._chunks[c][i % 200])
 
 
 def cells(rho, theta, geometry, shape):
