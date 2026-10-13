@@ -12,8 +12,9 @@ Team-maintained acquisition, conversion, audit, baseline and evaluation code is 
   - `uwbench audit` (W1-05/P03): manifest schema from runbook E6; hashes, monotonic time, back-jumps, drop estimate, stereo pairing, image shape, IMU units/gravity axis/rate, pressure units, empty sonar. Example: manifests/euroc_v101_run.yaml, evidence in reports/w1/euroc_v101_audit/.
   - `uwbench detect-a` (W2 pilot, P18): causal replay of detector statistics over finished runs, leave-one-run-out operating points, per-axis miss / unscorable / misattribution and comparability flags; configs in configs/detect_a/, record in reports/w2/detect-a-pilot-experiments.md.
   - `uwbench eval-traj` (W1-07/P04): APE/RPE, time coverage, lost intervals, reference-invalid vs unmatched counts, v2 per-axis exceedance; empty estimates fail.
-- reports/w1/backend-decision.md (W1-09): SVIn not reused (zero-elevation single-beam sonar model, sonar/depth disabled on ROS2 main); A1 uses GTSAM 4.3.0 in a separate venv.
-- Tests: `.venv-eval/bin/python -m unittest discover -s team/uwbench/tests` with PYTHONPATH=team/uwbench, plus scripts/test_*.py from scripts/.
+- reports/w1/backend-decision.md (W1-09): SVIn not reused (zero-elevation single-beam sonar model, sonar/depth disabled on ROS2 main); A1 (`uwbench run-a`, uwbench.a1) uses GTSAM 4.3.0.
+- Tests: `bash scripts/run_tests.sh` runs the uwbench suite (A detector, A1/A2 backend, B depth/map, audit, scoring) and scripts/test_*.py in .venv-eval and fails on any skipped test. Since 2026-10-12 .venv-eval carries gtsam 4.3.0 and opencv-python-headless 5.0.0.93 next to the evaluation lock (numpy stays 2.2.6), so one environment runs everything; `.venv-a` (numpy 2.5.4) is the environment the W3/W4 A1/A2/B runs in reports/w3 and reports/w4 were produced with and is kept only to reproduce them.
+- Branches: `codex/m1-sim-baselines` (month-1 sim/public baselines: MH, fault injection, A1/A2, B0-B2c) was merged into `codex/w1-public-baseline` on 2026-10-12 (b1ede97); further work goes on the merged branch.
 The Git branch is codex/w1-public-baseline. No remote is configured by this setup.
 
 - Runtime: Ubuntu 24.04, ROS 2 Jazzy, system Python 3.12.

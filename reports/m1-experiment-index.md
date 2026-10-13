@@ -7,7 +7,7 @@ status: living
 
 # 首月基线实验总索引
 
-本页登记首月不依赖硬件的实验：已完成哪些、正在进行哪些、还缺什么。任务来自 wiki 交接页 `plans/2026-10/acoustic-optic-month1-sim-baselines-handoff-2026-10`。每一行都指向详细报告，数值以报告和运行目录为准。分支为 `codex/m1-sim-baselines`。所有结果都来自仿真或公共数据；20° 仰角是仿真设定；声呐关联用真值对应的都是受控实验。
+本页登记首月不依赖硬件的实验：已完成哪些、正在进行哪些、还缺什么。任务来自 wiki 交接页 `plans/2026-10/acoustic-optic-month1-sim-baselines-handoff-2026-10`。每一行都指向详细报告，数值以报告和运行目录为准。分支为 `codex/m1-sim-baselines`，2026-10-12 已合并进 `codex/w1-public-baseline`（合并提交 b1ede97）；此后在合并分支上继续。所有结果都来自仿真或公共数据；20° 仰角是仿真设定；声呐关联用真值对应的都是受控实验。
 
 最后更新：2026-10-12 16:40
 

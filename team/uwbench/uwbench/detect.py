@@ -237,16 +237,23 @@ def fit_line(points, inlier_m, min_inliers, rng, iterations=100):
     return (m, d) if d > 0 else (-m, -d)
 
 
-def sonar_lines(stamps, images, geometry, cfg=CONFIG):
-    """Per sonar frame: (t, m_x, m_y, d) of the dominant line, NaN where none or where the echo is too thick for a vertical face."""
+def sonar_lines(stamps, images, geometry, cfg=CONFIG, footprint_half_bin=None):
+    """Per sonar frame: (t, m_x, m_y, d) of the dominant line, NaN where none or where the echo is too thick for a vertical face.
+
+    footprint_half_bin (rad): when given, first returns are moved within their azimuth bin toward the surface before the
+    fit (footprint_correct), the same correction the map variants get with sonar_footprint; None leaves them at the
+    bin centres (all pilot rounds).
+    """
     rng = np.random.default_rng(0)
     out = np.full((len(stamps), 4), np.nan)
     out[:, 0] = stamps
     for i, image in enumerate(images):
         if not sonar_echo_thickness(image, geometry, cfg['sonar_threshold']) <= cfg['sonar_max_thickness']:
             continue  # no vertical structure in view (inclined face or nothing): elevation ambiguity, no measurement
-        line = fit_line(sonar_first_returns(image, geometry, cfg['sonar_threshold']), cfg['sonar_inlier_m'],
-                        cfg['sonar_min_inliers'], rng)
+        points = sonar_first_returns(image, geometry, cfg['sonar_threshold'])
+        if footprint_half_bin is not None:
+            points = footprint_correct(points, footprint_half_bin, cfg['map_normal_k'])
+        line = fit_line(points, cfg['sonar_inlier_m'], cfg['sonar_min_inliers'], rng)
         if line is not None:
             out[i, 1:3], out[i, 3] = line
     return out
@@ -634,12 +641,12 @@ def load_sim_sonar_images(dataset):
 
 def sonar_products(stamps, images, geometry, T_imu_sonar, cfg=CONFIG):
     """Sonar lines, extrinsic and first-return scans for the detector from loaded sonar images."""
-    lines = sonar_lines(stamps, images, geometry, cfg)
+    half_bin = np.radians(geometry['Azimuth']/geometry['AzimuthBins'])/2 if cfg.get('sonar_footprint') else None
+    lines = sonar_lines(stamps, images, geometry, cfg, footprint_half_bin=half_bin)  # the x source gets the same correction as the maps
     scans = [(ts, sonar_first_returns(image, geometry, cfg['sonar_threshold'])
               if sonar_echo_thickness(image, geometry, cfg['sonar_threshold']) <= cfg['sonar_max_thickness'] else np.zeros((0, 2)))
              for ts, image in zip(stamps, images)]
-    if cfg.get('sonar_footprint'):
-        half_bin = np.radians(geometry['Azimuth']/geometry['AzimuthBins'])/2
+    if half_bin is not None:
         scans = [(ts, footprint_correct(pts, half_bin, cfg['map_normal_k'])) for ts, pts in scans]
     return lines, T_imu_sonar, scans
 

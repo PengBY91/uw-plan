@@ -287,6 +287,22 @@ class DetectTest(unittest.TestCase):
         np.testing.assert_allclose(lines[0, 1:], [1, 0, 2.5], atol=0.03)
         self.assertTrue(np.isnan(lines[1, 1:]).all())
 
+    def test_sonar_lines_apply_the_footprint_correction_when_asked(self):
+        # a wall at x = 2.5 m rendered with the nearest of 16 sub-rays per 0.94 deg bin, as the raycast sonar does: edge
+        # bins return early, so the line fitted from bin centres sits in front of the wall; the corrected fit does not
+        geometry = {'RangeMin': 0.0, 'RangeMax': 10.0, 'Azimuth': 120.0, 'AzimuthBins': 128}
+        az = np.radians(-60 + (np.arange(128) + 0.5)*120/128)
+        width = np.radians(120/128)
+        sub = az[:, None] + width*((np.arange(16) + 0.5)/16 - 0.5)
+        r = (2.5/np.cos(sub)).min(axis=1)  # nearest sub-ray of each bin
+        image = np.zeros((263, 128))
+        image[np.floor(r/(10/263)).astype(int), np.arange(128)] = 0.8
+        centre = sonar_lines(np.array([0.0]), [image], geometry)
+        fixed = sonar_lines(np.array([0.0]), [image], geometry, footprint_half_bin=width/2)
+        self.assertLess(centre[0, 3], 2.5 - 0.005)
+        self.assertLess(abs(fixed[0, 3] - 2.5), abs(centre[0, 3] - 2.5))
+        self.assertAlmostEqual(fixed[0, 3], 2.5, delta=0.02)
+
     def test_fit_line_finds_wall_despite_outliers(self):
         rng = np.random.default_rng(1)
         y = np.linspace(-3, 3, 60)
