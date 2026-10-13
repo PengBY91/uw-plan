@@ -1,0 +1,195 @@
+{
+  "name": "eb2_heave_v1",
+  "purpose": "E-B2 primitive: heave +-0.6 m; candidates at different elevations change range and leave the fan differently",
+  "world": "OpenWater",
+  "package": "Ocean",
+  "ticks_per_sec": 200,
+  "viewport": [
+    480,
+    640
+  ],
+  "assumptions": {
+    "imu_noise": "ASSUMPTION consumer-MEMS class per-sample sigmas at 200 Hz; replace with platform Allan-variance values after the IMU arrives",
+    "depth_sigma_m": "ASSUMPTION 2 cm per sample",
+    "sonar_elevation_deg": "ASSUMPTION 20 deg until the platform vertical aperture is measured (do not cite as the platform value)",
+    "scene_geometry": "E-B2 stage-0 analogue: ground-truth poses stand in for the rail/turntable; thin horizontal beams above and below the nominal sonar height, a vertical post and a small cube, all inside the elevation fan at the 3.5 m stand-off; raycast sonar so the props are visible"
+  },
+  "sensors": {
+    "imu_hz": 200,
+    "imu_noise": {
+      "AccelSigma": 0.02,
+      "AngVelSigma": 0.002,
+      "AccelBiasSigma": 0.0003,
+      "AngVelBiasSigma": 2e-05
+    },
+    "depth_hz": 50,
+    "depth_sigma_m": 0.02,
+    "camera_hz": 20,
+    "width": 640,
+    "height": 480,
+    "fov_deg": 90.0,
+    "sonar_hz": 10,
+    "sonar": {
+      "RangeBins": 256,
+      "AzimuthBins": 128,
+      "RangeMin": 0.3,
+      "RangeMax": 10,
+      "Elevation": 20,
+      "Azimuth": 120,
+      "MultSigma": 0.1,
+      "AddSigma": 0.05,
+      "MultiPath": false,
+      "ViewRegion": false
+    },
+    "sonar_model": "raycast",
+    "raycast_rays_per_bin": 2,
+    "raycast_channels": 64
+  },
+  "estimator_overrides": {
+    "values": {
+      "init_dyn_use": true,
+      "init_imu_thresh": 0.1
+    },
+    "reason": "AUV excitation is far below the drone-level EuRoC jerk threshold (tank r02)"
+  },
+  "props": [
+    {
+      "type": "box",
+      "location": [
+        0.0,
+        0.0,
+        -19.6
+      ],
+      "scale": [
+        6.0,
+        0.3,
+        0.2
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        0.0,
+        0.0,
+        -20.4
+      ],
+      "scale": [
+        6.0,
+        0.3,
+        0.2
+      ],
+      "material": "brick"
+    },
+    {
+      "type": "box",
+      "location": [
+        2.0,
+        0.0,
+        -20.0
+      ],
+      "scale": [
+        0.3,
+        0.3,
+        3.0
+      ],
+      "material": "cobblestone"
+    },
+    {
+      "type": "box",
+      "location": [
+        -2.0,
+        0.0,
+        -19.8
+      ],
+      "scale": [
+        0.3,
+        0.3,
+        0.3
+      ],
+      "material": "cobblestone"
+    },
+    {
+      "type": "box",
+      "location": [
+        -3.5,
+        0.0,
+        -20.0
+      ],
+      "scale": [
+        1.0,
+        0.3,
+        2.0
+      ],
+      "material": "brick"
+    }
+  ],
+  "waypoints": [
+    {
+      "t": 0,
+      "pose": [
+        0.0,
+        -3.5,
+        -20.0,
+        0.0,
+        0.0,
+        90.0
+      ]
+    },
+    {
+      "t": 6,
+      "pose": [
+        0.0,
+        -3.5,
+        -20.0,
+        0.0,
+        0.0,
+        90.0
+      ]
+    },
+    {
+      "t": 16,
+      "pose": [
+        0.0,
+        -3.5,
+        -19.4,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 26,
+      "pose": [
+        0.0,
+        -3.5,
+        -20.6,
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "t": 32,
+      "pose": [
+        0.0,
+        -3.5,
+        -20.0,
+        0.0,
+        0.0,
+        90.0
+      ]
+    },
+    {
+      "t": 34,
+      "pose": [
+        0.0,
+        -3.5,
+        -20.0,
+        0.0,
+        0.0,
+        90.0
+      ]
+    }
+  ]
+}

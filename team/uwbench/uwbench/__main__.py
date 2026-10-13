@@ -36,12 +36,12 @@ def _eval_traj(argv):
 
 
 def _run_a(argv):
-    from uwbench.a1.cli import main  # needs gtsam/cv2: run with .venv-a
+    from uwbench.a1.cli import main  # needs gtsam/cv2 (in .venv-eval since 2026-10-12)
     return main(argv)
 
 
 def _depth(argv):
-    from uwbench.b.depth import main  # needs cv2: run with .venv-a
+    from uwbench.b.depth import main  # needs cv2 (in .venv-eval since 2026-10-12)
     return main(argv)
 
 
@@ -60,8 +60,13 @@ def _detect_a(argv):
     return main(argv)
 
 
+def _motion_b(argv):
+    from uwbench.b.motion import main
+    return main(argv)
+
+
 IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj, 'depth': _depth, 'map': _map, 'eval-map': _eval_map,
-               'run-a': _run_a, 'detect-a': _detect_a}
+               'run-a': _run_a, 'detect-a': _detect_a, 'motion-b': _motion_b}
 
 
 def main(argv=None):

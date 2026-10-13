@@ -6,8 +6,12 @@ map: B0 stereo occupancy plus optional sonar updates (b1, b2a, b2c) along one po
   <run dir>        A0 OpenVINS run (estimate_bag), aligned to the reference with the eval-traj risk-mode
                    rule: yaw + translation over the first 10 s of matched poses; drift after that stays in the map.
 ROI and resolution are derived only from the route (waypoints and props), so every method shares them.
-eval-map: B plan section 6 ratios in that ROI, per height layer, structure thickness and error, and a coverage /
-false-free curve over occupancy thresholds.
+eval-map: B plan section 6 ratios in that ROI, per height layer, structure thickness and error, plus (review step 3,
+2026-10-12) the surface view from uwbench.b.metrics: where predicted occupancy lies relative to the box surfaces,
+recall of the route-facing surface band, the same ratios restricted to the visible ROI (voxels not shadowed by a box
+and not box interior), and the main curve as effective coverage and surface recall against the false-occupied rate
+over occupancy thresholds. With ground-truth poses the false-free rate of every method is near zero, so coverage
+against false occupied, not against false free, is the axis that separates the methods.
 """
 import argparse
 import json
@@ -199,6 +203,19 @@ def eval_main(argv):
     pred = labels()
     result = {'map': str(args.map), 'method': meta['method'], 'poses': meta['poses'], 'band_m': band,
               'roi': meta['roi'], 'overall': map_ratios(truth, pred)}
+    from uwbench.b.metrics import occupied_placement, route_facing_surface, signed_depth, surface_recall, visible_roi
+    centres_all = grid.centers().reshape(-1, 3)
+    y_vehicle = float(np.median(ds.gt[:, 1:].reshape(-1, 4, 4)[:, 1, 3]))
+    depth_signed = signed_depth(centres_all, boxes)
+    surface = route_facing_surface(centres_all, boxes, band, y_vehicle)
+    visible = visible_roi(centres_all, boxes, band, y_vehicle).reshape(grid.shape)
+    occ_flat = (pred == 'occ').reshape(-1)
+    result['surface'] = {**occupied_placement(depth_signed, occ_flat, band), 'visible_surface_voxels': int(surface.sum()),
+                         'visible_surface_recall': surface_recall(occ_flat, surface),
+                         'note': 'route-facing surface band of the box props; interior and far-side voxels are not what a sensor on the route sees'}
+    result['visible'] = {'fraction_of_roi': float(visible.mean()), 'fraction_of_true_free': float(visible[truth == 'free'].mean()) if (truth == 'free').any() else None,
+                         'ratios': map_ratios(truth[visible], pred[visible]),
+                         'note': 'ROI without voxels shadowed by a box (behind its far face within its x-z footprint) or inside a box beyond the band'}
     z = grid.centers()[..., 2]
     z0 = meta['roi']['nominal_sonar_height_m']
     layers = {'below_z0_minus_0.5': z < z0 - 0.5, 'within_0.5_of_z0': np.abs(z - z0) <= 0.5, 'above_z0_plus_0.5': z > z0 + 0.5}
@@ -225,6 +242,16 @@ def eval_main(argv):
                           'false_free_rate': r['false_free_rate'], 'false_occupied_rate': r['false_occupied_rate'],
                           'occupied_recall': r['occupied_recall']})
     result['curve'] = curve
+    # main curve (review step 3): coverage and surface recall against false occupied, visible ROI, free threshold fixed
+    main_curve = []
+    for occ_above in [0.0, 0.5, 1.0, 2.0, 3.0]:
+        lab = labels(occ_above, 0.0)
+        r = map_ratios(truth[visible], lab[visible])
+        main_curve.append({'occupied_above': occ_above, 'false_occupied_rate': r['false_occupied_rate'],
+                           'effective_coverage': r['effective_coverage'], 'false_free_rate': r['false_free_rate'],
+                           'visible_surface_recall': surface_recall((lab == 'occ').reshape(-1), surface)})
+    result['main_curve'] = main_curve
+    labels()
     if 'occluded' in m.files and m['occluded'].any():
         st = labels()
         result['b2c_tri_state'] = {'occupied': int((st == 'occ').sum()), 'verified_free': int((st == 'free').sum()),
@@ -232,5 +259,5 @@ def eval_main(argv):
                                    'never_observed': int(((st == 'unknown') & (m['occluded'] == 0)).sum())}
     args.out.mkdir(parents=True)
     (args.out/'metrics.json').write_text(json.dumps(result, indent=2) + '\n')
-    print(json.dumps({k: result[k] for k in ['method', 'poses', 'overall', 'structure_error_m', 'thickness_y_m']}, indent=2))
+    print(json.dumps({k: result[k] for k in ['method', 'poses', 'overall', 'visible', 'surface']}, indent=2))
     return 0
