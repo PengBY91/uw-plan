@@ -57,3 +57,4 @@ artifacts:
     sha256: b2b472ee698baff6e74730dcf1e14d8130da94d9459899d25bb395104dbd43b5
 ground_truth_original_sha256: 701200e6924ba845ccdeea884bd717c82d1ed91f480913ea6e2e6ccb9c0fbf6d
 ground_truth_corrected_sha256: 16543952bf69f3fb886008a26cc21d3c552deca8fa06087f0bc329c09d7fcbe3
+archives_removed: 2026-10-13 .bag and .zip deleted after conversion; *_asl and *_ros2 kept; re-download via raw_files[].source_archive and verify sha256/crc32 above
