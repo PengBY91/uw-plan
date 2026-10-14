@@ -43,6 +43,6 @@ status: living
 
 ## 数据与存储
 
-- `data/derived/fault/`：37 GB，W4-05 的派生 bag，可用 `scripts/inject_fault.py` 重新生成。
+- `data/derived/fault/`：37 GB，W4-05 的派生 bag，可用 `scripts/inject_fault.py` 重新生成。 2026-10-13 清理后目录内只保留每个派生数据的 fault.json、metadata.yaml 和 `mcap-checksums.sha256`（删除前记录的 20 个 .mcap 的 SHA-256）；重新生成后应与该文件逐一对照。
 - `data/public/euroc/MH_0{1,2}_easy*`：约 10 GB，被 `manifests/euroc_mh0{1,2}.yaml` 引用。
 - 运行目录 `runs/sim_*_a1_*`、`*_a2_*`、`*_b*_*`、`euroc_mh0*_a0_*`、`fault_*`：都被报告引用，失败运行一并保留。
