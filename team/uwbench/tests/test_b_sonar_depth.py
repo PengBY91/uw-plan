@@ -54,6 +54,26 @@ class SonarUpdateTests(unittest.TestCase):
         np.testing.assert_array_equal(g.log_odds, before)
         self.assertEqual(u.stats['free_voxel_updates'], 0)
 
+    def test_veto_blocks_stereo_free_through_sonar_candidates_only(self):
+        """V: a stereo ray through a voxel the sonar arc marked keeps that voxel from turning free; the
+        stereo hit itself is never vetoed (V off against the stored B2a maps is checked on the sim runs)."""
+        img, _ = echo_image(3.0, [64])
+        ray_end = np.array([[5.0, 0.0, 0.0]])            # stereo surface behind the sonar echo, ray along +x
+        maps = {}
+        for veto in (False, True):
+            g = grid()
+            if veto:
+                g.veto = np.zeros(g.shape, bool)
+            SonarUpdater(g, GEOM, np.radians(20), 0.5, 'b2a').update(img, np.eye(4), 0.0)
+            for k in range(3):                            # three stereo misses (-0.4 each) outweigh one sonar hit (+0.85)
+                g.integrate_rays(np.zeros(3), ray_end, 1.0 + k)
+            maps[veto] = g
+        self.assertEqual(state_at(maps[False], (3.0, 0.0, 0.0)), FREE)       # B2a: stereo clears the sonar arc
+        self.assertEqual(state_at(maps[True], (3.0, 0.0, 0.0)), OCCUPIED)
+        self.assertEqual(state_at(maps[True], (1.5, 0.0, 0.0)), FREE)        # off the arc: stereo free as before
+        self.assertEqual(state_at(maps[True], (5.0, 0.0, 0.0)), OCCUPIED)
+        self.assertGreater(maps[True].vetoed_free_updates, 0)
+
     def test_b2c_region_free_front_occluded_back(self):
         g = grid()
         u = SonarUpdater(g, GEOM, np.radians(20), 0.5, 'b2c')

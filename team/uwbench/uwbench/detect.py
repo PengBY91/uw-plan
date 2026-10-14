@@ -90,6 +90,7 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           'dir_yaw_source': 'frozen_budget',
           # review fixes (2026-10-12): see the module docstring
           'conflict_reference': 'window', 'threshold_allocation': 'union', 'comparable_tolerance': 0.5,
+          'health_target': None, 'health': None,  # M3.3 state machine outputs at this DET-DIR operating point (off by default)
           'gyro_noise': None}  # {'noise_density': .., 'random_walk': .., 'source': 'Allan variance ...'} overrides the run's IMU chain
 DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DET-SCALAR': 'global', 'DET-SCALAR-l2': 'global',
              'DIR-gap': 'axis', 'DIR-conflict': 'axis',
@@ -710,6 +711,11 @@ def compute_run(inputs, cfg=CONFIG, sonar=None):
                                cfg=cfg, gyro_noise=gyro_noise, true_bias=inputs['true_bias'], sonar=sonar,
                                window=inputs['window'], tol=inputs['tol'])
     data['gyro_noise'], data['gyro_noise_source'] = gyro_noise, source
+    rows = inputs['diag'][0]
+    data['obs_t'] = np.unique(rows[rows[:, 2] - rows[:, 3] > 0, 0])  # updates that accepted features: C0 observation age
+    est_t, R, p, _ = inputs['est']
+    k = np.clip(np.searchsorted(est_t, inputs['t']), 0, len(est_t) - 1)
+    data['pose_finite'] = np.isfinite(R[k]).all(axis=(1, 2)) & np.isfinite(p[k]).all(axis=1)
     return data
 
 
@@ -942,6 +948,48 @@ def write_stats(path, run):
     np.savetxt(path, cols, delimiter=',', header=','.join(STATS_COLUMNS), comments='', fmt=['%.6f', '%d'] + ['%.6g']*(cols.shape[1] - 2))
 
 
+def health_outputs(runs, cfg, out):
+    """M3.3 state machine on DET-DIR alarms, one directory per run under out/health/. Thresholds are the DET-DIR
+    leave-one-run-out thresholds at cfg['health_target'] (strict scoring, no lead time), i.e. the same operating point
+    the detector is scored at; the state machine itself never sees labels or errors."""
+    from uwbench import health
+    hcfg = {**health.HEALTH, **(cfg.get('health') or {})}
+    label_runs(runs, 0.0)
+    rows = []
+    for test in runs:
+        train = [r for r in runs if r is not test]
+        axes = SOURCE_AXES['conflict_dir']
+        cols = [np.concatenate([r['stats']['conflict_dir'][r['normal'], a] for r in train]) for a in axes]
+        thr = np.full(4, np.inf)
+        thr[list(axes)] = union_thresholds(cols, cfg['health_target'], cfg.get('threshold_allocation', 'union'), [cfg['health_target']/8]*len(axes))
+        alarm, status = health.latch(test['stats']['conflict_dir'], thr, test['tol'], hcfg['release_tol_fraction'], axes)
+        res = health.run(test['t'], alarm, status, test['obs_t'], test['pose_finite'], hcfg)
+        d = out/'health'/test['name']
+        d.mkdir(parents=True)
+        with (d/'transitions.csv').open('w', newline='') as f:
+            w = csv.DictWriter(f, fieldnames=['t_s', 'from', 'to', 'reason', 'epoch_id'])
+            w.writeheader()
+            w.writerows(res['transitions'])
+        with (d/'status.csv').open('w', newline='') as f:
+            w = csv.writer(f)
+            w.writerow(['t_s', 'state', 'reason', 'epoch_id', 'last_observation_s'] + [f'axis_ok_{a}' for a in AXES])
+            for i in range(len(test['t'])):
+                w.writerow([f"{test['t'][i]:.6f}", res['state'][i], res['reason'][i], res['epoch_id'][i],
+                            f"{res['last_observation_s'][i]:.6f}"] + list(status[i]))
+        dur = health.durations(test['t'], res['state'])
+        # descriptive only (truth used after the fact): how much exceedance time was spent outside NORMAL
+        ex = test['exceed'].any(axis=1)
+        flagged = np.array([s != 'NORMAL' for s in res['state']])
+        rows.append({'run': test['name'], 'thresholds': [None if not np.isfinite(x) else float(x) for x in thr],
+                     'durations_s': dur, 'transitions': len(res['transitions']),
+                     'exceedance_samples': int(ex.sum()), 'exceedance_not_normal_fraction': float(flagged[ex].mean()) if ex.any() else None,
+                     'normal_samples': int(test['normal'].sum()),
+                     'normal_not_normal_fraction': float(flagged[test['normal']].mean()) if test['normal'].any() else None})
+    (out/'health'/'summary.json').write_text(json.dumps({'config': hcfg, 'target': cfg['health_target'], 'runs': rows,
+        'note': 'product output (M3.3), not research evidence; truth only in the descriptive overlap columns'}, indent=2) + '\n')
+    return rows
+
+
 def main(argv):
     parser = argparse.ArgumentParser(prog='uwbench detect-a')
     parser.add_argument('--runs', type=Path, nargs='+', required=True, help='run directories (diagnostic OpenVINS build)')
@@ -973,6 +1021,8 @@ def main(argv):
                          f"within {cfg.get('comparable_tolerance', 0.5):.0%} of the target (ablation runbook)",
               'notes': 'tau in the last LORO fold is what stats_*.csv holds; false alarms are normal-sample fractions'}
     (args.out/'summary.json').write_text(json.dumps(record, indent=2) + '\n')
+    if cfg.get('health_target') is not None:
+        health_outputs(runs, cfg, args.out)
     for e in summary:
         print(json.dumps(e))
     return 0

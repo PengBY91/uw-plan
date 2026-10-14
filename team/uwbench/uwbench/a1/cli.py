@@ -83,7 +83,8 @@ def write_tum(path, poses):
             f.write('%.9f %.9f %.9f %.9f %.9f %.9f %.9f %.9f\n' % (t, *T[:3, 3], *q))
 
 
-def main(argv):
+def main(argv, after_keyframe=None):
+    """after_keyframe(sm, k, t, tracks): read-only hook after each keyframe update (uwbench diagnose-a)."""
     parser = argparse.ArgumentParser(prog='uwbench run-a', description=__doc__)
     parser.add_argument('--manifest', type=Path, required=True)
     parser.add_argument('--config', type=Path, required=True, help='A1 YAML (configs/a1/*.yaml)')
@@ -145,6 +146,8 @@ def main(argv):
                 seg = np.column_stack([dt, rows[:, 1:4], rows[:, 4:7]])
             init = (ds.gt_pose(t), ds.gt_velocity(t)) if k == 0 else None
             sm.add_keyframe(float(t), seg, by_kf.get(k, []), sonar_by_kf.get(k, []), init)
+            if after_keyframe is not None:
+                after_keyframe(sm, k, float(t), by_kf.get(k, []))
     except Exception as exc:  # keep the failure evidence; a failed run is a result
         status, error = 'failed', repr(exc)
     args.out.mkdir(parents=True)

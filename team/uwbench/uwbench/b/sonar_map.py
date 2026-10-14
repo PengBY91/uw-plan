@@ -6,6 +6,9 @@ B2a conservative: each echo marks its whole elevation arc occupied (thick but sa
 B2c Two-Stage reproduction: each echo's full 3-D reflection region (range bin x azimuth bin x elevation aperture) gets
     an independent log-odds hit; inside each azimuth column the region in front of the first echo is verified free;
     behind the first echo is occluded (counted, never updated); columns without any echo are not updated.
+Sonar veto V (map config veto: true, any sonar method): every voxel a sonar update has hit refuses later stereo
+free-space updates (B plan 3.4: the stereo ray "saw" free space where the sonar arc says something may be). V is the
+only source of a false-free reduction claim and is ablated on its own; with V off the host method is unchanged.
 The vertical aperture is a parameter: the simulated value is a simulation setting, not a platform measurement.
 """
 import numpy as np
@@ -103,6 +106,8 @@ class SonarUpdater:
                 self.stats['occluded_marks'] += int(len(occ))
         self.grid._apply(hits, self.hit, stamp, SOURCE_SONAR)
         self.stats['hit_voxel_updates'] += int(len(hits))
+        if self.grid.veto is not None and len(hits):   # V: from now on these candidates block stereo free rays
+            self.grid.veto[tuple(hits.T)] = True
         if len(free):
             self.grid._apply(free, self.miss, stamp, SOURCE_SONAR)
             self.stats['free_voxel_updates'] += int(len(free))

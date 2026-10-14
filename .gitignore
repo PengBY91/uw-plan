@@ -49,6 +49,8 @@
 !reports/w3/*.md
 !reports/w4/
 !reports/w4/*.md
+!reports/w5/
+!reports/w5/*.md
 !reports/w3/a1-sim/
 !reports/w3/a1-sim/*
 !reports/w3/b-sim/
