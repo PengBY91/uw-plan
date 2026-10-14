@@ -30,7 +30,7 @@ status: execution-record
 
 时间偏移选择改 IMU 而不改相机，原因是这样 OpenVINS 输出的时间戳仍在相机时钟上，评分时不需要换算（相对偏移等价）。`fault.json` 记录：父 bag 每个文件的 SHA256、父数据审计、种子、区间（绝对 ns 和相对起点的秒数）、参数、改的是哪个时间、复制的话题，以及输出文件的 SHA256。写完后重新读取输出 bag，逐话题核对时间戳与预期完全一致、严格递增，不一致则以非零状态退出。工具测试见 `scripts/tests/test_inject_fault.py`，共 5 项：成对删帧、种子可复现、偏移只改 header 不改记录时间、中断窗口、拒绝覆盖和拒绝未通过审计的父数据。
 
-派生 bag 只复制算法用到的三个话题（cam0、cam1、imu0），位于 `data/derived/fault/<父数据>_<故障>/`，共 37 GB。它们被运行记录引用；2026-10-13 清理时删除了 .mcap，保留 fault.json、metadata.yaml 和 `mcap-checksums.sha256`，可按同一种子和参数重新生成并对照校验和；按种子和参数可以重新生成。
+派生 bag 只复制算法用到的三个话题（cam0、cam1、imu0），位于 `data/derived/fault/<父数据>_<故障>/`，原共 37 GB（清理后目录约 250 KB）。它们被运行记录引用；2026-10-13 清理时删除了 .mcap，保留 fault.json、metadata.yaml 和 `mcap-checksums.sha256`，可按同一种子和参数重新生成并对照校验和；按种子和参数可以重新生成。
 
 强度设置：
 
