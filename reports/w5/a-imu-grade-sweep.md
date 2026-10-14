@@ -30,7 +30,7 @@ related: reports/w2/detect-a-pilot-experiments.md, reports/w5/a-diagnose-and-hea
 
 - **运行**：`scripts/imu_sweep.sh` 对每个等级、每条航次：生成数据集 → `sim_to_bag` → `uwbench audit` → OpenVINS A0 以 1× 回放 → `eval-traj`。OpenVINS 配置中的陀螺噪声参数随等级改写，即估计器知道正确的噪声。
 - **检测**：`detect-a` 两种航向来源，各加 `health_target: 0.05`：冻结零偏−预算（`review_default`）与在线零偏（`review_default_online_yaw`）。阈值按留一航次选取。
-- **输入完整性**：70 个运行全部 rc = 0。第一轮有 11 个运行在回放中掉了样本（IMU 最长断 0.73 s，相机最多 27 帧）。原因是我让 detect-a 与扫描并行跑，造成 CPU 争用。这 11 个运行在无其他负载下串行重跑，重跑后 70 个运行的输入审计全部零缺样。掉样本的运行和对应的 detect-a 输出保存在 `runs/imu-sweep/dropped/`，不参与本文任何数字。
+- **输入完整性**：70 个运行全部 rc = 0。第一轮有 11 个运行在回放中掉了样本（IMU 最长断 0.73 s，相机最多 27 帧）。原因是我让 detect-a 与扫描并行跑，造成 CPU 争用。这 11 个运行在无其他负载下串行重跑，重跑后 70 个运行的输入审计全部零缺样。掉样本的运行和对应的 detect-a 输出不参与本文任何数字，已于 2026-10-14 删除。
 
 ## 2 估计器航向
 
