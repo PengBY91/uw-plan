@@ -49,7 +49,7 @@ from scipy.spatial.transform import Rotation
 from uwbench.sonar import arc_points, elevation, range_bearing
 
 DEFAULTS = {'reference_t': 6.0, 'view_stride': 5, 'candidates': 81, 'tolerance_bins': 1, 'threshold': 0.25,
-            'truth_margin_deg': 0.5, 'truth_dist_m': 0.03, 'max_echoes': 400, 'seed': 0,
+            'truth_margin_deg': 0.5, 'max_echoes': 400, 'seed': 0,
             # vision-sonar association (off by default; needs a manifest dataset with stereo images)
             'stereo': False, 'stereo_sigma_disparity_px': 0.5, 'stereo_k_sigma': 3.0, 'stereo_floor_m': 0.05,
             'stereo_window_px': 5, 'stereo_min_valid_fraction': 0.5, 'stereo_max_dt_s': 0.025}
@@ -224,7 +224,6 @@ def analyse(ds, image, cfg):
     phis_deg = np.degrees(phis)
     tol = cfg['tolerance_bins']
     truth = {}  # reference cell -> true elevations (deg) of the raycast hits in it
-    truth_xyz = {}  # reference cell -> the hits themselves (sonar frame), for the geometric truth check
     path = ds.sonar_points_path()
     if path is not None:
         pts = np.load(path, mmap_mode='r')
@@ -237,7 +236,6 @@ def analyse(ds, image, cfg):
                 m = (hr == r) & (ha == a)
                 if m.any():
                     truth[(int(r), int(a))] = he[m]
-                    truth_xyz[(int(r), int(a))] = hits[m]
     motions, T_views = [], []
     for k in views:
         T_k = ds.gt_pose(float(sonar_t[k])) @ ds.T_imu_sonar
@@ -262,11 +260,14 @@ def analyse(ds, image, cfg):
         fan_all = np.zeros((n, len(views)), bool)
         he = truth.get((int(r0), int(a0)))
         true_mask = None if he is None else (np.abs(phis_deg[:, None] - he[None, :]) <= cfg['truth_margin_deg']).any(axis=1)
-        # geometric truth: candidates within truth_dist_m of a real reflector point. The elevation-margin label above
-        # also marks candidates just past a structure edge, in open water, as true; a rule that clears them is right.
-        hx = truth_xyz.get((int(r0), int(a0)))
-        arc = arc_points(rho0, th0, phis)
-        true3d = None if hx is None else (np.linalg.norm(arc[:, None, :] - hx[None, :, :], axis=-1).min(axis=1) <= cfg['truth_dist_m'])
+        # tight truth: for every real reflector only the elevation sample nearest to it (0.25 deg spacing). The
+        # elevation-margin label above also marks candidates just past a structure edge, in open water, as true, so a
+        # rule that correctly clears them looks like it lost the truth; a metric distance cannot separate those either,
+        # because the cell-centre arc already sits up to ~3 cm from the hits.
+        true_near = None
+        if he is not None:
+            true_near = np.zeros(n, bool)
+            true_near[np.argmin(np.abs(phis_deg[:, None] - he[None, :]), axis=0)] = True
         for v, (T_k, img, first) in enumerate(zip(T_views, images_k, firsts_k)):
             rho, th, ph = project(world, T_k)
             fan = in_fan(rho, th, ph, g)
@@ -303,7 +304,7 @@ def analyse(ds, image, cfg):
                 row[f'{rule}_span_deg'] = float(surv.max() - surv.min()) if len(surv) else 0.0
                 row[f'{rule}_clusters'] = runs_count(al)
                 row[f'{rule}_truth_retained'] = None if true_mask is None else bool(al[true_mask].all())
-                row[f'{rule}_truth3d_retained'] = None if true3d is None or not true3d.any() else bool(al[true3d].all())
+                row[f'{rule}_truth_nearest_retained'] = None if true_near is None else bool(al[true_near].all())
                 row[f'{rule}_precision'] = None if true_mask is None else (float(true_mask[al].mean()) if al.any() else None)
             rows.append(row)
     return rows, motions, {'reference_frame': ref, 'reference_t': float(sonar_t[ref]), 'echoes': int(len(rows_e)),
@@ -343,8 +344,8 @@ def summarise(rows, motions):
                      'span_deg_median': float(np.median([r[f'{rule}_span_deg'] for r in final])),
                      'clusters_median': float(np.median([r[f'{rule}_clusters'] for r in final])),
                      'truth_retained_fraction': float(np.mean([r[f'{rule}_truth_retained'] for r in wt])) if wt else None,
-                     'truth3d_retained_fraction': (lambda v: float(np.mean(v)) if v else None)(
-                         [r[f'{rule}_truth3d_retained'] for r in final if r[f'{rule}_truth3d_retained'] is not None]),
+                     'truth_nearest_retained_fraction': (lambda v: float(np.mean(v)) if v else None)(
+                         [r[f'{rule}_truth_nearest_retained'] for r in final if r[f'{rule}_truth_nearest_retained'] is not None]),
                      'precision_median': float(np.median(prec)) if prec else None}
         if rule in RULES:   # the pose-only prediction exists for the motion rules only
             out[rule].update({
