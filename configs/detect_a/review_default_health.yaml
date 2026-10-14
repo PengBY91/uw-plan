@@ -1,0 +1,7 @@
+# review_default (r18) plus the M3.3 health state machine at the DET-DIR 1% operating point, as in
+# reports/w5/a-diagnose-and-health.md section 3. Detector results are identical to r18 review_default; the extra
+# health/<run>/status.csv is the input of deferred commit D (E-B8, reports/w5/eb8-deferred-commit.md).
+conflict_reference: window
+sonar_reference_s: 10.0
+threshold_allocation: union
+health_target: 0.01

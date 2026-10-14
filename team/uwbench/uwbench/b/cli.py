@@ -5,6 +5,10 @@ map: B0 stereo occupancy plus optional sonar updates (b1, b2a, b2c) along one po
   <file>.tum       A1 trajectory (already in the reference frame: A1 starts from ground truth);
   <run dir>        A0 OpenVINS run (estimate_bag), aligned to the reference with the eval-traj risk-mode
                    rule: yaw + translation over the first 10 s of matched poses; drift after that stays in the map.
+Deferred commit D (M6.1, uwbench.b.deferred): --deferred <A health status.csv> buffers observations taken while A is
+not NORMAL or an axis they depend on alarms; --deferred-oracle gates on the true pose error instead (diagnostic upper
+bound). --recommit-poses applies one pose correction at the end of the run: buffered observations are recommitted with
+that pose source (offline stand-in for a loop closure or relocalisation); without it they stay uncommitted.
 ROI and resolution are derived only from the route (waypoints and props), so every method shares them.
 eval-map: B plan section 6 ratios in that ROI, per height layer, structure thickness and error, plus (review step 3,
 2026-10-12) the surface view from uwbench.b.metrics: where predicted occupancy lies relative to the box surfaces,
@@ -114,10 +118,19 @@ def map_main(argv):
     parser.add_argument('--depth', type=Path, required=True, help='uwbench depth output directory')
     parser.add_argument('--poses', required=True, help="'gt', an A1 .tum file, or an A0 run directory")
     parser.add_argument('--config', type=Path)
+    gate = parser.add_mutually_exclusive_group()
+    gate.add_argument('--deferred', type=Path, help="deferred commit D on A's health output (uwbench detect-a health/<run>/status.csv)")
+    gate.add_argument('--deferred-oracle', action='store_true', help='D gated on the true pose error (reads truth; upper bound only)')
+    gate.add_argument('--commit-prefix', type=Path, help="control: commit as many observations as the D map in this map directory, earliest first")
+    parser.add_argument('--deferred-block', default='alarm', help="comma-separated axis statuses that hold an observation (default 'alarm')")
+    parser.add_argument('--oracle-tolerances', type=float, nargs=4, default=[0.15, 0.15, 0.15, 3.0], metavar=('X', 'Y', 'Z', 'YAW_DEG'))
+    parser.add_argument('--recommit-poses', help="pose source ('gt', .tum or run dir) of one correction at the end of the run")
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args(argv)
     if args.out.exists():
         parser.error('Refusing to overwrite ' + str(args.out))
+    if args.recommit_poses and not (args.deferred or args.deferred_oracle or args.commit_prefix):
+        parser.error('--recommit-poses needs --deferred, --deferred-oracle or --commit-prefix')
     from uwbench.a.backend.simdata import SimDataset
     from uwbench.b.scene import boxes_from_props
     from uwbench.b.sonar_map import SonarUpdater
@@ -144,10 +157,34 @@ def map_main(argv):
         sonar = SonarUpdater(grid, g, np.radians(g['Elevation']), cfg['sonar_threshold'], args.method, **kw)
         image, sonar_source = sonar_images(ds)
         events += [(float(t), 'sonar', i) for i, t in enumerate(ds.sonar_t) if i % cfg['sonar_stride'] == 0]
+    plan, deferred = [(t, kind, i, poses) for t, kind, i in sorted(events)], None
+    if args.deferred or args.deferred_oracle or args.commit_prefix:
+        from uwbench.b import deferred as dmod
+        from uwbench.a.backend.simdata import EPOCH_S
+        if args.deferred:
+            decide = dmod.health_decision(dmod.HealthTrack.from_status_csv(args.deferred, EPOCH_S), tuple(args.deferred_block.split(',')))
+        elif args.deferred_oracle:
+            decide = dmod.oracle_decision(poses.at, ds.gt_pose, args.oracle_tolerances)
+        else:
+            n = json.loads((args.commit_prefix/'meta.json').read_text())['deferred']['committed_direct']
+            decide = dmod.prefix_decision(sorted(events)[n - 1][0] if n else -np.inf)
+        dc = dmod.DeferredCommit(decide)
+        decisions = [(t, kind, i) + dc.offer(t, kind, i) for t, kind, i in sorted(events)]
+        corrected = None
+        if args.recommit_poses:
+            corrected = Poses(ds, args.recommit_poses)
+            dc.correct(max(t for t, _, _ in events))
+        source = {'estimate': poses, 'corrected': corrected}
+        plan = [(t, kind, i, source[s]) for t, kind, i, s in dc.replay_order()]
+        deferred = {'mode': 'health' if args.deferred else 'oracle' if args.deferred_oracle else 'prefix',
+                    'prefix_of': str(args.commit_prefix) if args.commit_prefix else None, 'status_csv': str(args.deferred) if args.deferred else None,
+                    'block': args.deferred_block if args.deferred else None,
+                    'oracle_tolerances': args.oracle_tolerances if args.deferred_oracle else None,
+                    'recommit_poses': args.recommit_poses, **dc.summary()}
     skipped = 0
     wall = time.perf_counter()
-    for t, kind, i in sorted(events):
-        T = poses.at(t)
+    for t, kind, i, source in plan:
+        T = source.at(t)
         if T is None:
             skipped += 1   # no trusted pose: no unmarked update
             continue
@@ -160,6 +197,10 @@ def map_main(argv):
         else:
             sonar.update(image(i), T @ ds.T_imu_sonar, t)
     args.out.mkdir(parents=True)
+    if deferred is not None:
+        with (args.out/'deferred.csv').open('w') as f:
+            f.write('t_s,kind,index,committed,reason\n')
+            f.writelines(f'{t:.6f},{kind},{i},{int(ok)},{reason}\n' for t, kind, i, ok, reason in decisions)
     np.savez_compressed(args.out/'map.npz', origin=grid.origin, shape=np.array(grid.shape), resolution=grid.resolution,
                         log_odds=grid.log_odds, observed=grid.observed, last_update=grid.last_update,
                         sources=grid.sources, state=grid.state(),
@@ -168,7 +209,7 @@ def map_main(argv):
     meta = {'method': args.method, 'manifest': str(args.manifest), 'poses': args.poses, 'pose_alignment': poses.alignment,
             'depth': str(args.depth), 'config': cfg, 'roi': {'origin': grid.origin.tolist(), 'shape': list(grid.shape),
             'resolution_m': grid.resolution, 'nominal_sonar_height_m': z0}, 'events': len(events),
-            'skipped_without_pose': skipped, 'wall_s': time.perf_counter() - wall,
+            'skipped_without_pose': skipped, 'deferred': deferred, 'wall_s': time.perf_counter() - wall,
             'sonar': sonar.stats if sonar else None, 'sonar_images': sonar_source if sonar else None,
             'vertical_aperture_deg': ds.sonar_geometry['Elevation'] if sonar else None,
             'aperture_note': 'simulation setting, true in simulation; not the platform value' if sonar else None,
@@ -176,7 +217,7 @@ def map_main(argv):
             'veto': {'enabled': bool(cfg['veto']), 'vetoed_free_updates': grid.vetoed_free_updates,
                      'veto_voxels': int(grid.veto.sum()) if grid.veto is not None else 0}}
     (args.out/'meta.json').write_text(json.dumps(meta, indent=2, default=float) + '\n')
-    print(json.dumps({k: meta[k] for k in ['method', 'poses', 'events', 'skipped_without_pose', 'wall_s', 'sonar']}, indent=2, default=float))
+    print(json.dumps({k: meta[k] for k in ['method', 'poses', 'events', 'skipped_without_pose', 'deferred', 'wall_s', 'sonar']}, indent=2, default=float))
     return 0
 
 
