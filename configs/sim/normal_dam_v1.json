@@ -1,0 +1,310 @@
+{
+  "name": "normal_dam_v1",
+  "purpose": "D-sim normal family dam: Dam buttress traverse, span 9.0 m at depths [-55.0, -54.0, -56.0, -55.0], 0.25 m/s, alternating standoff (+0 / +2.5 m). ",
+  "world": "Dam",
+  "package": "Ocean",
+  "ticks_per_sec": 200,
+  "viewport": [
+    480,
+    640
+  ],
+  "assumptions": {
+    "imu_noise": "ASSUMPTION consumer-MEMS class per-sample sigmas at 200 Hz; replace with platform Allan-variance values after the IMU arrives; D-sim replaces the gyro with grade g1 (EuRoC ADIS16448 Kalibr values) via sim_imu_grade.py as a pre-Allan placeholder",
+    "depth_sigma_m": "ASSUMPTION 2 cm per sample",
+    "sonar_elevation_deg": "ASSUMPTION 20 deg until the platform vertical aperture is measured (do not cite as the platform value)",
+    "scene_geometry": "wall from identical boxes; spawn_prop rotation[2]=90 rotates about world y (verified by probe: rotation[0] rolls about x, rotation[1] yaws about z); props are probably absent from the sonar octree"
+  },
+  "sensors": {
+    "imu_hz": 200,
+    "imu_noise": {
+      "AccelSigma": 0.02,
+      "AngVelSigma": 0.002,
+      "AccelBiasSigma": 0.0003,
+      "AngVelBiasSigma": 2e-05
+    },
+    "depth_hz": 50,
+    "depth_sigma_m": 0.02,
+    "camera_hz": 20,
+    "width": 640,
+    "height": 480,
+    "fov_deg": 90.0,
+    "sonar_hz": 10,
+    "sonar": {
+      "RangeBins": 256,
+      "AzimuthBins": 128,
+      "RangeMin": 0.3,
+      "RangeMax": 10.0,
+      "Elevation": 20,
+      "Azimuth": 120,
+      "MultSigma": 0.1,
+      "AddSigma": 0.05,
+      "MultiPath": false,
+      "ViewRegion": false
+    },
+    "sonar_model": "raycast"
+  },
+  "waypoints": [
+    {
+      "t": 0,
+      "pose": [
+        25.649,
+        -26.249,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 6,
+      "pose": [
+        25.649,
+        -26.249,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 8,
+      "pose": [
+        25.9479,
+        -26.2751,
+        -54.7,
+        0,
+        0,
+        5.0
+      ]
+    },
+    {
+      "t": 10,
+      "pose": [
+        25.3501,
+        -26.2229,
+        -55.3,
+        0,
+        0,
+        -15.0
+      ]
+    },
+    {
+      "t": 12,
+      "pose": [
+        25.649,
+        -26.249,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 30.0,
+      "pose": [
+        26.041,
+        -21.7661,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 33.0,
+      "pose": [
+        26.041,
+        -21.7661,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 69.0,
+      "pose": [
+        25.257,
+        -30.7319,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 72.0,
+      "pose": [
+        25.257,
+        -30.7319,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 109.578,
+      "pose": [
+        23.5505,
+        -21.5481,
+        -54.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 112.578,
+      "pose": [
+        23.5505,
+        -21.5481,
+        -54.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 148.578,
+      "pose": [
+        22.7665,
+        -30.5139,
+        -54.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 151.578,
+      "pose": [
+        22.7665,
+        -30.5139,
+        -54.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 189.787,
+      "pose": [
+        26.041,
+        -21.7661,
+        -56.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 192.787,
+      "pose": [
+        26.041,
+        -21.7661,
+        -56.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 228.787,
+      "pose": [
+        25.257,
+        -30.7319,
+        -56.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 231.787,
+      "pose": [
+        25.257,
+        -30.7319,
+        -56.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 269.364,
+      "pose": [
+        23.5505,
+        -21.5481,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 272.364,
+      "pose": [
+        23.5505,
+        -21.5481,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 308.364,
+      "pose": [
+        22.7665,
+        -30.5139,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 311.364,
+      "pose": [
+        22.7665,
+        -30.5139,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 331.954,
+      "pose": [
+        25.649,
+        -26.249,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    },
+    {
+      "t": 334.954,
+      "pose": [
+        25.649,
+        -26.249,
+        -55.0,
+        0,
+        0,
+        -5.0
+      ]
+    }
+  ],
+  "estimator_overrides": {
+    "values": {
+      "init_dyn_use": true,
+      "init_imu_thresh": 0.1
+    },
+    "reason": "AUV excitation is far below the drone-level EuRoC jerk threshold (tank r02)"
+  },
+  "props": [],
+  "fog": []
+}

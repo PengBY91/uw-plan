@@ -1,0 +1,201 @@
+title: D-sim supplementary set (W5-11), pre-hardware
+created: '2026-10-14'
+imu: 'gyro grade g1 (EuRoC ADIS16448 Kalibr: N 1.6968e-4, K 1.9393e-5) via scripts/data/sim_imu_grade.py;
+  ASSUMPTION, pre-Allan placeholder for the platform IMU; accelerometer as simulated'
+report: reports/w5/d-sim.md
+datasets:
+- route: probe_vstripe_heave_v1
+  role: 'z-only candidate, design 1 (failed: no degradation)'
+  route_config: configs/sim/probe_vstripe_heave_v1.json
+  route_config_sha256: f04100dcfa4df2a1161b04c45d2329bfde4ca8dfbdf11d71195c8020869217ce
+  raw: data/sim/probe_vstripe_heave_v1_s01/raw
+  raw_meta_sha256: 649cf3dcc0566e64d8b4bd3251fef65576fcf56aaf0d9fe64337d687d6711ea0
+  raw_imu_sha256: bd0bb36ef6fe2f16278945923ea10373d9e07896149cb326dfc28d9643f8ab5e
+  duration_s: 81.0
+  generation_wall_s: 2062.4
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/probe_vstripe_heave_v1_s01_g1
+  g1_seed: 57209
+  g1_manifest_sha256: 0a83795f60bf0f0fd7ed69382b5a3d49ed356939a6180df74f50357abec2ea1e
+  g1_checksums_sha256: dcc43d1ddb80f558350974668b7056d8b4924660ad195b21466a8f654ffeb4bc
+  a0_run: runs/sim_probe_vstripe_heave_v1_s01_g1_a0_r01
+- route: probe_far_approach_v1
+  role: 'x-only candidate, design 1 probe, fog 1 (failed: never initialised)'
+  route_config: configs/sim/probe_far_approach_v1.json
+  route_config_sha256: 744448a61971d73af970d6303c2d55f07979bf609e2a6b522afbd7aa4cb187d4
+  raw: data/sim/probe_far_approach_v1_s01/raw
+  raw_meta_sha256: 65f169a5e7804bb67dbd6f12845a4febd1151d9a87c2ba5107c05439c23f3b94
+  raw_imu_sha256: 0e385e8a4a92be4e6cccfb6b3b995aeb26e03e0c8e50ae9087e692e0d9ed6030
+  duration_s: 98.0
+  generation_wall_s: 2610.6
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/probe_far_approach_v1_s01_g1
+  g1_seed: 83729
+  g1_manifest_sha256: 46f0331dee3a4377f805e4cef368bc747f2610be5606db98421d899e32ffbeda
+  g1_checksums_sha256: 04b8d6303cd6c935864440bc9d3b94625f9d0ccdfe0ef7de89152d18129c352b
+  a0_run: runs/sim_probe_far_approach_v1_s01_g1_a0_r01
+- route: probe_far_approach_fog0_v1
+  role: 'x-only candidate, design 1 probe, fog 0.3 (failed: diverged from initialisation)'
+  route_config: configs/sim/probe_far_approach_fog0_v1.json
+  route_config_sha256: 5c222b1f11f8ab8fac48b25b1db20ca1de44319fbc286f82680f095d9de30e96
+  raw: data/sim/probe_far_approach_fog0_v1_s01/raw
+  raw_meta_sha256: 9e798df7fc5f32461df906501eb276fd3d607ca91524179c5b11c1f5d3f6f337
+  raw_imu_sha256: f3601e2d6e6aabcdc948ecd74d8a9480ad31a3ec56592cba61a3e6a2627bb785
+  duration_s: 98.0
+  generation_wall_s: 2589.2
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/probe_far_approach_fog0_v1_s01_g1
+  g1_seed: 52342
+  g1_manifest_sha256: f28e046323de300975c68404e42495e482614175f3eededa4b0175f0fbed466e
+  g1_checksums_sha256: ee4e350cf6fa00161261393f743521dc03755c4587a461f78b179b64be5a66d8
+  a0_run: runs/sim_probe_far_approach_fog0_v1_s01_g1_a0_r01
+- route: probe_retreat_approach_v1
+  role: x-only candidate, design 2 (co-occurring x+y+z)
+  route_config: configs/sim/probe_retreat_approach_v1.json
+  route_config_sha256: 1b86e3472be9b4299097090fb37b4bb40be38550422e0edc84d13a29309a024f
+  raw: data/sim/probe_retreat_approach_v1_s01/raw
+  raw_meta_sha256: 96bd2b18c387cc4802a2dc91813f483093594e9b257699ebe868ac7ae5a8f7d9
+  raw_imu_sha256: 6765c4985ee7ee69120da4b54fce5e0bab67d9568aa675cfc285416ecfc61049
+  duration_s: 161.0
+  generation_wall_s: 4001.0
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/probe_retreat_approach_v1_s01_g1
+  g1_seed: 29114
+  g1_manifest_sha256: 1a5e27531e701607b925f0644d5372557bc821a219895fb8f13593e505689203
+  g1_checksums_sha256: 3acb0eeb6e2a28fd46ecf777ba60585d303e50c852052d884c44b563519369e2
+  a0_run: runs/sim_probe_retreat_approach_v1_s01_g1_a0_r01
+- route: vstripe_shuttle_v1
+  role: z-only candidate, design 2
+  route_config: configs/sim/vstripe_shuttle_v1.json
+  route_config_sha256: 3a9f3316221bab290d50d3336ea83696f6cee701f65e4112498029175aa268c9
+  raw: data/sim/vstripe_shuttle_v1_s01/raw
+  raw_meta_sha256: 35d84f4bf40fb3f1b9d91b808871a15c59ea314c4ff2662c791cf6d569644525
+  raw_imu_sha256: fc6335146d88d278adaa08a4cd34122c60650dc77230b60aa5f3222829347346
+  duration_s: 184.0
+  generation_wall_s: 4372.0
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/vstripe_shuttle_v1_s01_g1
+  g1_seed: 21252
+  g1_manifest_sha256: 67f8cec2fb204d0f7a7358872bf031ec494883aa8b125913611d88a6eeff94d5
+  g1_checksums_sha256: 585fd71abe8a9a3e18865cf142efebde5d1d299db806cda2984f09e7fa80dabc
+  a0_run: runs/sim_vstripe_shuttle_v1_s01_g1_a0_r01
+- route: vstripe_shuttle_b_v1
+  role: z-only candidate, design 2
+  route_config: configs/sim/vstripe_shuttle_b_v1.json
+  route_config_sha256: a5d5dadf1d528627fb61ab73dee277b6f90600e0c08d17fa63ff450834bd5620
+  raw: data/sim/vstripe_shuttle_b_v1_s01/raw
+  raw_meta_sha256: f625898c13138b06b07681f3ca148d1bee9bda8be4bc3892279264cb88693344
+  raw_imu_sha256: b5c39e576e1bca79546d91a904ceea464a6e2628ea32d91d069372cbce3dd7b4
+  duration_s: 206.857
+  generation_wall_s: 5535.2
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/vstripe_shuttle_b_v1_s01_g1
+  g1_seed: 71734
+  g1_manifest_sha256: 7d089f989627d07052570439ddba1dfd38e535809e3fae73a56b7159fa7ee013
+  g1_checksums_sha256: 53f73cca7fb199d62fbee0ed267ab7b229f75949c57c1b5d2982e130e09471f1
+  a0_run: runs/sim_vstripe_shuttle_b_v1_s01_g1_a0_r01
+- route: vstripe_shuttle_fog4_v1
+  role: z-only candidate, design 2
+  route_config: configs/sim/vstripe_shuttle_fog4_v1.json
+  route_config_sha256: b1f326e552b4296952c6537aa2fd2690c6208d53b6c39ba1f14aa7991be113a9
+  raw: data/sim/vstripe_shuttle_fog4_v1_s01/raw
+  raw_meta_sha256: 7459a0e9280fe7514969c5d53ac86c9d360ff880ba79fc69e4bbb8511fbc8430
+  raw_imu_sha256: a160312bf65031f9ea68b117c3ce66ba47d05ba990ed1ceade967c4284055d16
+  duration_s: 194.0
+  generation_wall_s: 5129.3
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/vstripe_shuttle_fog4_v1_s01_g1
+  g1_seed: 27402
+  g1_manifest_sha256: 1de4937b4075ace940797ea512a27e9e8286683106b337fb540d5273ce72c456
+  g1_checksums_sha256: 572e3d6a374502278ebe735b3f7e15ff722941f8ac11fca6904dbe738c3f1578
+  a0_run: runs/sim_vstripe_shuttle_fog4_v1_s01_g1_a0_r01
+- route: normal_dam_v1
+  role: normal family dam
+  route_config: configs/sim/normal_dam_v1.json
+  route_config_sha256: cc7b2e5eaecfda41927d619a3ae054df4045f337803c09ef363046d508701825
+  raw: data/sim/normal_dam_v1_s01/raw
+  raw_meta_sha256: 3c27c2b0616d5c36ea45502c79f476850fe84c7ffe082cdbdd1eaae8f753f1e5
+  raw_imu_sha256: 6d1233c1fe28041fafdc15021a2ef05e7fdd05f2f532592d5f263162aae6409b
+  duration_s: 334.954
+  generation_wall_s: 7763.1
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_dam_v1_s01_g1
+  g1_seed: 2504
+  g1_manifest_sha256: b3f6ed0cbb87b897311c5f2d5268795c849f0c9b72e096336fc4f7bc7b07009c
+  g1_checksums_sha256: 3109e7047d8971179f8e4257e72abfa9e4a3c9a8326adbf5ab74f7ed84464cab
+  a0_run: runs/sim_normal_dam_v1_s01_g1_a0_r01
+- route: normal_dam_b_v1
+  role: normal family dam
+  route_config: configs/sim/normal_dam_b_v1.json
+  route_config_sha256: 7248bc0889c98d696c2d5c1cc6ae03f037d5ce4caa8d42d01d76e9d64f2acb43
+  raw: data/sim/normal_dam_b_v1_s01/raw
+  raw_meta_sha256: c7880bf2699bc3d43b5ea99975ebc778d5518596afb8d50a68fc72c3d670331b
+  raw_imu_sha256: 47b6ca279365612676e0a5ee131105bd78daeae709a6a6174d2b8055564c9540
+  duration_s: 332.052
+  generation_wall_s: 8536.3
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_dam_b_v1_s01_g1
+  g1_seed: 70603
+  g1_manifest_sha256: 8fa91743f467aa4162e07ebb525bc4eb4364bb94c3d84c696981bb0384866195
+  g1_checksums_sha256: fe255b9b16fb87d75e7d69f40230b63f10a8fa10700043b211cdd9d476557c82
+  a0_run: runs/sim_normal_dam_b_v1_s01_g1_a0_r01
+- route: normal_checker_v1
+  role: normal family checker
+  route_config: configs/sim/normal_checker_v1.json
+  route_config_sha256: 7c0281fc1e4ad95f8ce424cad850a3da0edc05e24706ab97b8a89584bee8ec76
+  raw: data/sim/normal_checker_v1_s01/raw
+  raw_meta_sha256: 4d6016a30b7f0d7c0c22bd627895ab410ed713f4d9dcc7140d32c9552038d267
+  raw_imu_sha256: 07e70b14ed4a148c3ad60a8ab8360d4a897f0202367bf83d70caf6a196c23cbd
+  duration_s: 294.238
+  generation_wall_s: 7806.8
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_checker_v1_s01_g1
+  g1_seed: 10157
+  g1_manifest_sha256: 7f92cac06a4770ca01252dc5622e9930e096d0563bf13ab61dae52c9e415fe8b
+  g1_checksums_sha256: 112e64d62f3f5765886a3fe5ef88d674d52033eae405e7964a32cf4d0be351b4
+  a0_run: runs/sim_normal_checker_v1_s01_g1_a0_r01
+- route: normal_checker_fog1_v1
+  role: normal family checker
+  route_config: configs/sim/normal_checker_fog1_v1.json
+  route_config_sha256: 32c4dcf39e0768c7d809a2bb0fb977a4921229a136e9b487a7ab402d8ab281ab
+  raw: data/sim/normal_checker_fog1_v1_s01/raw
+  raw_meta_sha256: 9c99ad21b698c3fa16952490678f1bdc9a88d28dffd586ad2bfdd03d634d87d3
+  raw_imu_sha256: e18b2a43cdb541bc705a96a1689c470bbb6e7552aa4026694218ed845c9fddb2
+  duration_s: 305.431
+  generation_wall_s: 8552.9
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_checker_fog1_v1_s01_g1
+  g1_seed: 67701
+  g1_manifest_sha256: 100b2f8b6228eab85a5cede4b2a3807e3156f0f978c851e7e196bb0b8b96b2dc
+  g1_checksums_sha256: b9f816b7c90344ff4962617522ee01153f5f7597f52974ad2d6afc89c615e1f4
+  a0_run: runs/sim_normal_checker_fog1_v1_s01_g1_a0_r01
+- route: normal_pilaster_v1
+  role: normal family pilaster
+  route_config: configs/sim/normal_pilaster_v1.json
+  route_config_sha256: 6a9744063e6394f177185ec12864e83773f1d44985788294bdf815afca120fd9
+  raw: data/sim/normal_pilaster_v1_s01/raw
+  raw_meta_sha256: d9fc0630391e337616172ec2a053dc610b7b9b2b9e9499419b11a29afca82a59
+  raw_imu_sha256: 8a5dec10aa77246b8bab7c0a296336803340850e5fb285e16990daacb955c7b3
+  duration_s: 274.851
+  generation_wall_s: 7541.0
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_pilaster_v1_s01_g1
+  g1_seed: 37870
+  g1_manifest_sha256: 29030f9549a6723f685230634fa1cc8e6fde77082b5d586737f5d91c80f3924f
+  g1_checksums_sha256: 72695f156f7ed948e620a8342eb7aec5b177788c7494cddcd8ed485f57926dc0
+  a0_run: runs/sim_normal_pilaster_v1_s01_g1_a0_r01
+- route: normal_pilaster_b_v1
+  role: normal family pilaster
+  route_config: configs/sim/normal_pilaster_b_v1.json
+  route_config_sha256: eb01c0e3b02fcf97ff6f921e65e28ab40a7c43b05df67ab88aab7e9961d97813
+  raw: data/sim/normal_pilaster_b_v1_s01/raw
+  raw_meta_sha256: a99fc7e6cbda8fca38f39abb08c2352b4e8bc7ea3b0c5341dec3ceab124d5bce
+  raw_imu_sha256: 9ed2ad0b566156af4e3ddd728ccfb29670b6f117fccd664dbb8c449364927724
+  duration_s: 279.0
+  generation_wall_s: 7470.0
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_pilaster_b_v1_s01_g1
+  g1_seed: 49589
+  g1_manifest_sha256: 9abeb40d76637c6e714f3c47513cd69cb56f63089b6c9d06b52f25faea83da57
+  g1_checksums_sha256: 884236eef6287dbbed7f6a1f3d555f110bea32a541f9fe720e65682f9e8b0602
+  a0_run: runs/sim_normal_pilaster_b_v1_s01_g1_a0_r01
