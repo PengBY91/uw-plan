@@ -9,7 +9,7 @@ status: living
 
 本页登记首月不依赖硬件的实验：已完成哪些、正在进行哪些、还缺什么。任务来自 wiki 交接页 `plans/2026-10/acoustic-optic-month1-sim-baselines-handoff-2026-10`。每一行都指向详细报告，数值以报告和运行目录为准。分支为 `codex/m1-sim-baselines`，2026-10-12 已合并进 `codex/w1-public-baseline`（合并提交 b1ede97；斜墙修复 d58e76e 和结果 5557bb3 随后再次合并）；此后在合并分支上继续。所有结果都来自仿真或公共数据；20° 仰角是仿真设定；声呐关联用真值对应的都是受控实验。
 
-最后更新：2026-10-14（加入 W5 的六份硬件前报告；课题重定决定见 `reports/m1-reframing-2026-10-14.md`，W5-06 与 W5-11 按重定后的口径执行）
+最后更新：2026-10-14（加入 W5 的七份硬件前报告；课题重定决定见 `reports/m1-reframing-2026-10-14.md`，W5-06 与 W5-11 按重定后的口径执行）
 
 ## 状态总表
 
@@ -30,6 +30,7 @@ status: living
 | W5-06（E-B8） | 延迟提交 D，3 个场景 × A0 位姿，含同量前缀对照、真值门控与真值重提交上界 | 13 / 0 / 0（斜墙 dhgt 的 eval-map 手工重跑，见其 map.log） | 仿真完成 | 三个场景都过 R4（错误空闲 0.539/0.076/0.160 → 0.003/0.012/0.000，召回不降），同量前缀对照在两个场景不过；有效覆盖降 31–77%，靠位姿修正才能回来；建议 B3D 进入 W6 主矩阵 | `reports/w5/eb8-deferred-commit.md` | 待勾选 |
 | W5-06（E-B9） | 真值位姿 B2a 地图按斜距统计结构外厚度 | 复用 W3-04 真值位姿地图 | 仿真完成 | 2ρ·sin(α/2) 是从未被超过的上界，但高估实际厚度 3–20 层；H-B1' 第二判据需在 W7 前改写 | `reports/w5/eb9-arc-height.md` | 待勾选 |
 | W5-11（D-sim） | 轴不相关失效补充集：z 单独、x 单独各两轮设计，6 条正常航次，g1 陀螺 | 13 条路线，回放输入全零缺样；远距接近两条未初始化或发散，保留 | 仿真完成，**否定** | 设计的单轴失效全部共现（航向/方向误差乘行程）；只有两条 Dam 正常航次轴独立，其上 z 的 DET-DIR 与 DET-SCALAR 相当；正常数据 23.7 min 未达 30 min 下限 | `reports/w5/d-sim.md` | 未达验收（缺轴独立航次与正常时长） |
+| W6-01 前置（M3.4） | 输入完好性在线检查：W4-05 故障矩阵（20 个故障 + 2 个对照，从父 bag 重建）、棋盘墙正常航次、偏航摆动航次 × 5 个偏移、20/30 ms 门槛对照 | 25 + 4 + 10 次回放 | 仿真/公共数据完成 | 中断与掉帧全部按规格动作；V1_01 偏移测到 ±1 ms 内，条纹横梁不可测；规格的 15/40 ms 门槛与测试故障重合，建议 20/30 ms；**HoloOcean 图像比时间戳滞后约 9.5 ms**（真值核对） | `reports/w5/a-input-integrity.md` | W6-01 输入完好性部分待勾选 |
 
 ## 正在进行
 
@@ -51,5 +52,5 @@ status: living
 
 - `data/derived/fault/`：W4-05 的派生 bag，原为 37 GB，现约 250 KB，可用 `scripts/data/inject_fault.py` 重新生成。2026-10-13 清理后目录内只保留每个派生数据的 fault.json、metadata.yaml 和 `mcap-checksums.sha256`（删除前记录的 20 个 .mcap 的 SHA-256）；重新生成后应与该文件逐一对照。
 - `data/public/euroc/MH_0{1,2}_easy*`：约 9.3 GB（2026-10-13 清理后只剩 `*_asl` 和 `*_ros2`），被 `manifests/euroc_mh0{1,2}.yaml` 引用。
-- W5-11 D-sim 数据（`data/sim/*_s01` 与 `*_s01_g1`，见 `manifests/dsim_w5.yaml`）：约 77 GB，其中约 34 GB 为可重建的 bag。W5-06 为跑 detect-a 重新恢复了 14 条先导航次的 `ros2/`（约 25 GB），不再需要时可按存储策略删除。
+- W5-11 D-sim 数据（`data/sim/*_s01` 与 `*_s01_g1`，见 `manifests/dsim_w5.yaml`）：约 77 GB，其中约 34 GB 为可重建的 bag。2026-10-14 再次清理：`data/sim/*/ros2` 已全部删除（约 63 GB，可用 `sim_to_bag.py --restore-bag` 恢复并按 checksums.sha256 核对），`data/sim` 现约 82 GB；M3.4 的 4 个偏航摆动注入故障只保留 fault.json 与 metadata.yaml，mcap 哈希追加在 `data/derived/fault/mcap-checksums.sha256`。
 - 运行目录 `runs/sim_*_a1_*`、`*_a2_*`、`*_b*_*`、`euroc_mh0*_a0_*`、`fault_*`：都被报告引用，失败运行一并保留。
