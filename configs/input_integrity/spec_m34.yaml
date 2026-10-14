@@ -1,0 +1,4 @@
+# M3.4 tolerances as written in the month-2 method spec v2.4 (from the W4-05 fault injection). The offset thresholds
+# coincide with the injected test faults (15 ms must not alarm, 40 ms must be LOST), so a precise estimator lands on
+# either side of them by chance; see reports/w5/a-input-integrity.md.
+a_input_integrity: {imu_outage_s: 0.5, cam_outage_s: 3.0, time_offset_warn_ms: 15, time_offset_lost_ms: 40}

@@ -15,6 +15,7 @@ CONTRACT = {
     'run-a': ('A', 'P08/P10', 'manifest, A config -> fixed-backend run, trajectory and factor diagnostics'),
     'diagnose-a': ('A', 'P14', 'manifest, method config -> spectrum, directions, gauge, axis_info.csv'),
     'detect-a': ('A', 'P18', 'estimate runs, detect config -> causal detector replay, per-axis alarms, false-alarm operating points'),
+    'input-integrity': ('A', 'P18', 'bag (+ fault.json), camera-IMU calib -> online M3.4 input checks, transitions, offset estimates'),
     'motion-b': ('B', 'P19', 'segment manifest, candidates -> motion_info.csv with predicted vs actual shrinkage'),
     'check-method': ('shared', 'P14-P20', 'suite, check config -> algebra, geometry, state and evidence checks'),
     'benchmark': ('shared', 'P11/P17/P21', 'matrix config -> independent runs, failures and resources'),
@@ -65,13 +66,18 @@ def _detect_a(argv):
     return main(argv)
 
 
+def _input_integrity(argv):
+    from uwbench.a.integrity import main  # needs cv2
+    return main(argv)
+
+
 def _motion_b(argv):
     from uwbench.b.motion import main
     return main(argv)
 
 
 IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj, 'depth': _depth, 'map': _map, 'eval-map': _eval_map,
-               'run-a': _run_a, 'diagnose-a': _diagnose_a, 'detect-a': _detect_a, 'motion-b': _motion_b}
+               'run-a': _run_a, 'diagnose-a': _diagnose_a, 'detect-a': _detect_a, 'input-integrity': _input_integrity, 'motion-b': _motion_b}
 
 
 def main(argv=None):

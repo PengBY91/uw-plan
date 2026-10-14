@@ -10,8 +10,8 @@ it drops below threshold - release * tolerance. A NaN statistic is 'unscorable' 
 an independent source is 'no_source' (y, topic A v2.3) and is never treated as ok.
 
 Transitions (durations are continuous holding times on the sample clock, all from the config):
-  any -> LOST          hard fault: time regression (new epoch), non-finite pose, no observation for obs_timeout_s,
-                       or not yet initialised
+  any -> LOST          hard fault: time regression (new epoch), input-integrity LOST (M3.4), non-finite pose, no
+                       observation for obs_timeout_s, or not yet initialised
   NORMAL -> DEGRADED   some axis alarming for t_bad_s
   DEGRADED -> NORMAL   no axis alarming for t_good_s
   DEGRADED -> LOST     every sourced position axis (x, z) alarming for t_fail_s; an unscorable axis is not alarming
@@ -49,9 +49,11 @@ def latch(stats, thresholds, tolerances, release, sourced=(0, 2, 3)):
     return alarm, status
 
 
-def run(t, alarm, axis_status, obs_t, pose_finite, cfg=None):
+def run(t, alarm, axis_status, obs_t, pose_finite, cfg=None, input_lost=None):
     """State per sample. t: sample-clock stamps (may regress); alarm/axis_status from latch(); obs_t: stamps of valid
-    observations (sorted); pose_finite: bool per sample. Returns dict of per-sample arrays and the transition list."""
+    observations (sorted); pose_finite: bool per sample; input_lost: optional (t_s, reason) of the first LOST from the
+    M3.4 input-integrity monitor (uwbench.a.integrity), a hard fault from then on (that monitor latches until the
+    estimator re-initialises). Returns dict of per-sample arrays and the transition list."""
     c = {**HEALTH, **(cfg or {})}
     n = len(t)
     state, epoch = 'LOST', 0
@@ -86,6 +88,8 @@ def run(t, alarm, axis_status, obs_t, pose_finite, cfg=None):
             epoch += 1
             hard = 'time_regression'
             since.update({key: None for key in since})
+        elif input_lost is not None and now >= input_lost[0]:
+            hard = 'input_' + input_lost[1]
         elif not pose_finite[i]:
             hard = 'pose_nonfinite'
         elif k < 0:

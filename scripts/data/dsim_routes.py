@@ -197,6 +197,25 @@ add(shuttle('vstripe_shuttle_fog4_v1', 2.5, -13.0, 4.0, 0.4, 2, 4.0, purpose='De
 
 
 
+def yaw_excitation(name, standoff, amp_deg, half_period_s, cycles, fog, purpose=''):
+    """Hold in front of the checkerboard and oscillate yaw (+-amp_deg, half_period_s per swing): the rotational
+    excitation that the M3.4 time-offset check needs, i.e. the pre-mission offset-check manoeuvre. No translation."""
+    pos = (0.0, -standoff, -20.0)
+    wps = with_init(pos, 90.0, [(5.0, pos)])
+    t = wps[-1][0]
+    for k in range(2*cycles):
+        t += half_period_s
+        wps.append((t, [*pos, 0, 0, 90.0 + (amp_deg if k % 2 == 0 else -amp_deg)]))
+    wps += [(t + half_period_s/2, [*pos, 0, 0, 90.0]), (t + half_period_s/2 + 5.0, [*pos, 0, 0, 90.0])]
+    return route(name, f'M3.4 offset-check manoeuvre: hold {standoff} m from the checkerboard, yaw +-{amp_deg} deg, '
+                 f'{half_period_s} s per swing, {cycles} cycles, fog {fog}. {purpose}', 'OpenWater', wps,
+                 checker_wall(), [{'t': 0, 'density': fog, 'depth': 0.5}])
+
+
+add(yaw_excitation('offset_check_checker_v1', 3.5, 12.0, 2.0, 8, 2.0,
+                   purpose='Parent for software-injected IMU offsets (inject_fault.py) in the input-integrity check.'))
+
+
 def retreat_approach(name, near_init, far, near, speed, fog, tile=3.0, purpose=''):
     """Second x-only design: initialise near the wall (good parallax), retreat along the optical axis to far, then
     approach to near and retreat again. probe_far_approach_fog0_v1 initialised at 22 m and diverged from the start."""

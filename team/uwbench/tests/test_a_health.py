@@ -76,6 +76,14 @@ class StateTests(unittest.TestCase):
         self.assertEqual(state_at(res, t, 14.2), 'RECOVERING')
         self.assertEqual(state_at(res, t, 16.5), 'NORMAL')
 
+    def test_input_integrity_lost_is_a_latched_hard_fault(self):
+        t, stats = series()
+        alarm, status = health.latch(stats, THR, TOL, 0.1)
+        res = health.run(t, alarm, status, t.copy(), np.ones(len(t), bool), CFG, input_lost=(12.0, 'imu_outage'))
+        self.assertEqual(state_at(res, t, 11.5), 'NORMAL')
+        self.assertTrue(all(s == 'LOST' for s in res['state'][t >= 12.0]))
+        self.assertEqual(res['transitions'][-1]['reason'], 'input_imu_outage')
+
     def test_time_regression_opens_new_epoch(self):
         t, stats = series(10.0)
         t = np.r_[t[:100], t[100:] - 3.0]                         # clock jumps back 3 s at sample 100

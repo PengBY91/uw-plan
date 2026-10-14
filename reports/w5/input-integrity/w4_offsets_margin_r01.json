@@ -1,0 +1,54 @@
+[
+  {
+    "run": "v101_control",
+    "fault": "control",
+    "expected": "none",
+    "got": "none",
+    "reason": null,
+    "delay_s": null,
+    "lost_from_start_s": null,
+    "offset_windows": 26,
+    "offset_observable": 26,
+    "offset_median_ms": 0.05,
+    "verdict": "pass"
+  },
+  {
+    "run": "v101_imuoff05",
+    "fault": "imuoff05",
+    "expected": "none",
+    "got": "none",
+    "reason": null,
+    "delay_s": null,
+    "lost_from_start_s": null,
+    "offset_windows": 26,
+    "offset_observable": 26,
+    "offset_median_ms": 5.05,
+    "verdict": "pass"
+  },
+  {
+    "run": "v101_imuoff15",
+    "fault": "imuoff15",
+    "expected": "none",
+    "got": "none",
+    "reason": null,
+    "delay_s": null,
+    "lost_from_start_s": null,
+    "offset_windows": 26,
+    "offset_observable": 26,
+    "offset_median_ms": 15.05,
+    "verdict": "pass"
+  },
+  {
+    "run": "v101_imuoff40",
+    "fault": "imuoff40",
+    "expected": "LOST",
+    "got": "LOST",
+    "reason": "time_offset",
+    "delay_s": 25.24,
+    "lost_from_start_s": 25.24,
+    "offset_windows": 26,
+    "offset_observable": 26,
+    "offset_median_ms": 40.05,
+    "verdict": "pass"
+  }
+]
