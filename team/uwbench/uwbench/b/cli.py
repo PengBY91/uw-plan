@@ -25,7 +25,7 @@ from scipy.spatial.transform import Rotation, Slerp
 from uwbench.mapping import VoxelGrid, truth_from_boxes
 from uwbench.metrics.occupancy import map_ratios
 
-DEFAULTS = {'resolution_m': 0.10, 'stereo_pixel_stride': 4, 'max_stereo_range_m': 6.0, 'sonar_stride': 5,
+DEFAULTS = {'resolution_m': 0.10, 'stereo_pixel_stride': 4, 'max_stereo_range_m': 6.0, 'sonar_stride': 5, 'veto': False,
             'sonar_threshold': 0.25, 'roi_margin_m': {'x': 3.0, 'y_behind_props': 1.0, 'y_vehicle': 0.5, 'z': 1.5},
             'b2c': {'hit': 0.85, 'miss': -0.4}}
 
@@ -126,6 +126,10 @@ def map_main(argv):
     boxes = boxes_from_props(ds.route['props'])
     origin, shape, z0 = route_roi(ds, cfg, boxes)
     grid = VoxelGrid(origin, shape, cfg['resolution_m'])
+    if cfg['veto']:
+        if args.method == 'b0':
+            parser.error('veto needs a sonar method')
+        grid.veto = np.zeros(grid.shape, bool)
     poses = Poses(ds, args.poses)
     with np.load(args.depth/'depth.npz') as f:   # decompress once; npz members re-decompress on every access
         dep = {k: f[k] for k in ['times', 'depth', 'valid']}
@@ -159,7 +163,8 @@ def map_main(argv):
     np.savez_compressed(args.out/'map.npz', origin=grid.origin, shape=np.array(grid.shape), resolution=grid.resolution,
                         log_odds=grid.log_odds, observed=grid.observed, last_update=grid.last_update,
                         sources=grid.sources, state=grid.state(),
-                        occluded=sonar.occluded if sonar is not None and args.method == 'b2c' else np.zeros(grid.shape, np.int32))
+                        occluded=sonar.occluded if sonar is not None and args.method == 'b2c' else np.zeros(grid.shape, np.int32),
+                        veto=grid.veto if grid.veto is not None else np.zeros(grid.shape, bool))
     meta = {'method': args.method, 'manifest': str(args.manifest), 'poses': args.poses, 'pose_alignment': poses.alignment,
             'depth': str(args.depth), 'config': cfg, 'roi': {'origin': grid.origin.tolist(), 'shape': list(grid.shape),
             'resolution_m': grid.resolution, 'nominal_sonar_height_m': z0}, 'events': len(events),
@@ -167,7 +172,9 @@ def map_main(argv):
             'sonar': sonar.stats if sonar else None, 'sonar_images': sonar_source if sonar else None,
             'vertical_aperture_deg': ds.sonar_geometry['Elevation'] if sonar else None,
             'aperture_note': 'simulation setting, true in simulation; not the platform value' if sonar else None,
-            'occupancy': {'hit': grid.hit, 'miss': grid.miss, 'clamp': list(grid.clamp)}}
+            'occupancy': {'hit': grid.hit, 'miss': grid.miss, 'clamp': list(grid.clamp)},
+            'veto': {'enabled': bool(cfg['veto']), 'vetoed_free_updates': grid.vetoed_free_updates,
+                     'veto_voxels': int(grid.veto.sum()) if grid.veto is not None else 0}}
     (args.out/'meta.json').write_text(json.dumps(meta, indent=2, default=float) + '\n')
     print(json.dumps({k: meta[k] for k in ['method', 'poses', 'events', 'skipped_without_pose', 'wall_s', 'sonar']}, indent=2, default=float))
     return 0

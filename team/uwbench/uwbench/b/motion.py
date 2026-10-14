@@ -22,6 +22,12 @@ This tool measures the motion part with ground-truth poses standing in for the r
   rotation about the sonar centre keeps every candidate in its cell and separates nothing under the conservative rule
   (only the lever arm between rotation centre and sonar translates it), and under the aggressive rule only through
   the fan edge;
+- vision-sonar association (config stereo: true; datasets with a stereo pair): the B0 stereo depth of the nearest
+  left/right pair projects every candidate into the left camera. A candidate more than a depth-dependent margin in
+  front of the stereo surface lies in space the camera has verified free and is eliminated; one behind the surface
+  (occluded) or without valid depth is kept. stereo_ref uses the reference frame only (same-time association, no
+  motion), stereo adds every later view, conservative+stereo also applies the conservative sonar rule. Candidates
+  within the margin of the surface are 'supported' (reported, never used to collapse the arc);
 - truth, for scoring only: the simulator's raycast hits that fell into the reference cell give the true elevations
   (an arc may hold several reflectors, e.g. two beams at one range and bearing). `truth_retained` = no true elevation
   was eliminated; `precision` = share of survivors within `truth_margin_deg` of a true elevation; `clusters` = number
@@ -43,8 +49,43 @@ from scipy.spatial.transform import Rotation
 from uwbench.sonar import arc_points, elevation, range_bearing
 
 DEFAULTS = {'reference_t': 6.0, 'view_stride': 5, 'candidates': 81, 'tolerance_bins': 1, 'threshold': 0.25,
-            'truth_margin_deg': 0.5, 'max_echoes': 400, 'seed': 0}
+            'truth_margin_deg': 0.5, 'truth_dist_m': 0.03, 'max_echoes': 400, 'seed': 0,
+            # vision-sonar association (off by default; needs a manifest dataset with stereo images)
+            'stereo': False, 'stereo_sigma_disparity_px': 0.5, 'stereo_k_sigma': 3.0, 'stereo_floor_m': 0.05,
+            'stereo_window_px': 5, 'stereo_min_valid_fraction': 0.5, 'stereo_max_dt_s': 0.025}
 RULES = ('conservative', 'aggressive')
+STEREO_RULES = ('stereo_ref', 'stereo', 'conservative+stereo')
+
+
+def stereo_test(world, T_world_cam, depth, K, baseline, cfg):
+    """(eliminated, supported, testable) for world points against one stereo depth image.
+
+    A candidate is testable when it projects into the image in front of the camera and at least
+    stereo_min_valid_fraction of the window around its pixel has valid depth. Its stereo depth Z_s is the window
+    minimum (a nearer edge in the window makes elimination harder, never easier). Eliminated: the candidate lies more
+    than margin in front of Z_s, i.e. in space the stereo ray crossed before reaching a surface (verified free).
+    Supported: within margin of Z_s. Behind the surface (occluded) or untestable: kept. margin =
+    max(floor, k * Z_s^2 * sigma_d / (fx * B))."""
+    fx, fy, cx, cy = K
+    p = (world - T_world_cam[:3, 3]) @ T_world_cam[:3, :3]
+    z = p[:, 2]
+    h, w = depth.shape
+    with np.errstate(divide='ignore', invalid='ignore'):
+        u = np.floor(fx*p[:, 0]/z + cx).astype(int)
+        v = np.floor(fy*p[:, 1]/z + cy).astype(int)
+    half = cfg['stereo_window_px']//2
+    elim, supp, test = np.zeros(len(p), bool), np.zeros(len(p), bool), np.zeros(len(p), bool)
+    for i in np.nonzero((z > 0.1) & (u >= half) & (u < w - half) & (v >= half) & (v < h - half))[0]:
+        win = depth[v[i] - half:v[i] + half + 1, u[i] - half:u[i] + half + 1]
+        ok = np.isfinite(win)
+        if ok.mean() < cfg['stereo_min_valid_fraction']:
+            continue
+        zs = float(win[ok].min())
+        margin = max(cfg['stereo_floor_m'], cfg['stereo_k_sigma']*zs*zs*cfg['stereo_sigma_disparity_px']/(fx*baseline))
+        test[i] = True
+        elim[i] = z[i] < zs - margin
+        supp[i] = abs(z[i] - zs) <= margin
+    return elim, supp, test
 
 
 class RawDataset:
@@ -183,6 +224,7 @@ def analyse(ds, image, cfg):
     phis_deg = np.degrees(phis)
     tol = cfg['tolerance_bins']
     truth = {}  # reference cell -> true elevations (deg) of the raycast hits in it
+    truth_xyz = {}  # reference cell -> the hits themselves (sonar frame), for the geometric truth check
     path = ds.sonar_points_path()
     if path is not None:
         pts = np.load(path, mmap_mode='r')
@@ -195,6 +237,7 @@ def analyse(ds, image, cfg):
                 m = (hr == r) & (ha == a)
                 if m.any():
                     truth[(int(r), int(a))] = he[m]
+                    truth_xyz[(int(r), int(a))] = hits[m]
     motions, T_views = [], []
     for k in views:
         T_k = ds.gt_pose(float(sonar_t[k])) @ ds.T_imu_sonar
@@ -202,15 +245,28 @@ def analyse(ds, image, cfg):
         motions.append({'view': k, 't_s': float(sonar_t[k]), **relative_motion(T_ref, T_k)})
     images_k = [np.asarray(image(k)) > cfg['threshold'] for k in views]
     firsts_k = [first_echo_rows(img) for img in images_k]
+    stereo_views = stereo_depths(ds, [ref] + views, cfg) if cfg['stereo'] else None
     n = cfg['candidates']
     rows = []
     for e, (r0, a0, rho0, th0) in enumerate(zip(rows_e, cols_e, rho_c, th_c)):
         world = arc_points(rho0, th0, phis) @ T_ref[:3, :3].T + T_ref[:3, 3]
-        alive = {rule: np.ones(n, bool) for rule in RULES}
+        alive = {rule: np.ones(n, bool) for rule in RULES + (STEREO_RULES if cfg['stereo'] else ())}
+        if cfg['stereo']:   # same-time association at the reference frame
+            T_c, depth = stereo_views[0]
+            supported = np.zeros(n, bool)
+            if depth is not None:
+                elim, supported, _ = stereo_test(world, T_c, depth, ds.K, ds.baseline, cfg)
+                for rule in STEREO_RULES:
+                    alive[rule] &= ~elim
         sig = np.zeros((n, len(views), 2), int)
         fan_all = np.zeros((n, len(views)), bool)
         he = truth.get((int(r0), int(a0)))
         true_mask = None if he is None else (np.abs(phis_deg[:, None] - he[None, :]) <= cfg['truth_margin_deg']).any(axis=1)
+        # geometric truth: candidates within truth_dist_m of a real reflector point. The elevation-margin label above
+        # also marks candidates just past a structure edge, in open water, as true; a rule that clears them is right.
+        hx = truth_xyz.get((int(r0), int(a0)))
+        arc = arc_points(rho0, th0, phis)
+        true3d = None if hx is None else (np.linalg.norm(arc[:, None, :] - hx[None, :, :], axis=-1).min(axis=1) <= cfg['truth_dist_m'])
         for v, (T_k, img, first) in enumerate(zip(T_views, images_k, firsts_k)):
             rho, th, ph = project(world, T_k)
             fan = in_fan(rho, th, ph, g)
@@ -222,25 +278,51 @@ def analyse(ds, image, cfg):
             alive['aggressive'] &= ~fan | seen
             elim, _ = in_front_of_first_echo(first, rc, ac, tol)
             alive['conservative'] &= ~(fan & elim)
+            if cfg['stereo']:
+                alive['conservative+stereo'] &= ~(fan & elim)
+                T_c, depth = stereo_views[v + 1]
+                if depth is not None:
+                    s_elim, _, _ = stereo_test(world, T_c, depth, ds.K, ds.baseline, cfg)
+                    alive['stereo'] &= ~s_elim
+                    alive['conservative+stereo'] &= ~s_elim
             row = {'echo': e, 'ref_row': int(r0), 'ref_col': int(a0), 'rho_m': float(rho0), 'theta_deg': float(np.degrees(th0)),
                    'view': views[v], 't_s': float(sonar_t[views[v]]), 'n_views': v + 1, **motions[v],
                    'testable_fraction': float(fan.mean()),
                    'true_elev_min_deg': None if he is None else float(he.min()), 'true_elev_max_deg': None if he is None else float(he.max()),
                    'true_elev_median_deg': None if he is None else float(np.median(he)),
                    'true_reflectors': None if he is None else runs_count(true_mask)}
-            for rule in RULES:
+            if cfg['stereo']:
+                row['stereo_ref_supported_fraction'] = float(supported.mean())
+                row['stereo_ref_supported_has_truth'] = None if true_mask is None else bool((supported & true_mask).any())
+            for rule in alive:
                 al = alive[rule]
-                pred = float(predicted_survivors(sig[:, :v + 1], fan_all[:, :v + 1], rule, tol).mean())
+                pred = float(predicted_survivors(sig[:, :v + 1], fan_all[:, :v + 1], rule, tol).mean()) if rule in RULES else np.nan
                 surv = phis_deg[al]
                 row[f'{rule}_fraction_actual'] = float(al.mean())
                 row[f'{rule}_fraction_predicted'] = pred/n
                 row[f'{rule}_span_deg'] = float(surv.max() - surv.min()) if len(surv) else 0.0
                 row[f'{rule}_clusters'] = runs_count(al)
                 row[f'{rule}_truth_retained'] = None if true_mask is None else bool(al[true_mask].all())
+                row[f'{rule}_truth3d_retained'] = None if true3d is None or not true3d.any() else bool(al[true3d].all())
                 row[f'{rule}_precision'] = None if true_mask is None else (float(true_mask[al].mean()) if al.any() else None)
             rows.append(row)
     return rows, motions, {'reference_frame': ref, 'reference_t': float(sonar_t[ref]), 'echoes': int(len(rows_e)),
                            'echoes_with_truth': len(truth), 'views': len(views), 'candidates': n}
+
+
+def stereo_depths(ds, sonar_indices, cfg):
+    """(T_world_cam0, depth or None) per sonar frame: the nearest left/right pair within stereo_max_dt_s, B0 depth."""
+    from uwbench.b.depth import depth_from_pair
+    out = []
+    for k in sonar_indices:
+        t = float(ds.sonar_t[k])
+        j = int(np.argmin(np.abs(ds.left_t - t)))
+        if abs(ds.left_t[j] - t) > cfg['stereo_max_dt_s']:
+            out.append((None, None))
+            continue
+        depth, _, _, _ = depth_from_pair(ds.image('left', j), ds.image('right', j), ds.K[0], ds.baseline)
+        out.append((ds.gt_pose(float(ds.left_t[j])) @ ds.T_imu_cam0, depth))
+    return out
 
 
 def summarise(rows, motions):
@@ -251,19 +333,30 @@ def summarise(rows, motions):
     m = np.array([[abs(x['dx_m']), abs(x['dy_m']), abs(x['dz_m']), abs(x['roll_deg']), abs(x['pitch_deg']), abs(x['yaw_deg'])] for x in motions])
     out = {'final_view': last_view, 'echoes': len(final),
            'motion_max_abs': dict(zip(['dx_m', 'dy_m', 'dz_m', 'roll_deg', 'pitch_deg', 'yaw_deg'], m.max(axis=0).tolist()))}
-    for rule in RULES:
+    for rule in [r for r in RULES + STEREO_RULES if f'{r}_fraction_actual' in rows[0]]:
         fa = np.array([r[f'{rule}_fraction_actual'] for r in rows])
         fp = np.array([r[f'{rule}_fraction_predicted'] for r in rows])
         wt = [r for r in final if r[f'{rule}_truth_retained'] is not None]
         prec = [r[f'{rule}_precision'] for r in wt if r[f'{rule}_precision'] is not None]
         out[rule] = {'fraction_actual_median': float(np.median([r[f'{rule}_fraction_actual'] for r in final])),
                      'fraction_actual_mean': float(np.mean([r[f'{rule}_fraction_actual'] for r in final])),
-                     'fraction_predicted_median': float(np.median([r[f'{rule}_fraction_predicted'] for r in final])),
+                     'span_deg_median': float(np.median([r[f'{rule}_span_deg'] for r in final])),
                      'clusters_median': float(np.median([r[f'{rule}_clusters'] for r in final])),
                      'truth_retained_fraction': float(np.mean([r[f'{rule}_truth_retained'] for r in wt])) if wt else None,
-                     'precision_median': float(np.median(prec)) if prec else None,
-                     'pred_actual_correlation': float(np.corrcoef(fp, fa)[0, 1]) if fa.std() > 0 and fp.std() > 0 else None,
-                     'pred_actual_median_abs_diff': float(np.median(np.abs(fp - fa)))}
+                     'truth3d_retained_fraction': (lambda v: float(np.mean(v)) if v else None)(
+                         [r[f'{rule}_truth3d_retained'] for r in final if r[f'{rule}_truth3d_retained'] is not None]),
+                     'precision_median': float(np.median(prec)) if prec else None}
+        if rule in RULES:   # the pose-only prediction exists for the motion rules only
+            out[rule].update({
+                'fraction_predicted_median': float(np.median([r[f'{rule}_fraction_predicted'] for r in final])),
+                'pred_actual_correlation': float(np.corrcoef(fp, fa)[0, 1]) if fa.std() > 0 and fp.std() > 0 else None,
+                'pred_actual_median_abs_diff': float(np.median(np.abs(fp - fa)))})
+    if 'stereo_ref_supported_fraction' in rows[0]:
+        st = [r for r in final if r['stereo_ref_supported_has_truth'] is not None]
+        out['stereo_ref_support'] = {
+            'supported_fraction_median': float(np.median([r['stereo_ref_supported_fraction'] for r in final])),
+            'echoes_with_any_support': float(np.mean([r['stereo_ref_supported_fraction'] > 0 for r in final])),
+            'support_contains_truth_fraction': float(np.mean([r['stereo_ref_supported_has_truth'] for r in st])) if st else None}
     return out
 
 

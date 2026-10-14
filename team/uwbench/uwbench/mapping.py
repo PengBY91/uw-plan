@@ -26,6 +26,8 @@ class VoxelGrid:
         self.observed = np.zeros(self.shape, bool)
         self.last_update = np.full(self.shape, np.nan)
         self.sources = np.zeros(self.shape, np.uint8)
+        self.veto = None          # sonar veto V (B plan 3.4): voxels holding a sonar candidate refuse stereo free updates
+        self.vetoed_free_updates = 0
 
     def index(self, points):
         idx = np.floor((np.asarray(points) - self.origin)/self.resolution).astype(int)
@@ -67,6 +69,11 @@ class VoxelGrid:
         hit_idx, hit_inside = self.index(endpoints)
         hit_set = {tuple(i) for i in hit_idx[hit_inside]}
         free = np.array([i for i in free_idx[inside] if tuple(i) not in hit_set]).reshape(-1, 3)
+        if self.veto is not None and len(free):
+            free = np.unique(free, axis=0)
+            blocked = self.veto[tuple(free.T)]
+            self.vetoed_free_updates += int(blocked.sum())
+            free = free[~blocked]
         self._apply(free, self.miss, stamp, source)
         self._apply(hit_idx[hit_inside], self.hit, stamp, source)
 

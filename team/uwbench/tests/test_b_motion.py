@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from scipy.spatial.transform import Rotation
 
-from uwbench.b.motion import DEFAULTS, analyse, cells, in_front_of_first_echo, predicted_survivors, relative_motion, runs_count, summarise
+from uwbench.b.motion import DEFAULTS, analyse, stereo_test, cells, in_front_of_first_echo, predicted_survivors, relative_motion, runs_count, summarise
 from uwbench.sonar import range_bearing
 
 GEOM = {'RangeBins': 256, 'AzimuthBins': 128, 'RangeMin': 0.3, 'RangeMax': 10.0, 'Elevation': 20.0, 'Azimuth': 120.0}
@@ -143,6 +143,38 @@ class MotionTests(unittest.TestCase):
         self.assertAlmostEqual(m['dx_m'], 1.0)
         self.assertAlmostEqual(m['dz_m'], 0.5)
         self.assertAlmostEqual(m['pitch_deg'], 10.0, places=6)
+
+
+class StereoAssociationTests(unittest.TestCase):
+    """Camera at the origin looking along +z (optical frame), a wall at 4 m with a 40 px hole of invalid depth."""
+    K = (300.0, 300.0, 320.0, 240.0)
+
+    def setUp(self):
+        self.depth = np.full((480, 640), 4.0, np.float32)
+        self.depth[200:240, 400:440] = np.nan
+        self.cfg = dict(DEFAULTS)
+
+    def test_in_front_eliminated_on_surface_supported_behind_kept(self):
+        pts = np.array([[0.0, 0.0, 2.0], [0.0, 0.0, 4.02], [0.0, 0.0, 6.0]])
+        elim, supp, test = stereo_test(pts, np.eye(4), self.depth, self.K, 0.2, self.cfg)
+        self.assertEqual(list(test), [True, True, True])
+        self.assertEqual(list(elim), [True, False, False])   # 2 m: inside the verified-free ray in front of the wall
+        self.assertEqual(list(supp), [False, True, False])   # 6 m: occluded by the wall, kept
+
+    def test_outside_image_or_invalid_depth_is_untestable(self):
+        u, v = 420, 220                                       # inside the hole
+        z = 3.0
+        pts = np.array([[(u + 0.5 - 320)*z/300, (v + 0.5 - 240)*z/300, z], [10.0, 0.0, 2.0], [0.0, 0.0, -2.0]])
+        elim, _, test = stereo_test(pts, np.eye(4), self.depth, self.K, 0.2, self.cfg)
+        self.assertFalse(test.any())
+        self.assertFalse(elim.any())
+
+    def test_margin_grows_with_depth(self):
+        far = np.full((480, 640), 8.0, np.float32)
+        # sigma_Z at 8 m with fx 300, B 0.2, 0.5 px: 64*0.5/60 = 0.53 m, 3 sigma = 1.6 m: 7 m is not eliminated
+        elim, supp, _ = stereo_test(np.array([[0.0, 0.0, 7.0]]), np.eye(4), far, self.K, 0.2, self.cfg)
+        self.assertFalse(elim[0])
+        self.assertTrue(supp[0])
 
 
 if __name__ == '__main__':
