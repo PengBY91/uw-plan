@@ -55,6 +55,11 @@ def _eval_map(argv):
     return eval_main(argv)
 
 
+def _diagnose_a(argv):
+    from uwbench.a1.diagnose import main  # needs gtsam
+    return main(argv)
+
+
 def _detect_a(argv):
     from uwbench.detect import main
     return main(argv)
@@ -66,7 +71,7 @@ def _motion_b(argv):
 
 
 IMPLEMENTED = {'audit': _audit, 'eval-traj': _eval_traj, 'depth': _depth, 'map': _map, 'eval-map': _eval_map,
-               'run-a': _run_a, 'detect-a': _detect_a, 'motion-b': _motion_b}
+               'run-a': _run_a, 'diagnose-a': _diagnose_a, 'detect-a': _detect_a, 'motion-b': _motion_b}
 
 
 def main(argv=None):
