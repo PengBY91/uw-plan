@@ -57,6 +57,8 @@ Ubuntu 24.04.4 / ROS2 Jazzy / 系统 Python 3.12，离线评分使用 .venv-eval
 
 在新的 build_w1_clean、install_w1_clean 和 log_w1_clean 中，按顺序、并行度 2、RelWithDebInfo、DISABLE_MATPLOTLIB=ON 重建 ov_core/ov_init/ov_msckf/ov_eval，四包成功，耗时 8 分 11 秒；新 install 的可执行入口和 launch 参数查询通过。运行入口仍使用先前同源构建的 ros_ws/install；空目录复建作为 W1-02 的可重建验证，二者不混写。
 
+（2026-10-14：build_w1_clean、install_w1_clean、log_w1_clean 已删除以释放空间；本段记录的结果和入口检查日志仍保留在 reports/w1/。需要复查时按本段命令在空目录中重新复建。）
+
 团队代码根目录已建立独立 Git，分支 codex/w1-public-baseline，无远程地址。scripts、team 源码、冻结 YAML、DDS XML、依赖与补丁锁、数据 manifest 和 Markdown 报告均版本化；vendor、ros_ws 上游 checkout、数据、结果 bag、SDK、venv、构建与缓存不进入团队 Git。上游提交号与补丁组合保持可追溯。
 
 ## 运行与评分口径

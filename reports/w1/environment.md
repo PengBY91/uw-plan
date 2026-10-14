@@ -86,6 +86,8 @@ OpenVINS 的本机版本为“上游 SHA + `locks/openvins-jazzy.patch`”。补
 
 W1-01 已完成。后续在独立空目录 build_w1_clean / install_w1_clean 完成四包复建（8 分 11 秒），入口检查通过，W1-02 已补齐验收；日志为 reports/w1/openvins-clean-rebuild.log。W1-03 数据审计已通过；公共回放及评测状态以 [[plans/acoustic-optic-w1-openvins-v101-baseline-2026-10|基线执行记录]]为准。W1-05 至 W1-09 尚未整项验收，G0 未通过。
 
+（2026-10-14：build_w1_clean、install_w1_clean、log_w1_clean 已删除以释放空间；本段记录的结果和入口检查日志仍保留在 reports/w1/。需要复查时按本段命令在空目录中重新复建。）
+
 ## 可直接执行的检查入口
 
 以下在 WSL Bash 执行。ROS 包装脚本清理继承的 Conda 环境，只加载 Jazzy、本工作区和本地库；它服务于离线构建与 CLI 检查，实机联网、显示和 DDS 参数需后续明确配置。

@@ -26,7 +26,7 @@ Subcommands:
 - `uwbench eval-traj` (W1-07/P04): APE/RPE, time coverage, lost intervals, reference-invalid vs unmatched counts, v2 per-axis exceedance; empty estimates fail.
 
 - reports/w1/backend-decision.md (W1-09): SVIn not reused (zero-elevation single-beam sonar model, sonar/depth disabled on ROS2 main); A1 (`uwbench run-a`, uwbench.a.backend) uses GTSAM 4.3.0.
-- Tests: `bash scripts/run_tests.sh` runs the uwbench suite (A detector, A1/A2 backend, B depth/map, audit, scoring) and scripts/tests/ in .venv-eval and fails on any skipped test. Since 2026-10-12 .venv-eval carries gtsam 4.3.0 and opencv-python-headless 5.0.0.93 next to the evaluation lock (numpy stays 2.2.6), so one environment runs everything; `.venv-a` (numpy 2.5.4) is the environment the W3/W4 A1/A2/B runs in reports/w3 and reports/w4 were produced with and is kept only to reproduce them.
+- Tests: `bash scripts/run_tests.sh` runs the uwbench suite (A detector, A1/A2 backend, B depth/map, audit, scoring) and scripts/tests/ in .venv-eval and fails on any skipped test. Since 2026-10-12 .venv-eval carries gtsam 4.3.0 and opencv-python-headless 5.0.0.93 next to the evaluation lock (numpy stays 2.2.6), so one environment runs everything; `.venv-a` (numpy 2.5.4), the environment the W3/W4 A1/A2/B runs in reports/w3 and reports/w4 were produced with, was deleted on 2026-10-14; rebuild it from locks/a-requirements.txt and locks/a-wheels.sha256 to reproduce those runs exactly.
 - Branches: `codex/m1-sim-baselines` (month-1 sim/public baselines: MH, fault injection, A1/A2, B0-B2c) was merged into `codex/w1-public-baseline` on 2026-10-12 (b1ede97); further work goes on the merged branch.
 The Git branch is codex/w1-public-baseline. No remote is configured by this setup.
 
