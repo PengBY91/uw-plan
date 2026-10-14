@@ -19,11 +19,11 @@ raw_files:
   bytes: 1571292346
   sha256: 5f4ecbc563e7bf04950efab76fc3b14e126d4c91a1dd1134c33124fe18a4bfc6
   whole_archive_md5_verified: false
-ros1_bag: /home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy.bag
-asl_directory: /home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy_asl/mav0
-ros2_directory: /home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy_ros2
-ground_truth_original: /home/steve/uw-ao-lab-m1/data/public/euroc/MH_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv
-ground_truth_corrected: /home/steve/uw-ao-lab-m1/ros_ws/src/open_vins/ov_data/euroc_mav/MH_01_easy.csv
+ros1_bag: /home/steve/uw-ao-lab/data/public/euroc/MH_01_easy.bag
+asl_directory: /home/steve/uw-ao-lab/data/public/euroc/MH_01_easy_asl/mav0
+ros2_directory: /home/steve/uw-ao-lab/data/public/euroc/MH_01_easy_ros2
+ground_truth_original: /home/steve/uw-ao-lab/data/public/euroc/MH_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv
+ground_truth_corrected: /home/steve/uw-ao-lab/ros_ws/src/open_vins/ov_data/euroc_mav/MH_01_easy.csv
 conversion:
   rosbags_version: 0.11.6
   ros2_distribution: jazzy
