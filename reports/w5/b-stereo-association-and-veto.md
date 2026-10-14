@@ -53,7 +53,7 @@ related: reports/w4/b-eb2-motion-primitives.md, reports/w3/b-sim-mapping.md
 
 `conservative+stereo` 与 `stereo` 在每个单元都相同，因为保守声呐规则本身不排除任何候选。
 
-## 2 距离分辨率复核（`scripts/sim_sonar_rebin.py`）
+## 2 距离分辨率复核（`scripts/data/sim_sonar_rebin.py`）
 
 射线声呐记录了每帧的命中点（`sonar_points.npy`），成像只是按格计数再加噪声。这个工具用生成器自己的 `render_sonar`，按新的 RangeBins 重新成像，增益、饱和与噪声模型都相同，随机种子固定；其余数据用符号链接。按原来的 256 个单元重新成像，回波掩码与原图的 IoU 为 0.9987。
 
@@ -130,7 +130,7 @@ V 关闭时，用新代码重跑条纹横梁真值位姿的 B2a，状态与 log-
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench motion-b --manifest data/sim/eb2_heave_v1_s01/manifest.yaml \
   --config stereo_sd1.yaml --out runs/eb2/motion_eb2_heave_v1_stereo_sd1
 # 距离分辨率：重新成像后跑默认 motion-b（转台序列用 --raw）
-.venv-eval/bin/python scripts/sim_sonar_rebin.py --run data/sim/eb2_heave_v1_s01 --range-bins 1024
+.venv-eval/bin/python scripts/data/sim_sonar_rebin.py --run data/sim/eb2_heave_v1_s01 --range-bins 1024
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench motion-b --manifest data/sim/eb2_heave_v1_s01_rb1024/manifest.yaml \
   --out runs/eb2/motion_eb2_heave_v1_rb1024
 # 声呐否决：配置文件内容为 "map:" 下一行 "  veto: true"；深度与位姿和原 B2a 运行相同（见其 map/meta.json）

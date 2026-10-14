@@ -14,14 +14,14 @@ status: execution-record
 ## 1 实现与矩阵
 
 - **后端**：与 A1 相同（`uwbench run-a`，提交 14734c4）：同一个 KLT 前端缓存、同一个真值初始化、同一套 oracle 连续跟踪关联（max_gap 1.0 s）、基础 σ 0.05 m / 1°。A2 只在声呐因子上乘一个有界标量权重 w ∈ [w_min, 1]，实现方式是把噪声标准差除以 √w；固定权重、鲁棒核、标量策略三族分别开关，不叠加。
-- **标量策略**（`uwbench/a1/weights.py`，单元测试 5 项通过）：
+- **标量策略**（`uwbench/a/backend/weights.py`，单元测试 5 项通过）：
   - `innovation`：在加入因子之前，用当前位姿和地标估计算出新观测的白化残差范数（新息），每个跟踪段单独做指数平滑（α = 0.3），带滞回：平滑值高于 high 时把权重降到 w_min，低于 low 时恢复到 1，介于两者之间时保持原状态。
   - `support`：权重随跟踪段已有观测数 n 线性上升，第一次观测为 w_min，到第 n_full 次时为 1。
-- **矩阵**：比较前写定的 `configs/w4_matrix.yaml`（2026-10-12，`changes: []`，之后没有改动），候选由 `scripts/a2_configs.py` 生成到 `configs/a2/`（17 组）。
+- **矩阵**：比较前写定的 `configs/w4_matrix.yaml`（2026-10-12，`changes: []`，之后没有改动），候选由 `scripts/experiments/a2_configs.py` 生成到 `configs/a2/`（17 组）。
   - 开发集：`stripe_beam_v1_s01..s03`。验证集：`pilaster_wall_v1_s01`、`stripe_wall_h_v1_s01`、`slope_wall_v1_s01`。
   - 固定权重：σ × {0.5, 2, 4}；鲁棒核：Huber k ∈ {1, 1.345, 2}，Cauchy k ∈ {0.5, 1, 2}；标量：innovation w_min ∈ {0.1, 0.3} × (high, low) ∈ {(3, 1.5), (2, 1)}，support w_min ∈ {0.1, 0.3} × n_full ∈ {5, 20}。
   - 选择规则：只看开发集；主指标是开发集上 causal 公共 APE RMSE 的中位数；任一开发数据集失败即不入选（结果保留）；平局时先比风险模式最大位置轴误差的中位数，再比非默认参数个数少者。每族选一个冠军，加上参照 `sonar_off`、`fixed`，在验证集上各跑一次。
-- **评分**：`eval-traj --config configs/a1/eval_traj_10hz.yaml`，评 `trajectory_causal.tum`；汇总和选择由 `scripts/summarize_a_runs.py --select` 完成，只读取运行证据。
+- **评分**：`eval-traj --config configs/a1/eval_traj_10hz.yaml`，评 `trajectory_causal.tum`；汇总和选择由 `scripts/experiments/summarize_a_runs.py --select` 完成，只读取运行证据。
 
 ## 2 开发集结果（条纹横梁 s01 / s02 / s03）
 
@@ -106,7 +106,7 @@ status: execution-record
 ## 6 复现命令
 
 ```bash
-.venv-eval/bin/python scripts/a2_configs.py            # configs/w4_matrix.yaml -> configs/a2/*.yaml
+.venv-eval/bin/python scripts/experiments/a2_configs.py            # configs/w4_matrix.yaml -> configs/a2/*.yaml
 for DS in stripe_beam_v1_s01 stripe_beam_v1_s02 stripe_beam_v1_s03; do
   for CF in configs/a1/sonar_off.yaml configs/a1/fixed.yaml configs/a2/*.yaml; do
     C=$(basename $CF .yaml); R=runs/sim_${DS}_a2_${C}_r01
@@ -114,6 +114,6 @@ for DS in stripe_beam_v1_s01 stripe_beam_v1_s02 stripe_beam_v1_s03; do
     PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench eval-traj --manifest data/sim/$DS/manifest.yaml --config configs/a1/eval_traj_10hz.yaml --estimate $R/trajectory_causal.tum --out $R/eval-traj-causal
   done
 done
-.venv-eval/bin/python scripts/summarize_a_runs.py --runs runs --datasets stripe_beam_v1_s01 stripe_beam_v1_s02 stripe_beam_v1_s03 --select --out dev_summary.json
+.venv-eval/bin/python scripts/experiments/summarize_a_runs.py --runs runs --datasets stripe_beam_v1_s01 stripe_beam_v1_s02 stripe_beam_v1_s03 --select --out dev_summary.json
 # validation: the same loop over the validation datasets with the two references and the three winners only
 ```

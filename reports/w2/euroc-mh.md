@@ -13,10 +13,10 @@ status: execution-record
 
 | 环节 | 实际情况 |
 | --- | --- |
-| 来源 | ETH Research Collection `machine_hall.zip`（12,683,729,426 字节，MD5 363f5c25…，见 `locks/eth-files.json`）。没有下载整个包：`scripts/download_euroc.py --list-entries` 用 HTTP Range 读 ZIP64 中央目录（用同样方法重建的 vicon_room1 条目与历史的 `locks/archive-entries.json` 逐字节一致），然后只取 `MH_01_easy`、`MH_02_easy` 的 `.bag` 和 `.zip` 四个成员 |
+| 来源 | ETH Research Collection `machine_hall.zip`（12,683,729,426 字节，MD5 363f5c25…，见 `locks/eth-files.json`）。没有下载整个包：`scripts/data/download_euroc.py --list-entries` 用 HTTP Range 读 ZIP64 中央目录（用同样方法重建的 vicon_room1 条目与历史的 `locks/archive-entries.json` 逐字节一致），然后只取 `MH_01_easy`、`MH_02_easy` 的 `.bag` 和 `.zip` 四个成员 |
 | 校验 | 每个成员都核对了 Content-Range，解压后 CRC32 与中央目录一致，并记录了本地 SHA256（`manifests/euroc_mh01.yaml`、`euroc_mh02.yaml`）。没有校验整包 MD5，因为没有下载整包 |
 | 限流 | 服务器按请求次数返回 HTTP 429，且不带 Retry-After；16–128 MB 分块下载基本卡死。下载器改为每个成员只发一个流式 Range 请求，中断时从本地断点续传，退避时间为分钟级 |
-| 转换与审计 | `scripts/prepare_euroc.py --sequence`：rosbags 0.11.6 转为 ROS2 Jazzy MCAP；`audit_euroc.py` 逐条比对 ROS1 与 ROS2 的全部消息（排除 Header.seq），并与 ASL 文件夹核对图像像素抽样、时间戳（≤128 ns）和 IMU 数值（≤1e-6）。MH_01：IMU 36820，双目各 3682，Leica 3099；ASL 7384 个条目通过 CRC。MH_02：IMU 30400，双目各 3040；ASL 6100 个条目通过 CRC。两条序列的审计都通过 |
+| 转换与审计 | `scripts/data/prepare_euroc.py --sequence`：rosbags 0.11.6 转为 ROS2 Jazzy MCAP；`audit_euroc.py` 逐条比对 ROS1 与 ROS2 的全部消息（排除 Header.seq），并与 ASL 文件夹核对图像像素抽样、时间戳（≤128 ns）和 IMU 数值（≤1e-6）。MH_01：IMU 36820，双目各 3682，Leica 3099；ASL 7384 个条目通过 CRC。MH_02：IMU 30400，双目各 3040；ASL 6100 个条目通过 CRC。两条序列的审计都通过 |
 | 真值 | 每条序列只用自己的真值，不混用。OpenVINS 自带的 `ov_data/euroc_mav/MH_0x_easy.csv` 与 ETH 原始的 `state_groundtruth_estimate0/data.csv` SHA256 相同（OpenVINS 只修正了 V1_01），所以下表中"修正"和"原始"两套参考给出的 APE 相同 |
 
 ## 运行与结果
@@ -57,14 +57,14 @@ status: execution-record
 
 ```bash
 S=<staging>; cp locks/eth-files.json locks/eth-item.json $S/
-.venv-eval/bin/python scripts/download_euroc.py --stage $S --sequence MH_01_easy --list-entries
-.venv-eval/bin/python scripts/download_euroc.py --stage $S --sequence MH_01_easy
-.venv-eval/bin/python scripts/prepare_euroc.py --lab "$PWD" --stage $S --sequence MH_01_easy --report reports/w2/euroc-mh --manifest manifests/euroc_mh01.yaml
+.venv-eval/bin/python scripts/data/download_euroc.py --stage $S --sequence MH_01_easy --list-entries
+.venv-eval/bin/python scripts/data/download_euroc.py --stage $S --sequence MH_01_easy
+.venv-eval/bin/python scripts/data/prepare_euroc.py --lab "$PWD" --stage $S --sequence MH_01_easy --report reports/w2/euroc-mh --manifest manifests/euroc_mh01.yaml
 RUN=euroc_mh01_a0_r01; AUD=$PWD/reports/w2/euroc-mh/mh_01_easy-data-audit/audit.json; BAG=$PWD/data/public/euroc/MH_01_easy_ros2
-bash scripts/ros-cyclone-run.sh /usr/bin/python3 scripts/run_openvins.py --lab "$PWD" --bag $BAG --run-id $RUN --rate 1.0 --imu-history-depth 1000 --imu-reliability reliable --dataset-audit $AUD
-.venv-eval/bin/python scripts/audit_input_trace.py --bag $BAG --run $PWD/runs/$RUN
-.venv-eval/bin/python scripts/evaluate_openvins.py --run $PWD/runs/$RUN --audit $AUD --gt-original $PWD/data/public/euroc/MH_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv --gt-corrected $PWD/ros_ws/src/open_vins/ov_data/euroc_mav/MH_01_easy.csv --sequence MH_01_easy
-.venv-eval/bin/python scripts/check_replay_acceptance.py --run $PWD/runs/$RUN --dataset-audit $AUD
+bash scripts/env/ros_cyclone_run.sh /usr/bin/python3 scripts/openvins/run_openvins.py --lab "$PWD" --bag $BAG --run-id $RUN --rate 1.0 --imu-history-depth 1000 --imu-reliability reliable --dataset-audit $AUD
+.venv-eval/bin/python scripts/openvins/audit_input_trace.py --bag $BAG --run $PWD/runs/$RUN
+.venv-eval/bin/python scripts/openvins/evaluate_openvins.py --run $PWD/runs/$RUN --audit $AUD --gt-original $PWD/data/public/euroc/MH_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv --gt-corrected $PWD/ros_ws/src/open_vins/ov_data/euroc_mav/MH_01_easy.csv --sequence MH_01_easy
+.venv-eval/bin/python scripts/openvins/check_replay_acceptance.py --run $PWD/runs/$RUN --dataset-audit $AUD
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench eval-traj --manifest manifests/euroc_mh01_run.yaml --estimate runs/$RUN/estimate_bag --out runs/$RUN/eval-traj
 ```
 

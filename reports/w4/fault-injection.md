@@ -20,7 +20,7 @@ status: execution-record
 
 ## 注入工具与派生数据
 
-`scripts/inject_fault.py`：输入一个已通过审计的 ROS2 bag，输出新 bag 加 `fault.json`；原始数据只读。三类故障分开实验，每份派生数据只含一种故障：
+`scripts/data/inject_fault.py`：输入一个已通过审计的 ROS2 bag，输出新 bag 加 `fault.json`；原始数据只读。三类故障分开实验，每份派生数据只含一种故障：
 
 | 故障 | 操作 | 改了哪个时间 |
 | --- | --- | --- |
@@ -28,7 +28,7 @@ status: execution-record
 | offset 固定时间偏移 | 给 /imu0 每条消息的 header.stamp 统一加 Δt | 只改采样时间 header.stamp；bag 记录时间不变，所以回放节奏不变 |
 | outage 消息中断 | 删掉某一路在 [60 s, 60 s + D) 内的所有消息 | 只删消息 |
 
-时间偏移选择改 IMU 而不改相机，原因是这样 OpenVINS 输出的时间戳仍在相机时钟上，评分时不需要换算（相对偏移等价）。`fault.json` 记录：父 bag 每个文件的 SHA256、父数据审计、种子、区间（绝对 ns 和相对起点的秒数）、参数、改的是哪个时间、复制的话题，以及输出文件的 SHA256。写完后重新读取输出 bag，逐话题核对时间戳与预期完全一致、严格递增，不一致则以非零状态退出。工具测试见 `scripts/test_inject_fault.py`，共 5 项：成对删帧、种子可复现、偏移只改 header 不改记录时间、中断窗口、拒绝覆盖和拒绝未通过审计的父数据。
+时间偏移选择改 IMU 而不改相机，原因是这样 OpenVINS 输出的时间戳仍在相机时钟上，评分时不需要换算（相对偏移等价）。`fault.json` 记录：父 bag 每个文件的 SHA256、父数据审计、种子、区间（绝对 ns 和相对起点的秒数）、参数、改的是哪个时间、复制的话题，以及输出文件的 SHA256。写完后重新读取输出 bag，逐话题核对时间戳与预期完全一致、严格递增，不一致则以非零状态退出。工具测试见 `scripts/tests/test_inject_fault.py`，共 5 项：成对删帧、种子可复现、偏移只改 header 不改记录时间、中断窗口、拒绝覆盖和拒绝未通过审计的父数据。
 
 派生 bag 只复制算法用到的三个话题（cam0、cam1、imu0），位于 `data/derived/fault/<父数据>_<故障>/`，共 37 GB。它们被运行记录引用；2026-10-13 清理时删除了 .mcap，保留 fault.json、metadata.yaml 和 `mcap-checksums.sha256`，可按同一种子和参数重新生成并对照校验和；按种子和参数可以重新生成。
 
@@ -132,16 +132,16 @@ V1_01 的掉帧段起点为 18.6、68.1、73.1、101.1、124.1 s（相对 bag �
 - 每种故障在每个父数据上只跑了 1 次，没有重复，种子只取了一个值。
 - 仿真父数据的对照本身已严重越限，对相机故障的分辨力有限；下一步应换一条无越限的仿真航段（比如 Dam）作父数据。
 - 两个父数据反应不同的原因（配置差异还是运动强度差异）没有隔离。可以用 V1 加关闭在线时间偏移的配置补一组对照。
-- `benchmark` 子命令（P11 前半）没有实现，CLI 仍以非零状态退出；本轮用批处理脚本加各运行目录内的 run.json、input-audit.json 和 eval-traj 记录代替，汇总由 `scripts/summarize_fault_runs.py` 读取这些记录生成。
+- `benchmark` 子命令（P11 前半）没有实现，CLI 仍以非零状态退出；本轮用批处理脚本加各运行目录内的 run.json、input-audit.json 和 eval-traj 记录代替，汇总由 `scripts/experiments/summarize_fault_runs.py` 读取这些记录生成。
 
 ## 复现命令
 
 ```bash
-.venv-eval/bin/python scripts/inject_fault.py --src data/public/euroc/V1_01_easy_ros2 --parent-audit reports/w1/v101-data-audit/audit.json --out data/derived/fault/v101_camdrop05 --fault dropout --stream cam --bursts 5 --burst-frames 5 --seed 1
-.venv-eval/bin/python scripts/inject_fault.py ... --fault offset --stream imu --offset-ms 15
-.venv-eval/bin/python scripts/inject_fault.py ... --fault outage --stream cam --start-s 60 --duration-s 6
-bash scripts/ros-cyclone-run.sh /usr/bin/python3 scripts/run_openvins.py --lab "$PWD" --bag "$PWD/data/derived/fault/v101_camdrop05" --run-id fault_v101_camdrop05_a0_r01 --rate 1.0 --imu-history-depth 1000 --imu-reliability reliable --config-dir "$PWD/configs/euroc_v101" --dataset-audit "$PWD/data/derived/fault/v101_camdrop05/fault.json"
-.venv-eval/bin/python scripts/audit_input_trace.py --bag data/derived/fault/v101_camdrop05 --run runs/fault_v101_camdrop05_a0_r01
+.venv-eval/bin/python scripts/data/inject_fault.py --src data/public/euroc/V1_01_easy_ros2 --parent-audit reports/w1/v101-data-audit/audit.json --out data/derived/fault/v101_camdrop05 --fault dropout --stream cam --bursts 5 --burst-frames 5 --seed 1
+.venv-eval/bin/python scripts/data/inject_fault.py ... --fault offset --stream imu --offset-ms 15
+.venv-eval/bin/python scripts/data/inject_fault.py ... --fault outage --stream cam --start-s 60 --duration-s 6
+bash scripts/env/ros_cyclone_run.sh /usr/bin/python3 scripts/openvins/run_openvins.py --lab "$PWD" --bag "$PWD/data/derived/fault/v101_camdrop05" --run-id fault_v101_camdrop05_a0_r01 --rate 1.0 --imu-history-depth 1000 --imu-reliability reliable --config-dir "$PWD/configs/euroc_v101" --dataset-audit "$PWD/data/derived/fault/v101_camdrop05/fault.json"
+.venv-eval/bin/python scripts/openvins/audit_input_trace.py --bag data/derived/fault/v101_camdrop05 --run runs/fault_v101_camdrop05_a0_r01
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench eval-traj --manifest manifests/euroc_v101_run.yaml --estimate runs/fault_v101_camdrop05_a0_r01/estimate_bag --out runs/fault_v101_camdrop05_a0_r01/eval-traj
-.venv-eval/bin/python scripts/summarize_fault_runs.py --runs runs --derived data/derived/fault --parent v101 --control fault_v101_control_a0_r02 --out <summary.json>
+.venv-eval/bin/python scripts/experiments/summarize_fault_runs.py --runs runs --derived data/derived/fault --parent v101 --control fault_v101_control_a0_r02 --out <summary.json>
 ```

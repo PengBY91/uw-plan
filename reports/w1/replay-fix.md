@@ -69,10 +69,10 @@ r08 进一步验证：仅刷新时间上界仍不够。最后一对双目回调�
 | 同上 | ImageTransport 与发布者共同存活，按成员销毁次序先释放发布者再释放其 transport |
 | run_subscribe_msckf.cpp | executor 退出后停止并 join 线程，再做最终输出、销毁对象和 ROS shutdown |
 | subscribe.launch.py | 暴露 imu_history_depth 与 imu_reliable；裸 launch 保留 best-effort 默认，以兼容只提供 best-effort 的实机驱动 |
-| scripts/run_openvins.py | 公共 bag 运行器明确默认 reliable、depth=1000；只给 launch 发送一次 SIGINT；记录代码提交、二进制和共享库哈希、参数、子进程异常 |
+| scripts/openvins/run_openvins.py | 公共 bag 运行器明确默认 reliable、depth=1000；只给 launch 发送一次 SIGINT；记录代码提交、二进制和共享库哈希、参数、子进程异常 |
 | 同上 | 团队仓库和 OpenVINS 源码均要求干净 Git 状态；唯一 run_id，禁止覆盖历史结果 |
-| scripts/audit_input_trace.py | 逐条核对算法接收与更新，检查缺失、重复、顺序、双目错配 |
-| scripts/check_replay_acceptance.py | 对已保存 run、输入审计和评分文件应用预设门槛，写 regression-acceptance.json；失败返回非零 |
+| scripts/openvins/audit_input_trace.py | 逐条核对算法接收与更新，检查缺失、重复、顺序、双目错配 |
+| scripts/openvins/check_replay_acceptance.py | 对已保存 run、输入审计和评分文件应用预设门槛，写 regression-acceptance.json；失败返回非零 |
 
 可靠订阅要求发布端也提供 reliable。本次回放端实测 reliable、深度 10，算法端 reliable、深度 1000；实际端点信息保存在每次运行的 imu-qos.txt。实机驱动若仅 best-effort，必须先检查 QoS 兼容性，再决定驱动发布策略与订阅配置；不能直接照搬公共回放配置后把不匹配误判为设备无数据。
 
@@ -114,13 +114,13 @@ r08 进一步验证：仅刷新时间上界仍不够。最后一对双目回调�
 cd /home/steve/uw-ao-lab
 git status --short
 git -C ros_ws/src/open_vins status --short
-bash scripts/build-openvins.sh
+bash scripts/env/build_openvins.sh
 sudo /usr/sbin/sysctl -w net.core.rmem_max=16777216
 RUN=w1_v101_a0_r11
-bash scripts/ros-cyclone-run.sh /usr/bin/python3 scripts/run_openvins.py --lab "$PWD" --bag "$PWD/data/public/euroc/V1_01_easy_ros2" --run-id "$RUN" --rate 1.0 --imu-history-depth 1000 --imu-reliability reliable
-.venv-eval/bin/python scripts/audit_input_trace.py --bag "$PWD/data/public/euroc/V1_01_easy_ros2" --run "$PWD/runs/$RUN"
-.venv-eval/bin/python scripts/evaluate_openvins.py --run "$PWD/runs/$RUN" --audit "$PWD/reports/w1/v101-data-audit/audit.json" --gt-original "$PWD/data/public/euroc/V1_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv" --gt-corrected "$PWD/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"
-.venv-eval/bin/python scripts/check_replay_acceptance.py --run "$PWD/runs/$RUN"
+bash scripts/env/ros_cyclone_run.sh /usr/bin/python3 scripts/openvins/run_openvins.py --lab "$PWD" --bag "$PWD/data/public/euroc/V1_01_easy_ros2" --run-id "$RUN" --rate 1.0 --imu-history-depth 1000 --imu-reliability reliable
+.venv-eval/bin/python scripts/openvins/audit_input_trace.py --bag "$PWD/data/public/euroc/V1_01_easy_ros2" --run "$PWD/runs/$RUN"
+.venv-eval/bin/python scripts/openvins/evaluate_openvins.py --run "$PWD/runs/$RUN" --audit "$PWD/reports/w1/v101-data-audit/audit.json" --gt-original "$PWD/data/public/euroc/V1_01_easy_asl/mav0/state_groundtruth_estimate0/data.csv" --gt-corrected "$PWD/ros_ws/src/open_vins/ov_data/euroc_mav/V1_01_easy.csv"
+.venv-eval/bin/python scripts/openvins/check_replay_acceptance.py --run "$PWD/runs/$RUN"
 ```
 
 运行前选未使用的 run_id。原始数据、完整日志、trace、输出 bag、评分与图片均保留在 runs，不提交大文件。`status=scored` 只表示评分完成；只有完整输入审计及 regression-acceptance.json 全部通过，才算一次回归通过。此处 sysctl 为临时设置，重启 WSL 后需重新检查。

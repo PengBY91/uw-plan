@@ -36,13 +36,13 @@ status: living
 | A1/A2 后端在斜墙上报 `Indeterminate linear system` | 已修复（提交 d58e76e，出错时从完整因子图重建 iSAM2；未触发的运行逐字节不变）。斜墙每次运行仍需 12–55 次重建 | 从根上解决（固定滞后平滑器，或限制变量间信息量跨度）需要改后端并重跑 A1/A2 矩阵 |
 | 恒深航段中点地标的仰角弱可观 | 声呐地标误差 0.25–0.73 m，A1 没有收益 | 跨重访关联（需要真实数据关联）、平面结构因子 |
 | 风险模式对齐窗口放大初始偏航瞬态 | 所有 A 配置的 x 误差都在米级 | 按协议保留；等 `configs/acceptance_w2.yaml` 冻结 |
-| `eval-map` 的占据召回统计的是结构内部 | 会奖励位姿拖影 | 已用 `scripts/b_surface_occupancy.py` 补充；建议给 `eval-map` 增加表面召回字段 |
+| `eval-map` 的占据召回统计的是结构内部 | 会奖励位姿拖影 | 已用 `scripts/experiments/b_surface_occupancy.py` 补充；建议给 `eval-map` 增加表面召回字段 |
 | A1/A2 没有报警字段 | 越限而未报警的风险不可评 | W5 方向 / 健康输出 |
 | Dam 场景没有道具 | 没有 A1 oracle 地标，也没有 B 的长方体参考 | 从世界网格生成参考 |
 | 平台垂直孔径、D1–D3 实测数据 | W3-01、W3-03、W3-06、W4-03 的平台部分都被阻塞 | 等 W2-12 和水池采集 |
 
 ## 数据与存储
 
-- `data/derived/fault/`：37 GB，W4-05 的派生 bag，可用 `scripts/inject_fault.py` 重新生成。 2026-10-13 清理后目录内只保留每个派生数据的 fault.json、metadata.yaml 和 `mcap-checksums.sha256`（删除前记录的 20 个 .mcap 的 SHA-256）；重新生成后应与该文件逐一对照。
+- `data/derived/fault/`：37 GB，W4-05 的派生 bag，可用 `scripts/data/inject_fault.py` 重新生成。 2026-10-13 清理后目录内只保留每个派生数据的 fault.json、metadata.yaml 和 `mcap-checksums.sha256`（删除前记录的 20 个 .mcap 的 SHA-256）；重新生成后应与该文件逐一对照。
 - `data/public/euroc/MH_0{1,2}_easy*`：约 10 GB，被 `manifests/euroc_mh0{1,2}.yaml` 引用。
 - 运行目录 `runs/sim_*_a1_*`、`*_a2_*`、`*_b*_*`、`euroc_mh0*_a0_*`、`fault_*`：都被报告引用，失败运行一并保留。

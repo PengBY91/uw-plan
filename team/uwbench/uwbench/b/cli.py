@@ -22,8 +22,8 @@ import numpy as np
 import yaml
 from scipy.spatial.transform import Rotation, Slerp
 
-from uwbench.mapping import VoxelGrid, truth_from_boxes
-from uwbench.metrics.occupancy import map_ratios
+from uwbench.b.voxel_map import VoxelGrid, truth_from_boxes
+from uwbench.b.occupancy import map_ratios
 
 DEFAULTS = {'resolution_m': 0.10, 'stereo_pixel_stride': 4, 'max_stereo_range_m': 6.0, 'sonar_stride': 5, 'veto': False,
             'sonar_threshold': 0.25, 'roi_margin_m': {'x': 3.0, 'y_behind_props': 1.0, 'y_vehicle': 0.5, 'z': 1.5},
@@ -45,13 +45,13 @@ class Poses:
             T = ds.gt[:, 1:].reshape(-1, 4, 4)
             self.R, self.p = T[:, :3, :3], T[:, :3, 3]
             return
-        from uwbench.a1.simdata import EPOCH_S
+        from uwbench.a.backend.simdata import EPOCH_S
         path = Path(source)
         if path.is_file():
             d = np.loadtxt(path).reshape(-1, 8)
             t, p, R = d[:, 0] - EPOCH_S, d[:, 1:4], Rotation.from_quat(d[:, 4:8]).as_matrix()
         else:
-            from uwbench.trajectory import read_estimate
+            from uwbench.eval_traj import read_estimate
             t, R, p, _ = read_estimate(path/'estimate_bag', '/ov_msckf/poseimu')
             t = t - EPOCH_S
             from uwbench.metrics.axes import align_yaw_translation
@@ -79,7 +79,7 @@ def route_roi(ds, cfg, boxes):
     m = cfg['roi_margin_m']
     T = ds.gt[:, 1:].reshape(-1, 4, 4)
     traj = T[:, :3, 3]
-    from uwbench.a1.simdata import nominal_sonar_height
+    from uwbench.a.backend.simdata import nominal_sonar_height
     z0 = nominal_sonar_height(ds)
     lo = np.array([traj[:, 0].min() - m['x'], traj[:, 1].min() - m['y_vehicle'], z0 - m['z']])
     hi = np.array([traj[:, 0].max() + m['x'], max(b[1][1] for b in boxes) + m['y_behind_props'], z0 + m['z']])
@@ -118,7 +118,7 @@ def map_main(argv):
     args = parser.parse_args(argv)
     if args.out.exists():
         parser.error('Refusing to overwrite ' + str(args.out))
-    from uwbench.a1.simdata import SimDataset
+    from uwbench.a.backend.simdata import SimDataset
     from uwbench.b.scene import boxes_from_props
     from uwbench.b.sonar_map import SonarUpdater
     cfg = merge(DEFAULTS, (yaml.safe_load(args.config.read_text()) or {}).get('map') if args.config else None)
@@ -197,7 +197,7 @@ def eval_main(argv):
     args = parser.parse_args(argv)
     if args.out.exists():
         parser.error('Refusing to overwrite ' + str(args.out))
-    from uwbench.a1.simdata import SimDataset
+    from uwbench.a.backend.simdata import SimDataset
     from uwbench.b.scene import boxes_from_props
     ds = SimDataset(args.manifest)
     boxes = boxes_from_props(ds.route['props'])

@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from scipy.spatial.transform import Rotation
-from uwbench.trajectory import evaluate
+from uwbench.eval_traj import evaluate
 
 
 def circle(t):

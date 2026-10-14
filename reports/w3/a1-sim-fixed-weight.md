@@ -131,5 +131,5 @@ for C in sonar_off fixed huber cauchy fixed_revisit; do
   PYTHONPATH=team/uwbench .venv-a/bin/python -m uwbench run-a --manifest $M --config configs/a1/$C.yaml --tracks runs/sim_${DS}_a1_frontend_r01/tracks.npz --out $R
   for K in causal smoothed; do PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench eval-traj --manifest $M --config configs/a1/eval_traj_10hz.yaml --estimate $R/trajectory_$K.tum --out $R/eval-traj-$K; done
 done
-.venv-eval/bin/python scripts/summarize_a_runs.py --runs runs --tag a1 --run-suffix r02 --datasets pilaster_wall_v1_s01 stripe_wall_h_v1_s01 stripe_beam_v1_s01 slope_wall_v1_s01 --out a1_summary.json
+.venv-eval/bin/python scripts/experiments/summarize_a_runs.py --runs runs --tag a1 --run-suffix r02 --datasets pilaster_wall_v1_s01 stripe_wall_h_v1_s01 stripe_beam_v1_s01 slope_wall_v1_s01 --out a1_summary.json
 ```

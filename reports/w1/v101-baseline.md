@@ -67,7 +67,7 @@ Ubuntu 24.04.4 / ROS2 Jazzy / 系统 Python 3.12，离线评分使用 .venv-eval
 
 APE 使用完整匹配轨迹 SE(3) 对齐，禁止尺度拟合；真值关联阈值 10 ms、固定偏移 0。RPE 按实际输出时间选择 1 s 和 5 s 配对，容差 25 ms，使用 evo 的标准相对位姿误差公式，分别报告平移 m 与旋转 degree；保存所有配对索引、实际间隔和配对数。时间配对的五项测试通过，覆盖空轨迹、重复时间、缺帧与已知相对误差等情况。
 
-当前 evo 1.37.1 的 delta_unit 不支持 s。原手册中的秒单位命令已更正；20 帧/100 帧只作为均匀 20 Hz 示例，本次真实秒间隔评分使用 scripts/evaluate_openvins.py，不把固定帧数误记为秒。
+当前 evo 1.37.1 的 delta_unit 不支持 s。原手册中的秒单位命令已更正；20 帧/100 帧只作为均匀 20 Hz 示例，本次真实秒间隔评分使用 scripts/openvins/evaluate_openvins.py，不把固定帧数误记为秒。
 
 ## 实际运行结果
 
@@ -133,7 +133,7 @@ APE 使用完整匹配轨迹 SE(3) 对齐，禁止尺度拟合；真值关联阈
 
 Cyclone DDS 安装在 local/cyclone/opt/ros/jazzy，采用 rmw_cyclonedds_cpp 2.2.4（ROS 官方仓库构建 20260911.095700）和 Cyclone DDS 0.10.5，附带三个 iceoryx 2.0.6 包；均按官方 HTTPS Packages 索引 SHA256 核对后解包。旧 APT 索引中的 rmw 包构建已下线，最终实际下载版本及 URL/哈希见 locks/cyclone-debs.json。没有替换 /opt/ros/jazzy 系统包。
 
-DDS 使用回环 lo、禁用 multicast、静态 peer 127.0.0.1、ROS_DOMAIN_ID=76。配置为 configs/cyclonedds-local.xml；运行通过 scripts/ros-cyclone-run.sh 注入项目本地库，不加载 Conda。
+DDS 使用回环 lo、禁用 multicast、静态 peer 127.0.0.1、ROS_DOMAIN_ID=76。配置为 configs/cyclonedds-local.xml；运行通过 scripts/env/ros_cyclone_run.sh 注入项目本地库，不加载 Conda。
 
 ## 复现入口
 
@@ -149,7 +149,7 @@ r04 当时使用 0.5×、默认 IMU best-effort 深度 5，仅带 Jazzy 头文�
 | --- | --- |
 | scripts/ | 下载、入库、全量审计、原生解码核对、隔离运行、实际秒间隔评分及测试 |
 | configs/euroc_v101/ | 三份冻结算法 YAML；文件哈希保存在每次 run.json |
-| configs/cyclonedds-local.xml、scripts/ros-cyclone-run.sh | 实际通过的 WSL 本地通信配置与入口 |
+| configs/cyclonedds-local.xml、scripts/env/ros_cyclone_run.sh | 实际通过的 WSL 本地通信配置与入口 |
 | manifests/euroc_v101.yaml | 数据大小、来源、SHA256、转换版本、标定、双真值登记 |
 | locks/ | 上游 SHA、依赖、Jazzy 补丁、DDS 包回执、构建指纹、临时 sysctl 前后值及下载元数据 |
 | reports/w1/baseline-summary.json | 四次运行的精简指标、退出码、原始证据哈希，纳入 Git |

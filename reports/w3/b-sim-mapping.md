@@ -16,7 +16,7 @@ updated: 2026-10-12
 
 | 项目 | 内容 |
 | --- | --- |
-| 代码 | 运行 worktree 提交 1b0593e（`uwbench depth`、`map`、`eval-map`，`uwbench/b/`）；表面带指标是 `scripts/b_surface_occupancy.py`，事后读取 `map.npz` 计算 |
+| 代码 | 运行 worktree 提交 1b0593e（`uwbench depth`、`map`、`eval-map`，`uwbench/b/`）；表面带指标是 `scripts/experiments/b_surface_occupancy.py`，事后读取 `map.npz` 计算 |
 | 场景 | `pilaster_wall_v1_s01`（壁柱墙）、`stripe_beam_v1_s01`（条纹横梁，有上下结构）、`slope_wall_v1_s01`（35° 斜墙）。Dam 没有跑：`configs/sim/dam_wall_v1.json` 没有道具（props 为 0），大墙是世界自带的几何，无法用道具长方体生成参考 |
 | 声呐图像 | 壁柱墙和斜墙用 `raw/` 中的声呐图像；条纹横梁用补录的 `sonar_raycast/`，因为原始 ImagingSonar 看不到道具（见 `reports/w2/sim-w2-11.md`）。回波定义为强度 > 0.25 的像素；每 5 帧声呐取 1 帧。垂直孔径 20°，是仿真设定 |
 | 双目深度（B0） | OpenCV SGBM（3WAY，128 视差，块 5），左右一致性 ≤ 1 px，纹理标准差 ≥ 1.0（去掉雾区无纹理误匹配），深度 0.3–8 m，每 10 帧取 1 帧，像素步长 4，积分上限 6 m。无效深度不产生空闲射线 |
@@ -97,7 +97,7 @@ B2c 的三态体素数（真值位姿）：壁柱墙占据 15656、已验证空 
 
 `eval-map` 的参考 `truth_from_boxes` 会去掉结构边界两侧排除带内的体素，剩下的"真占据"大多是长方体内部。相机和声呐只能看到表面，内部体素被判为占据只可能来自位姿或深度误差把表面向内拖。例如壁柱墙 B0 用真值位姿的占据召回是 0.046，用 A1 位姿反而是 0.215。核对结果是：真值位姿下，深于 0.10 m 的内部占据体素占 9.1%；A1 位姿下占 33.4%。召回上升来自拖影，不是地图更好。
 
-因此本报告不用 `eval-map` 的占据召回比较方法，改用 `scripts/b_surface_occupancy.py`（2026-10-12 起这些指标并入 `eval-map`，见第 8 节）：把体素中心按到长方体表面的有符号距离分成结构外侧、表面带（±0.10 m）和内部三类；"可见表面召回"是面向航线一侧的表面带中被判为占据的比例。原始 `eval-map` 的输出（含占据召回）保留在每个运行目录，`tables.md` 也照录，没有修改共享的 `eval-map` 行为。建议之后在 `eval-map` 里增加一个表面召回字段，同时保留原有字段。
+因此本报告不用 `eval-map` 的占据召回比较方法，改用 `scripts/experiments/b_surface_occupancy.py`（2026-10-12 起这些指标并入 `eval-map`，见第 8 节）：把体素中心按到长方体表面的有符号距离分成结构外侧、表面带（±0.10 m）和内部三类；"可见表面召回"是面向航线一侧的表面带中被判为占据的比例。原始 `eval-map` 的输出（含占据召回）保留在每个运行目录，`tables.md` 也照录，没有修改共享的 `eval-map` 行为。建议之后在 `eval-map` 里增加一个表面召回字段，同时保留原有字段。
 
 ## 5 B2c 复现偏差表
 
@@ -137,7 +137,7 @@ for P in gt runs/sim_${DS}_a0_r01 runs/sim_${DS}_a1_sonar_off_r02/trajectory_cau
     for BAND in 0.10 0.05; do PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench eval-map --manifest $M --map $RUN/map --band-m $BAND --out $RUN/eval-map-band$BAND; done
   done
 done
-PYTHONPATH=team/uwbench .venv-eval/bin/python scripts/b_surface_occupancy.py --manifest $M --maps runs/sim_${DS}_b*_*_r01/map --out reports/w3/b-sim/surface_stripe_beam.json
+PYTHONPATH=team/uwbench .venv-eval/bin/python scripts/experiments/b_surface_occupancy.py --manifest $M --maps runs/sim_${DS}_b*_*_r01/map --out reports/w3/b-sim/surface_stripe_beam.json
 ```
 
 ## 8 评审步骤 3：可见 ROI、表面召回与主曲线（2026-10-12）

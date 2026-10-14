@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from uwbench.mapping import FREE, OCCUPIED, UNKNOWN, VoxelGrid
+from uwbench.b.voxel_map import FREE, OCCUPIED, UNKNOWN, VoxelGrid
 from uwbench.b.sonar_map import SonarUpdater, cell_geometry
 
 try:
@@ -98,7 +98,7 @@ class SonarUpdateTests(unittest.TestCase):
         self.assertAlmostEqual(float(theta(0)), -np.radians(60) + da/2)   # column 0 is the right edge (negative bearing)
 
 
-@unittest.skipIf(cv2 is None, 'OpenCV not installed (use .venv-a)')
+@unittest.skipIf(cv2 is None, 'OpenCV not installed (run scripts/run_tests.sh, which uses .venv-eval)')
 class DepthTests(unittest.TestCase):
     def test_fronto_parallel_plane_depth_and_masks(self):
         rng = np.random.default_rng(0)

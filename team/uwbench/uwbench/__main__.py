@@ -31,12 +31,12 @@ def _audit(argv):
 
 
 def _eval_traj(argv):
-    from uwbench.trajectory import main
+    from uwbench.eval_traj import main
     return main(argv)
 
 
 def _run_a(argv):
-    from uwbench.a1.cli import main  # needs gtsam/cv2 (in .venv-eval since 2026-10-12)
+    from uwbench.a.backend.cli import main  # needs gtsam/cv2 (in .venv-eval since 2026-10-12)
     return main(argv)
 
 
@@ -56,12 +56,12 @@ def _eval_map(argv):
 
 
 def _diagnose_a(argv):
-    from uwbench.a1.diagnose import main  # needs gtsam
+    from uwbench.a.backend.diagnose import main  # needs gtsam
     return main(argv)
 
 
 def _detect_a(argv):
-    from uwbench.detect import main
+    from uwbench.a.detect.cli import main
     return main(argv)
 
 

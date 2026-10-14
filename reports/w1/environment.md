@@ -92,14 +92,14 @@ W1-01 已完成。后续在独立空目录 build_w1_clean / install_w1_clean 完
 
 ```bash
 export AO_LAB="$HOME/uw-ao-lab"
-python3 "$AO_LAB/scripts/audit_w1.py" --lab "$AO_LAB"
-bash "$AO_LAB/scripts/ros-run.sh" ros2 pkg list
-bash "$AO_LAB/scripts/ros-run.sh" ros2 pkg executables ov_msckf
-bash "$AO_LAB/scripts/ros-run.sh" ros2 launch ov_msckf subscribe.launch.py --show-args
+python3 "$AO_LAB/scripts/env/audit_w1.py" --lab "$AO_LAB"
+bash "$AO_LAB/scripts/env/ros_run.sh" ros2 pkg list
+bash "$AO_LAB/scripts/env/ros_run.sh" ros2 pkg executables ov_msckf
+bash "$AO_LAB/scripts/env/ros_run.sh" ros2 launch ov_msckf subscribe.launch.py --show-args
 "$AO_LAB/.venv-eval/bin/python" -m pip check
 "$AO_LAB/.venv-eval/bin/evo_ape" --help
 "$AO_LAB/team/octomap_smoke"
-bash "$AO_LAB/scripts/build-openvins.sh"
+bash "$AO_LAB/scripts/env/build_openvins.sh"
 ```
 
 离线重建 eval 环境时另用新目录，保留现有环境：

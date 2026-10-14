@@ -17,7 +17,7 @@ related: reports/w2/detect-a-pilot-experiments.md, reports/w5/a-diagnose-and-hea
 
 ## 1 方法
 
-- **数据**：`scripts/sim_imu_grade.py` 由仿真真值姿态求机体角速度（中心差分），加零偏随机游走 K 与白噪声 N，起点是仿真的真实初始零偏。加速度计不变。重构检查：残差 σ = 0.0020，与仿真 AngVelSigma 一致。种子 = 1000 × 等级号 + 航次序号。
+- **数据**：`scripts/data/sim_imu_grade.py` 由仿真真值姿态求机体角速度（中心差分），加零偏随机游走 K 与白噪声 N，起点是仿真的真实初始零偏。加速度计不变。重构检查：残差 σ = 0.0020，与仿真 AngVelSigma 一致。种子 = 1000 × 等级号 + 航次序号。
 - **等级**（N rad/s/√Hz，K rad/s²/√Hz，T_tol 为解析值，不含初始零偏误差）：
 
   | 等级 | 含义 | N | K | T_tol（s） |
@@ -28,7 +28,7 @@ related: reports/w2/detect-a-pilot-experiments.md, reports/w5/a-diagnose-and-hea
   | g3 | 高端 MEMS，ARW 0.1°/√h | 2.9e-5 | 1e-6 | 970 |
   | g4 | 战术级，ARW 0.012°/√h | 3.5e-6 | 1e-7 | 4504 |
 
-- **运行**：`scripts/imu_sweep.sh` 对每个等级、每条航次：生成数据集 → `sim_to_bag` → `uwbench audit` → OpenVINS A0 以 1× 回放 → `eval-traj`。OpenVINS 配置中的陀螺噪声参数随等级改写，即估计器知道正确的噪声。
+- **运行**：`scripts/experiments/imu_sweep.sh` 对每个等级、每条航次：生成数据集 → `sim_to_bag` → `uwbench audit` → OpenVINS A0 以 1× 回放 → `eval-traj`。OpenVINS 配置中的陀螺噪声参数随等级改写，即估计器知道正确的噪声。
 - **检测**：`detect-a` 两种航向来源，各加 `health_target: 0.05`：冻结零偏−预算（`review_default`）与在线零偏（`review_default_online_yaw`）。阈值按留一航次选取。
 - **输入完整性**：70 个运行全部 rc = 0。第一轮有 11 个运行在回放中掉了样本（IMU 最长断 0.73 s，相机最多 27 帧）。原因是我让 detect-a 与扫描并行跑，造成 CPU 争用。这 11 个运行在无其他负载下串行重跑，重跑后 70 个运行的输入审计全部零缺样。掉样本的运行和对应的 detect-a 输出不参与本文任何数字，已于 2026-10-14 删除。
 
@@ -84,7 +84,7 @@ g0 的个别航次（fog0、fog4、fog8）误差较大，g1 以上趋于一致�
 | g0–g4 | 冻结零偏−预算 | — | DET-COV | 14–19% | 否 | 62–86% / 25–71% / 46–79% | 21–43% |
 | g0–g4 | 冻结零偏−预算 | — | ORACLE（真零偏累积冲突） | 6–8% | 部分 | 100% / 1–3% / 0% | 18–56% |
 
-完整表（含在线零偏下的 DET-SCALAR）由 `scripts/summarize_imu_sweep.py` 输出。
+完整表（含在线零偏下的 DET-SCALAR）由 `scripts/experiments/summarize_imu_sweep.py` 输出。
 
 - DET-SCALAR 在所有等级都能报警，但不能指出哪个轴（航向误归因 80–85%），不受陀螺等级影响。
 - 真零偏预言机的航向漏报在所有等级都是 0%，说明航向冲突信号本身存在。DET-DIR 与它的差距来自零偏估计，g0 时差距最大，g4 时仍有 24%。
@@ -100,11 +100,11 @@ g0 的个别航次（fog0、fog4、fog8）误差较大，g1 以上趋于一致�
 ## 5 复现
 
 ```bash
-bash scripts/imu_sweep.sh                       # 数据集、OpenVINS A0 1×、eval-traj；可续跑
-.venv-eval/bin/python scripts/audit_input_trace.py --bag data/sim/<route>_<g>/ros2 --run $PWD/runs/sim_<route>_<g>_a0_r01
+bash scripts/experiments/imu_sweep.sh                       # 数据集、OpenVINS A0 1×、eval-traj；可续跑
+.venv-eval/bin/python scripts/openvins/audit_input_trace.py --bag data/sim/<route>_<g>/ros2 --run $PWD/runs/sim_<route>_<g>_a0_r01
 # detect-a：review_default.yaml 或 review_default_online_yaw.yaml 加一行 "health_target: 0.05"，--runs 为该等级 14 个运行
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench detect-a --config <cfg> --out runs/detect-a/imu_<g>_<frozen|online> --runs <14 runs>
-.venv-eval/bin/python scripts/summarize_imu_sweep.py
+.venv-eval/bin/python scripts/experiments/summarize_imu_sweep.py
 ```
 
-不要在扫描进行时并行跑 detect-a 或其他重负载，否则 1× 回放会掉样本；每个运行都要核对输入审计零缺样。detect-a 会读数据集 bag 中的 `/imu0` 与 `/depth/pressure`，删除 `ros2/` 后需先用 `scripts/sim_to_bag.py --run <ds> --restore-bag` 恢复。
+不要在扫描进行时并行跑 detect-a 或其他重负载，否则 1× 回放会掉样本；每个运行都要核对输入审计零缺样。detect-a 会读数据集 bag 中的 `/imu0` 与 `/depth/pressure`，删除 `ros2/` 后需先用 `scripts/data/sim_to_bag.py --run <ds> --restore-bag` 恢复。

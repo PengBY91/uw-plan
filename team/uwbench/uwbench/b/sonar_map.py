@@ -13,7 +13,7 @@ The vertical aperture is a parameter: the simulated value is a simulation settin
 """
 import numpy as np
 
-from uwbench.mapping import SOURCE_SONAR
+from uwbench.b.voxel_map import SOURCE_SONAR
 from uwbench.sonar import arc_points
 
 

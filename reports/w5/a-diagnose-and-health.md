@@ -17,7 +17,7 @@ related: reports/w2/detect-a-pilot-experiments.md, reports/w3/a1-sim-fixed-weigh
 2. **归一化不改变弱方向类型。** 每个运行里弱方向都是平移（只有斜墙有 5.6% 的窗口是旋转），归一化前后弱方向类型改变的窗口比例为 0。L = 2 m 下，这一组数据上的归一化与否不影响 E-A1 的结论。
 3. **健康状态机已实现，只读，作为产品输出。** 在 14 条先导航次、DET-DIR 1% 工作点上，13 条有越限的航次里 57–98% 的越限时间处于非 NORMAL 状态。正常时间基本保持 NORMAL；例外是雾 0 条纹横梁（冻结零偏误报 100%，第 2.17 节已记录）、深壁柱（12%）和竖条纹墙（7%）。这些数字只说明状态机按检测器报警在工作，不是研究证据。
 
-## 1 diagnose-a 做什么（`team/uwbench/uwbench/a1/diagnose.py`，方法规格 M1，提示 P14）
+## 1 diagnose-a 做什么（`team/uwbench/uwbench/a/backend/diagnose.py`，方法规格 M1，提示 P14）
 
 - **对象**：A1 平滑器（GTSAM iSAM2，原始 IMU 预积分、双目重投影、声呐斜距-方位）的每个关键帧对 (k−1, k)。在第 k 个关键帧更新后的估计处（因果），线性化两帧都看到的地标的双目与声呐因子。行已经白化，鲁棒核按求解器的方式重新加权。
 - **消元**：每个地标在它的全部行上一起消元（F = Q₂ᵀJ_x，H = FᵀF），不逐因子边缘化。声呐地标两次斜距-方位观测不足以确定仰角时，只在已确定的子空间上投影，不凭空造信息。单元测试与 GTSAM 自己的部分消元（`eliminatePartialSequential`）逐元素一致。
@@ -34,7 +34,7 @@ related: reports/w2/detect-a-pilot-experiments.md, reports/w3/a1-sim-fixed-weigh
 
 ## 2 E-A1 结果
 
-差值为"实际 − 对照"，方括号内为 95% 块自助区间（块长 10 个窗口 = 20 s）。由 `scripts/ea1_correspondence_stats.py` 输出。
+差值为"实际 − 对照"，方括号内为 95% 块自助区间（块长 10 个窗口 = 20 s）。由 `scripts/experiments/ea1_correspondence_stats.py` 输出。
 
 | 场景 | 配置 | frac_weak2 实际 − 对照 | trans_cos_weak 实际 − 对照 |
 | --- | --- | --- | --- |
@@ -52,7 +52,7 @@ related: reports/w2/detect-a-pilot-experiments.md, reports/w3/a1-sim-fixed-weigh
 
 **局限**：只有四个场景、都是恒深横移航段，窗口固定 2 s；L 取 2 m 未在开发集冻结；窗口信息的力臂项被忽略；A1 从真值初始化。平台数据上需要按方法规格重做，并换用 D1/D2 的独立参考。
 
-## 3 健康状态机（`team/uwbench/uwbench/health.py`，方法规格 M3.3）
+## 3 健康状态机（`team/uwbench/uwbench/a/health.py`，方法规格 M3.3）
 
 - **输入**：DET-DIR 的逐轴统计量与阈值（`detect-a` 留一航次选出的阈值），以及公共监视器 C0：估计时间戳、有效观测时间戳（接受了特征的更新）、位姿是否有限。全部按消息采样时钟处理，不读真值。
 - **逐轴报警锁存**：统计量超过阈值时报警，降到"阈值 − 0.1 × 容限"以下才解除（滞回）。统计量为 NaN 时该轴记为 unscorable，既不报警也不算 ok。y 轴记为 no_source。
@@ -65,7 +65,7 @@ related: reports/w2/detect-a-pilot-experiments.md, reports/w3/a1-sim-fixed-weigh
   - RECOVERING → NORMAL：持续 2 s 无故障、无报警。RECOVERING → DEGRADED：某轴持续报警 1 s。
   - 只缺声呐不会强制进入 LOST，只会让 x 变为不可评。
 - **接入方式**：`detect-a` 配置写 `health_target: <目标误报率>` 时，输出 `health/<航次>/status.csv`、`transitions.csv` 和 `health/summary.json`。默认关闭，检测结果与 r18 `review_default` 完全一致。
-- **测试**：12 项（`team/uwbench/tests/test_health.py`），覆盖滞回、短暂抖动、持续报警与恢复、观测中断、时间回跳与 epoch、位置轴全报警、缺声呐、位姿非有限、因果截断与时长守恒。
+- **测试**：12 项（`team/uwbench/tests/test_a_health.py`），覆盖滞回、短暂抖动、持续报警与恢复、观测中断、时间回跳与 epoch、位置轴全报警、缺声呐、位姿非有限、因果截断与时长守恒。
 
 先导 14 条航次、DET-DIR 1% 工作点（`review_default` 加 `health_target: 0.01`）：
 
@@ -94,7 +94,7 @@ related: reports/w2/detect-a-pilot-experiments.md, reports/w3/a1-sim-fixed-weigh
 # diagnose-a（与 run-a 参数相同，另有 --length-m 与 --window）
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench diagnose-a --manifest data/sim/<ds>/manifest.yaml \
   --config configs/a1/<sonar_off|fixed>.yaml --tracks runs/sim_<ds>_a1_frontend_r01/tracks.npz --out runs/sim_<ds>_a1_<cfg>_diag_r01
-.venv-eval/bin/python scripts/ea1_correspondence_stats.py
+.venv-eval/bin/python scripts/experiments/ea1_correspondence_stats.py
 # 健康状态机：detect-a 配置中加一行 health_target
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench detect-a --config <review_default.yaml 加 "health_target: 0.01"> \
   --out <dir> --runs <14 条先导航次>

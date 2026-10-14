@@ -93,7 +93,7 @@ def main(argv):
     if args.out.exists():
         parser.error('Refusing to overwrite ' + str(args.out))
     import yaml
-    from uwbench.a1.simdata import SimDataset
+    from uwbench.a.backend.simdata import SimDataset
     cfg = (yaml.safe_load(args.config.read_text()) or {}).get('depth') if args.config else None
     ds = SimDataset(args.manifest)
     try:

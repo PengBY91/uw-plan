@@ -86,10 +86,10 @@ status: pilot
 ## 6 复现
 
 ```bash
-# 路线生成（Windows Python，holoocean 2.3.0），之后 scripts/sim_to_bag.py --run data/sim/<route>_s01
+# 路线生成（Windows Python，holoocean 2.3.0），之后 scripts/data/sim_to_bag.py --run data/sim/<route>_s01
 $PYW team/sim/holoocean_generate.py configs/sim/eb2_<primitive>_v1.json data/sim/eb2_<primitive>_v1_s01/raw
 # 转台序列：合成 gt_imu.npy / sonar_t.npy，再回放射线声呐
-.venv-eval/bin/python scripts/eb2_turntable.py --source data/sim/eb2_pitch_v1_s01/raw --name eb2_pitch_tt_v1 --axis y --amplitude-deg 12 --out data/sim/eb2_pitch_tt_v1_s01
+.venv-eval/bin/python scripts/data/eb2_turntable.py --source data/sim/eb2_pitch_v1_s01/raw --name eb2_pitch_tt_v1 --axis y --amplitude-deg 12 --out data/sim/eb2_pitch_tt_v1_s01
 cd team/sim && python.exe holoocean_sonar_replay.py <data/sim/eb2_pitch_tt_v1_s01/raw> <data/sim/eb2_pitch_tt_v1_s01/sonar_raycast>
 # 分析
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench motion-b --manifest data/sim/eb2_heave_v1_s01/manifest.yaml --out runs/eb2/motion_eb2_heave_v1

@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from uwbench.__main__ import main
-from uwbench.metrics.occupancy import map_ratios
+from uwbench.b.occupancy import map_ratios
 from uwbench.sonar import arc_points, effect_size_row, range_bearing
 
 

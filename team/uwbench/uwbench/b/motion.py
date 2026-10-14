@@ -374,7 +374,7 @@ def main(argv):
     import yaml
     cfg = {**DEFAULTS, **((yaml.safe_load(args.config.read_text()) or {}) if args.config else {})}
     if args.manifest:
-        from uwbench.a1.simdata import SimDataset
+        from uwbench.a.backend.simdata import SimDataset
         from uwbench.b.cli import sonar_images
         ds = SimDataset(args.manifest)
         image, source = sonar_images(ds)
