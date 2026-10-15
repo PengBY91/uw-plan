@@ -4,7 +4,9 @@ Everything here is causal: each decision uses only messages that have already ar
 truth or estimator state (the time-offset estimate is independent of the estimator's own online calibration, which is
 exactly what fails silently in the W4 fault injection, reports/w4/fault-injection.md).
 
-Checks (tolerances from INTEGRITY, overridable from the config; to be re-verified on platform data before freezing):
+Checks (tolerances from INTEGRITY, overridable from the config; to be re-verified on platform data before freezing).
+The offset thresholds are 20 / 30 ms (method spec v2.5): between the largest harmless (15 ms) and the smallest
+divergent (40 ms) W4-05 offset with margin on both sides; spec v2.4 had 15 / 40 ms, the test faults themselves.
   imu/cam time regression  a sample stamp not after the previous one on the same stream       -> LOST
   imu outage               no IMU sample for >= imu_outage_s                                  -> LOST
   cam outage               no stereo pair for >= cam_outage_s                                 -> LOST
@@ -29,7 +31,7 @@ clear the check.
 import numpy as np
 
 INTEGRITY = {'imu_outage_s': 0.5, 'cam_outage_s': 3.0, 'rate_window_s': 1.0, 'rate_min_fraction': 0.8,
-             'imu_rate_hz': None, 'time_offset_warn_ms': 15.0, 'time_offset_lost_ms': 40.0, 'lost_hold': 2,
+             'imu_rate_hz': None, 'time_offset_warn_ms': 20.0, 'time_offset_lost_ms': 30.0, 'lost_hold': 2,
              'offset_window_s': 20.0, 'offset_step_s': 5.0, 'offset_search_ms': 100.0, 'offset_grid_ms': 1.0,
              'offset_min_rot_rad_s': 0.03, 'offset_min_fit_r2': 0.8, 'offset_cost_margin': 0.1}
 STATES = ('NORMAL', 'WARN', 'LOST')

@@ -1,3 +1,4 @@
-# Proposed offset thresholds between the largest harmless (15 ms, OpenVINS converged) and the smallest harmful (40 ms,
-# divergence) W4-05 offsets, with margin on both sides; outage tolerances unchanged. Not frozen: platform data first.
+# Adopted 2026-10-14 (method spec v2.5, runbook v2.4; equals the code defaults): offset thresholds between the largest
+# harmless (15 ms, OpenVINS converged) and the smallest harmful (40 ms, divergence) W4-05 offsets, with margin on both
+# sides; outage tolerances unchanged. Frozen only after re-verification on platform data.
 a_input_integrity: {imu_outage_s: 0.5, cam_outage_s: 3.0, time_offset_warn_ms: 20, time_offset_lost_ms: 30}

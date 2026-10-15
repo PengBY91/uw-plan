@@ -38,7 +38,7 @@ LOST 一直保持到估计器重新初始化（`reset()`，新 epoch），WARN �
 
 ## 2 W4-05 故障矩阵
 
-派生故障 bag 已在 2026-10-13 清理时删除，这里从父 bag 按各自的 fault.json 在内存中重建：掉帧删除 [start_ns, end_ns] 闭区间，中断删除半开区间，偏移平移 IMU 的 header.stamp。每个用例重建后的各话题消息数与 fault.json 的 written_count 逐一相同，父 bag 的 SHA-256 与 fault.json 记录一致，因此输入与当时 OpenVINS 读到的完全相同。运行目录 `runs/input-integrity/w4_faults_r01/`，汇总 `reports/w5/input-integrity/w4_faults_r01.json`，配置为规格值（`configs/input_integrity/spec_m34.yaml` 的数值，即代码默认）。
+派生故障 bag 已在 2026-10-13 清理时删除，这里从父 bag 按各自的 fault.json 在内存中重建：掉帧删除 [start_ns, end_ns] 闭区间，中断删除半开区间，偏移平移 IMU 的 header.stamp。每个用例重建后的各话题消息数与 fault.json 的 written_count 逐一相同，父 bag 的 SHA-256 与 fault.json 记录一致，因此输入与当时 OpenVINS 读到的完全相同。运行目录 `runs/input-integrity/w4_faults_r01/`，汇总 `reports/w5/input-integrity/w4_faults_r01.json`，配置为当时的规格值 15／40 ms（`configs/input_integrity/spec_m34.yaml` 的数值，即运行时的代码默认；2026-10-14 决定后代码默认已改为 20／30 ms）。
 
 | 故障 | V1_01 | 仿真条纹横梁 | 规格要求 |
 | --- | --- | --- | --- |
@@ -77,7 +77,9 @@ LOST 一直保持到估计器重新初始化（`reset()`，新 epoch），WARN �
 
 **−9.5 ms 的来源。** 用真值姿态代替陀螺，在 [t_key + τ, t_k + τ] 上取真值相对转动与双目 PnP 转动比较（只作诊断，读真值，不属于检查器）：R² 在 τ = −8 至 −10 ms 最大（0.99844，τ = 0 时 0.99819），与陀螺得到的 −9.5 ms 一致。g1 陀螺是真值姿态的中心差分（`scripts/data/sim_imu_grade.py`，与 HoloOcean 自带陀螺的重建核对通过），本身不引入时移，因此偏移在相机：HoloOcean 的图像内容比其时间戳早约 2 个 tick（200 tick/s）。W2-11 的跟踪核对（`scripts/data/sim_track_check.py`）报告的 KLT 误差中位数 0.04–0.18 px，与这个量级的滞后在低转速下造成的像素误差相当，当时没有被分辨出来。
 
-## 4 对规格与规程的建议（待用户决定）
+## 4 对规格与规程的建议
+
+**2026-10-14 决定**：门槛改为 20／30 ms，其余三项按下列建议写入实现规格 v2.5 与运行手册 v2.4（同时写入的还有 H-A2 按越限区间判定与 H-B1' 第二判据拆分）。代码默认与 `configs/input_integrity/margin_20_30.yaml` 一致。
 
 - **门槛。** M3.4 的偏移门槛改为告警 20 ms、LOST 30 ms，使测试故障（15 ms 无害、40 ms 发散）各自离门槛 ≥ 5 ms；中断门槛不变。平台数据核验后冻结。
 - **规程。** 偏移检查不应依赖航行中的自然转动：仿真里 AUV 正常航段的激励几乎都低于 0.03 rad/s（棋盘墙正常航次 53/55 个窗口为低转动）。把"纹理面前原地偏航摆动约 30 s"加进零偏冻结规程，作为进入依赖估计航段前的放行条件；检查结果不可测时不放行。
