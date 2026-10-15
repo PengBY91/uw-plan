@@ -186,6 +186,14 @@ add(normal_wall('normal_checker_v1', checker_wall(), 2.0, [3.0, 4.0], [-20, -19,
                 purpose='Checkerboard of 2 m brick/cobblestone tiles: texture in both directions.'))
 add(normal_wall('normal_checker_fog1_v1', checker_wall(), 1.0, [3.5, 2.5], [-20, -21, -19, -21.5], 12.0, 0.25,
                 purpose='Second realisation, light fog.'))
+# W5-11 follow-up (2026-10-14): normal data within tolerance was 23.7 min, below the 30 min floor; the checkerboard
+# family was the cleanest (no exceedance), so three more realisations vary standoff, depth, speed, fog and tile size.
+add(normal_wall('normal_checker_c_v1', checker_wall(), 1.5, [2.5, 3.5], [-20, -18.5, -21.5, -19.5], 16.0, 0.3,
+                purpose='Third realisation: wider span, larger depth range.'))
+add(normal_wall('normal_checker_t3_v1', checker_wall(tile=3.0), 2.0, [3.0], [-20, -21, -19, -20.5], 14.0, 0.25,
+                purpose='3 m tiles, single standoff, slower.'))
+add(normal_wall('normal_checker_t15_v1', checker_wall(tile=1.5), 1.0, [3.0, 4.0], [-20, -19.5, -20.5, -19], 16.0, 0.35,
+                purpose='1.5 m tiles, larger standoffs, faster, light fog.'))
 add(normal_wall('normal_pilaster_v1', PILASTER, 2.0, [2.5, 3.0], [-20, -19.5, -20.5, -20], 16.0, 0.35,
                 purpose='pilaster_deep_v1 wall (0.3 m pilasters every 2 m on horizontal-stripe brick).'))
 add(normal_wall('normal_pilaster_b_v1', PILASTER, 2.0, [2.5], [-20, -20.5, -19.5, -20], 14.0, 0.3,

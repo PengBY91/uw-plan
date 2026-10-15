@@ -17,7 +17,10 @@ ROLES = {'probe_vstripe_heave_v1': 'z-only candidate, design 1 (failed: no degra
          'vstripe_shuttle_fog4_v1': 'z-only candidate, design 2',
          'normal_dam_v1': 'normal family dam', 'normal_dam_b_v1': 'normal family dam',
          'normal_checker_v1': 'normal family checker', 'normal_checker_fog1_v1': 'normal family checker',
-         'normal_pilaster_v1': 'normal family pilaster', 'normal_pilaster_b_v1': 'normal family pilaster'}
+         'normal_pilaster_v1': 'normal family pilaster', 'normal_pilaster_b_v1': 'normal family pilaster',
+         'normal_checker_c_v1': 'normal family checker (2026-10-14 follow-up)',
+         'normal_checker_t3_v1': 'normal family checker, 3 m tiles (2026-10-14 follow-up)',
+         'normal_checker_t15_v1': 'normal family checker, 1.5 m tiles (2026-10-14 follow-up)'}
 
 
 def sha(path):

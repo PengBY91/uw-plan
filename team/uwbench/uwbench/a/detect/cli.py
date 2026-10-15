@@ -108,6 +108,7 @@ def main(argv):
                                          'source': r['gyro_noise_source']} for r in runs},
               'frozen_budget_reaches_yaw_tolerance_s': horizon,
               'sonar_planes': {r['name']: r['stats'].get('sonar_planes') for r in runs},
+              'bias_freeze': {r['name']: r['stats'].get('bias_freeze') for r in runs},
               'sonar_map_points': {r['name']: r['stats'].get('sonar_map_points') for r in runs},
               'scoring': 'r_miss counts unscorable (NaN) exceedance samples as missed, same denominator for every detector; '
                          'r_miss_scorable leaves them out (pilot definition); comparable = realised false-alarm fraction '

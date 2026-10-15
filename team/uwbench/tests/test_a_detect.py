@@ -9,7 +9,7 @@ from uwbench.a.detect.config import ATMOSPHERE_PA, CONFIG, G, RHO
 from uwbench.a.detect.inputs import parse_diag
 from uwbench.a.detect.scoring import (Channel, comparable, evaluate, pooled, score_detector, threshold, union_false_alarm,
                                      union_thresholds)
-from uwbench.a.detect.signals import budget_horizon_s, drift_budget_deg, information_gap, rereference
+from uwbench.a.detect.signals import budget_horizon_s, drift_budget_deg, information_gap, rereference, still_bias
 from uwbench.a.detect.sonar import (fit_line, footprint_correct, sonar_conflict, sonar_conflict_map, sonar_conflict_multi,
                                     sonar_echo_thickness, sonar_first_returns, sonar_lines)
 from uwbench.a.detect.statistics import statistics
@@ -17,11 +17,13 @@ from uwbench.metrics.axes import AXES
 
 
 def synthetic(seed=0, yaw_drift=0.0):
-    """20 Hz estimate with a slow yaw turn; 200 Hz gyro consistent with it; optional extra estimated yaw drift (deg/s)."""
+    """20 Hz estimate with a slow yaw turn; 200 Hz gyro consistent with it, after 4 s still (the bias-freeze segment);
+    optional extra estimated yaw drift (deg/s)."""
     rng = np.random.default_rng(seed)
-    imu_t = np.arange(0, 40, 0.005)
+    imu_t = np.arange(-4, 40, 0.005)
     rate = np.radians(2.0)  # true yaw rate about body z
-    gyro = np.column_stack([imu_t, rng.normal(0, 1e-4, len(imu_t)), rng.normal(0, 1e-4, len(imu_t)), np.full(len(imu_t), rate)])
+    gyro = np.column_stack([imu_t, rng.normal(0, 1e-4, len(imu_t)), rng.normal(0, 1e-4, len(imu_t)),
+                            np.where(imu_t < 0, 0.0, rate)])
     est_t = np.arange(1, 40, 0.05)
     yaw = rate*est_t + np.radians(yaw_drift)*np.clip(est_t - 20, 0, None)
     R = Rotation.from_euler('z', yaw).as_matrix()
@@ -254,6 +256,18 @@ class DetectTest(unittest.TestCase):
         online = statistics(t, est, diag, imu, odom, pressure, cfg={**CONFIG, 'dir_yaw_source': 'online'},
                             gyro_noise=(1e-4, 1e-5), sonar=(lines, np.eye(4)))
         np.testing.assert_array_equal(online['conflict_dir'][:, 3], online['conflict_cum'][:, 3])
+
+    def test_still_bias_uses_the_quiet_window_before_the_estimate(self):
+        rng = np.random.default_rng(3)
+        t = np.arange(0, 12, 0.005)
+        bias = np.array([1e-4, -2e-4, 3e-4])
+        w = bias + rng.normal(0, 2e-3, (len(t), 3))
+        w[t >= 6, 2] += 0.3*np.sin(2*np.pi*0.5*t[t >= 6])   # init wiggle from 6 s; first estimate at 7 s
+        w[t < 1, 2] += 0.05                                    # settling at the start
+        b, (lo, hi), std = still_bias(np.column_stack([t, w]), 7.0, 3.0)
+        self.assertTrue(1.0 <= lo and hi <= 6.0 + 1e-9)
+        np.testing.assert_allclose(b, bias, atol=3*2e-3/np.sqrt(600))
+        self.assertIsNone(still_bias(np.column_stack([t, w]), 2.0, 3.0))
 
     def test_drift_budget_grows_with_white_noise_and_bias_walk(self):
         self.assertAlmostEqual(drift_budget_deg(100.0, 1e-3, 0.0, 1.0), np.degrees(1e-2))

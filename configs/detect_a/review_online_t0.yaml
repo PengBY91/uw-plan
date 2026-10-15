@@ -1,0 +1,7 @@
+# review_default with the pilot's bias freeze (the estimator's online bias at its first output, one sample), which was
+# the default until 2026-10-14; reproduces the outputs made before then (D-sim sections 3 and 7, IMU sweep section 3,
+# r18). Not the method-spec M3.1 procedure.
+conflict_reference: window
+sonar_reference_s: 10.0
+threshold_allocation: union
+bias_freeze: online_t0

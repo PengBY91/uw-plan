@@ -99,3 +99,7 @@ PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench diagnose-a --manifest d
 PYTHONPATH=team/uwbench .venv-eval/bin/python -m uwbench detect-a --config <review_default.yaml 加 "health_target: 0.01"> \
   --out <dir> --runs <14 条先导航次>
 ```
+
+## 补充：冻结零偏按规格修正后的重算（2026-10-15）
+
+detect-a 的冻结零偏改为规格 M3.1 的静止段估计（`bias_freeze: still`，见 `d-sim.md` 第 8.2 节）后，重算了本报告的 health 输出（`runs/detect-a/r18_review_default_health_still/`）。14 条航次中 11 条的 status.csv 逐字节相同。pilaster_deep_fog6 的 NORMAL 减少 99 个样本，转为 DEGRADED 或 RECOVERING；stripe_beam_fog0 与 fog4 只有逐轴状态变化，各状态时长不变。第 3 节的表除 pilaster_deep_fog6 一行外仍然成立。

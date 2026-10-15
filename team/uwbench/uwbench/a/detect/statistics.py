@@ -5,7 +5,7 @@ from scipy.spatial.transform import Rotation
 
 from uwbench.a.detect.config import ATMOSPHERE_PA, CONFIG, G, RHO, default_tolerances
 from uwbench.a.detect.inputs import load_inputs
-from uwbench.a.detect.signals import drift_budget_deg, gyro_heading, rereference, windowed
+from uwbench.a.detect.signals import drift_budget_deg, gyro_heading, rereference, still_bias, windowed
 from uwbench.a.detect.sonar import (load_sim_sonar, sonar_conflict_map, sonar_conflict_multi,
                                     sonar_conflict_signed)
 from uwbench.metrics.axes import body_axis_sigma
@@ -80,8 +80,24 @@ def statistics(t, est, diag, imu, odom, pressure, cfg=CONFIG, gyro_noise=None, t
     z_first = np.clip(np.searchsorted(pressure[:, 0], est_t[0], side='right') - 1, 0, None)
     z_cum = np.abs(rereference((p_t[:, 2] - p[0, 2]) - (z_depth[zi1] - z_depth[z_first]), ref))
     stats['conflict_cum'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum, yaw_cum])
-    # the online bias follows the estimate, so wrong vision information partly moves into it; freeze it at t_0
-    yaw_frozen = np.abs(rereference(cumulative_yaw(gyro_heading(imu, bias_t[:1], bias[:1])), ref))
+    # the online bias follows the estimate, so wrong vision information partly moves into it; freeze it.
+    # bias_freeze 'online_t0' (pilot, default until 2026-10-14): the estimator's online bias at its first output, a single sample of gyro
+    # minus estimated rate. 'still' (method spec M3.1, default): mean gyro over the quietest still_window_s before the first
+    # estimate, from the IMU alone (W5-11 follow-up 2026-10-14: online_t0 put 0.06-0.4 deg/s of false heading drift
+    # into two of five checkerboard normal runs).
+    freeze = cfg.get('bias_freeze', 'still')
+    if freeze == 'online_t0':
+        b0 = bias[:1]
+        stats['bias_freeze'] = {'mode': freeze, 'bias': b0[0].tolist()}
+    elif freeze == 'still':
+        sb = still_bias(imu, est_t[0], cfg.get('still_window_s', 3.0))
+        if sb is None:
+            raise ValueError('bias_freeze still: no IMU window before the first estimate')
+        b0 = sb[0][None, :]
+        stats['bias_freeze'] = {'mode': freeze, 'bias': sb[0].tolist(), 'window': sb[1], 'std': sb[2].tolist()}
+    else:
+        raise ValueError(f'unknown bias_freeze {freeze!r}')
+    yaw_frozen = np.abs(rereference(cumulative_yaw(gyro_heading(imu, bias_t[:1], b0)), ref))
     stats['conflict_cum_frozen'] = np.column_stack([np.zeros(len(t)), np.zeros(len(t)), z_cum, yaw_frozen])
     budget = np.zeros(len(t)) if gyro_noise is None else drift_budget_deg(t - est_t[0], *gyro_noise, cfg['budget_n_sigma'])
     stats['budget_yaw_deg'] = budget

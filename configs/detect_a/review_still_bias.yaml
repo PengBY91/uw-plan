@@ -1,0 +1,8 @@
+# review_default plus the method-spec M3.1 bias freeze: the heading channel's gyro bias is the mean gyro over the
+# quietest 3 s before the first estimate, from the IMU alone, instead of the estimator's online bias at its first output
+# (W5-11 follow-up 2026-10-14).
+conflict_reference: window
+sonar_reference_s: 10.0
+threshold_allocation: union
+bias_freeze: still
+still_window_s: 3.0

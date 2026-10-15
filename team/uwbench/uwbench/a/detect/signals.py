@@ -32,6 +32,26 @@ def gyro_heading(imu, bias_t, bias):
     return Q
 
 
+def still_bias(imu, before_t, window_s, step_s=0.25):
+    """Gyro bias from the IMU alone (method spec M3.1 bias-freeze procedure): the mean gyro over the quietest window of
+    window_s seconds that ends before before_t (smallest summed per-axis variance). Returns (bias, (t_lo, t_hi), std)
+    or None when the IMU has less than window_s before before_t."""
+    t = imu[:, 0]
+    starts = np.arange(t[0], before_t - window_s + 1e-9, step_s)
+    best = None
+    for s in starts:
+        sel = (t >= s) & (t < s + window_s)
+        if sel.sum() < 10:
+            continue
+        v = float(imu[sel, 1:].var(axis=0).sum())
+        if best is None or v < best[0]:
+            best = (v, s, sel)
+    if best is None:
+        return None
+    _, s, sel = best
+    return imu[sel, 1:].mean(axis=0), (float(s), float(s + window_s)), imu[sel, 1:].std(axis=0)
+
+
 def drift_budget_deg(T, noise_density, random_walk, n_sigma):
     """n_sigma bound on heading error from integrating a gyro whose bias was frozen T seconds ago (bias error excluded)."""
     T = np.clip(T, 0, None)

@@ -20,6 +20,7 @@ CONFIG = {'nis_window_s': 1.0, 'feat_window_s': 1.0, 'info_window_s': 1.0, 'conf
           # review fixes (2026-10-12): see the module docstring
           'conflict_reference': 'window', 'threshold_allocation': 'union', 'comparable_tolerance': 0.5,
           'health_target': None, 'health': None,  # M3.3 state machine outputs at this DET-DIR operating point (off by default)
+          'bias_freeze': 'still', 'still_window_s': 3.0,  # frozen gyro bias for the heading channel (statistics.py; 'online_t0' = pilot)
           'gyro_noise': None}  # {'noise_density': .., 'random_walk': .., 'source': 'Allan variance ...'} overrides the run's IMU chain
 DETECTORS = {'DET-NIS': 'global', 'DET-COV': 'axis', 'DET-FEAT': 'global', 'DET-SCALAR': 'global', 'DET-SCALAR-l2': 'global',
              'DIR-gap': 'axis', 'DIR-conflict': 'axis',

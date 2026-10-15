@@ -199,3 +199,48 @@ datasets:
   g1_manifest_sha256: 9abeb40d76637c6e714f3c47513cd69cb56f63089b6c9d06b52f25faea83da57
   g1_checksums_sha256: 884236eef6287dbbed7f6a1f3d555f110bea32a541f9fe720e65682f9e8b0602
   a0_run: runs/sim_normal_pilaster_b_v1_s01_g1_a0_r01
+- route: normal_checker_c_v1
+  role: normal family checker (2026-10-14 follow-up)
+  route_config: configs/sim/normal_checker_c_v1.json
+  route_config_sha256: 3b7446cbd5c055bd335572d945d7479446f4785e20647273272de6a5fd2e894e
+  raw: data/sim/normal_checker_c_v1_s01/raw
+  raw_meta_sha256: 68cec6a77c56269402083de43c7074dd3fdcd2824e0ca35fbeac71047efc2985
+  raw_imu_sha256: 0ff0b9d91192b410907cc7fddaa71e8d22e33d4c689667c24057f0c937af31c6
+  duration_s: 329.93
+  generation_wall_s: 10318.3
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_checker_c_v1_s01_g1
+  g1_seed: 9157
+  g1_manifest_sha256: 00b0b3aa6e9e7ea17e2ee572b5527f8df4dc3c36f5fd0e687d3ad6708df3d0b5
+  g1_checksums_sha256: a13b55c73f5206284703d6789b1660bd6c399978f74d1689139937e775c71c2e
+  a0_run: runs/sim_normal_checker_c_v1_s01_g1_a0_r01
+- route: normal_checker_t3_v1
+  role: normal family checker, 3 m tiles (2026-10-14 follow-up)
+  route_config: configs/sim/normal_checker_t3_v1.json
+  route_config_sha256: 9fba55a43226b24932d43f49207f1373f4d35a7703b8a07853108ccd24edcf26
+  raw: data/sim/normal_checker_t3_v1_s01/raw
+  raw_meta_sha256: 37c8e3b6ac424afcba9dbc1b12879a442c94d2d4b6a5a682789f4ade5efb5f9e
+  raw_imu_sha256: 6daf739929e88c842a1f42e586e0cb9a1925b88517a8aeaefeadc475ee6c37f2
+  duration_s: 337.071
+  generation_wall_s: 10333.6
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_checker_t3_v1_s01_g1
+  g1_seed: 8627
+  g1_manifest_sha256: b86080cb5308e506b75a0e574f66fbc0a488162d5b2ae11beb4439dda4ebccc7
+  g1_checksums_sha256: 9500a48138ba33f5b09d8fb7dd806d4209683c59042177a1a6211b34a439b2ac
+  a0_run: runs/sim_normal_checker_t3_v1_s01_g1_a0_r01
+- route: normal_checker_t15_v1
+  role: normal family checker, 1.5 m tiles (2026-10-14 follow-up)
+  route_config: configs/sim/normal_checker_t15_v1.json
+  route_config_sha256: cd5d743a96c088a744af4bcc61a3d83eb7128bc8a13359466275bd2fd08a4a9a
+  raw: data/sim/normal_checker_t15_v1_s01/raw
+  raw_meta_sha256: b95f7d054a03688de366da6c0b4f24511803b1dec9cf57b6f2126702a22d876b
+  raw_imu_sha256: f054f3d5b0724ed32a02533fec9d78774a507e5c699bfc8aaf5fa048292f4d8c
+  duration_s: 280.312
+  generation_wall_s: 7741.7
+  holoocean_version: 2.3.0
+  g1_dataset: data/sim/normal_checker_t15_v1_s01_g1
+  g1_seed: 74540
+  g1_manifest_sha256: 9ff262f016c745efd3d066708bef127661ae85822eb3f815b96cc8e214ac9810
+  g1_checksums_sha256: 74e4b8c114c840564d28f630063c2676cbcb139907f0d4a472e707272a8e9456
+  a0_run: runs/sim_normal_checker_t15_v1_s01_g1_a0_r01
