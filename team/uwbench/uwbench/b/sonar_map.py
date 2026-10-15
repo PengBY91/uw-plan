@@ -9,9 +9,14 @@ B2c Two-Stage reproduction: each echo's full 3-D reflection region (range bin x 
 Sonar veto V (map config veto: true, any sonar method): every voxel a sonar update has hit refuses later stereo
 free-space updates (B plan 3.4: the stereo ray "saw" free space where the sonar arc says something may be). V is the
 only source of a false-free reduction claim and is ablated on its own; with V off the host method is unchanged.
+Isolated-echo filter (map config sonar_isolated, M4 outlier flag; E-B9 2026-10-14): an echo cell with no other echo
+within +-bins range and azimuth bins in its own frame and none in that neighbourhood of the previous or next raw sonar
+frame is dropped before any update. Under B2a a single noise cell otherwise writes a whole occupied arc. It needs the next
+raw frame, so online it delays each update by one raw frame period. Off by default.
 The vertical aperture is a parameter: the simulated value is a simulation setting, not a platform measurement.
 """
 import numpy as np
+from scipy.ndimage import maximum_filter
 
 from uwbench.b.voxel_map import SOURCE_SONAR
 from uwbench.sonar import arc_points
@@ -20,6 +25,21 @@ from uwbench.sonar import arc_points
 def echo_cells(image, threshold):
     rows, cols = np.nonzero(image > threshold)
     return rows, cols
+
+
+def isolated_echoes(image, neighbours, threshold, bins=1):
+    """Mask over echo_cells(image, threshold): True where the echo has no support in its own frame or in neighbours
+    (adjacent raw frames; None entries are skipped) within +-bins cells."""
+    echo = image > threshold
+    rows, cols = np.nonzero(echo)
+    fp = np.ones((2*bins + 1, 2*bins + 1), bool)
+    ring = fp.copy()
+    ring[bins, bins] = False
+    support = maximum_filter(echo.astype(np.uint8), footprint=ring, mode='constant')[rows, cols] > 0
+    for other in neighbours:
+        if other is not None:
+            support |= maximum_filter((np.asarray(other) > threshold).astype(np.uint8), footprint=fp, mode='constant')[rows, cols] > 0
+    return ~support
 
 
 def cell_geometry(geometry, shape):
@@ -51,7 +71,8 @@ def _region(rho_lo, rho_hi, th_lo, th_hi, ph_lo, ph_hi, step):
 
 
 class SonarUpdater:
-    def __init__(self, grid, geometry, aperture_rad, threshold, method, hit=None, miss=None, free_band_m=None):
+    def __init__(self, grid, geometry, aperture_rad, threshold, method, hit=None, miss=None, free_band_m=None,
+                 isolated_bins=None):
         if method not in ('b1', 'b2a', 'b2c'):
             raise ValueError('Unknown sonar method ' + str(method))
         if aperture_rad <= 0:
@@ -60,13 +81,22 @@ class SonarUpdater:
         self.hit = grid.hit if hit is None else hit
         self.miss = grid.miss if miss is None else miss
         self.band = grid.resolution if free_band_m is None else free_band_m
+        self.isolated_bins = isolated_bins
         self.occluded = np.zeros(grid.shape, np.int32)
-        self.stats = {'frames': 0, 'echo_cells': 0, 'hit_voxel_updates': 0, 'free_voxel_updates': 0, 'occluded_marks': 0}
+        self.stats = {'frames': 0, 'echo_cells': 0, 'hit_voxel_updates': 0, 'free_voxel_updates': 0, 'occluded_marks': 0,
+                      'isolated_dropped': 0}
 
-    def update(self, image, T_world_sonar, stamp):
+    def update(self, image, T_world_sonar, stamp, neighbours=None):
+        """neighbours: the previous and next raw frames, required when the isolated-echo filter is on."""
         rows, cols = echo_cells(image, self.threshold)
         self.stats['frames'] += 1
         self.stats['echo_cells'] += int(len(rows))
+        if self.isolated_bins is not None and len(rows):
+            if neighbours is None:
+                raise ValueError('The isolated-echo filter needs the adjacent raw frames')
+            keep = ~isolated_echoes(image, neighbours, self.threshold, self.isolated_bins)
+            self.stats['isolated_dropped'] += int((~keep).sum())
+            rows, cols = rows[keep], cols[keep]
         if not len(rows):
             return
         rho, theta, dr, da = cell_geometry(self.g, image.shape)

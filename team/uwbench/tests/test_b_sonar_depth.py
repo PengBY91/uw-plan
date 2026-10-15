@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 
 from uwbench.b.voxel_map import FREE, OCCUPIED, UNKNOWN, VoxelGrid
-from uwbench.b.sonar_map import SonarUpdater, cell_geometry
+from uwbench.b.sonar_map import SonarUpdater, cell_geometry, isolated_echoes
 
 try:
     import cv2
@@ -91,6 +91,28 @@ class SonarUpdateTests(unittest.TestCase):
             SonarUpdater(grid(), GEOM, 0.0, 0.5, 'b2a')
         with self.assertRaises(ValueError):
             SonarUpdater(grid(), GEOM, np.radians(20), 0.5, 'b9')
+
+    def test_isolated_echo_filter(self):
+        blob, row = echo_image(3.0, [63, 64, 65])
+        lone, lrow = echo_image(6.0, [20])
+        img = blob + lone
+        empty = np.zeros_like(img)
+        rows, cols = np.nonzero(img > 0.5)
+        iso = dict(zip(zip(rows, cols), isolated_echoes(img, [empty, None], 0.5)))
+        self.assertTrue(iso[(lrow, 20)])                                 # no neighbour in its frame or the adjacent ones
+        self.assertFalse(any(iso[(row, c)] for c in (63, 64, 65)))       # same-frame support
+        nxt = np.zeros_like(img)
+        nxt[lrow + 1, 21] = 1.0                                          # within one cell in the next raw frame
+        self.assertFalse(isolated_echoes(lone, [empty, nxt], 0.5)[0])
+        nxt[lrow + 1, 21], nxt[lrow + 2, 22] = 0.0, 1.0                  # two cells away: no support
+        self.assertTrue(isolated_echoes(lone, [empty, nxt], 0.5)[0])
+        g = grid()
+        u = SonarUpdater(g, GEOM, np.radians(20), 0.5, 'b2a', isolated_bins=1)
+        u.update(img, np.eye(4), 0.0, neighbours=[empty, empty])
+        self.assertEqual(u.stats['isolated_dropped'], 1)
+        self.assertEqual(state_at(g, (3.0, 0.0, 0.0)), OCCUPIED)
+        with self.assertRaises(ValueError):
+            u.update(img, np.eye(4), 1.0)
 
     def test_cell_geometry_layout(self):
         rho, theta, dr, da = cell_geometry(GEOM, (256, 128))

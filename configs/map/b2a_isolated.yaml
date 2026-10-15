@@ -1,0 +1,4 @@
+# B2a with the isolated-echo filter (M4 outlier flag, E-B9 follow-up 2026-10-14): an echo with no other echo within one
+# range/azimuth cell in its own frame and in the previous and next raw sonar frames is dropped before the update.
+map:
+  sonar_isolated: {enabled: true, bins: 1}

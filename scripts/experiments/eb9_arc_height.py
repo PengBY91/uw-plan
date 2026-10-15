@@ -14,6 +14,9 @@ where it lies in the surface). With ground-truth poses and a geometry-only sonar
 the elevation arc and voxelisation, so a systematic excess over h of more than one voxel layer would mean something
 other than elevation ambiguity dominates (runbook E-B9).
 
+When the map was built with the isolated-echo filter (map config sonar_isolated) the same echoes are dropped here and
+counted by source (dropped_echoes).
+
 usage: eb9_arc_height.py --run runs/sim_<ds>_b2a_gt_r01 [--run ...] --out reports/w5/eb9/arc_height.json
 """
 import argparse
@@ -27,7 +30,7 @@ from uwbench.a.backend.simdata import SimDataset
 from uwbench.b.cli import DEFAULTS, merge, sonar_images
 from uwbench.b.metrics import signed_depth
 from uwbench.b.scene import boxes_from_props
-from uwbench.b.sonar_map import cell_geometry, echo_cells
+from uwbench.b.sonar_map import cell_geometry, echo_cells, isolated_echoes
 from uwbench.b.voxel_map import VoxelGrid
 from uwbench.sonar import arc_height_span, arc_points
 
@@ -104,6 +107,8 @@ def analyse(run_dir):
     min_rho_backed = np.full(grid.shape, np.inf)
     cells_of = hit_cells(ds, g, (g['RangeBins'], g['AzimuthBins']))
     echo_rho, echo_thick, echo_z, echo_backed = [], [], [], []
+    iso = cfg.get('sonar_isolated', {'enabled': False})
+    dropped = {'noise_only': 0, 'hit_backed': 0}
     for i, t in enumerate(ds.sonar_t):
         if i % cfg['sonar_stride']:
             continue
@@ -111,9 +116,16 @@ def analyse(run_dir):
         rows, cols = echo_cells(img, cfg['sonar_threshold'])
         if not len(rows):
             continue
+        backed_cells = cells_of(i) if cells_of else None
+        if iso['enabled']:
+            nb = [image(j) if 0 <= j < len(ds.sonar_t) else None for j in (i - 1, i + 1)]
+            drop = isolated_echoes(img, nb, cfg['sonar_threshold'], int(iso['bins']))
+            for r_, c_ in zip(rows[drop], cols[drop]):
+                b = True if backed_cells is None else (int(r_)*g['AzimuthBins'] + int(c_)) in backed_cells
+                dropped['hit_backed' if b else 'noise_only'] += 1
+            rows, cols = rows[~drop], cols[~drop]
         rho, theta, _, _ = cell_geometry(g, img.shape)
         T = ds.gt_pose(float(t)) @ ds.T_imu_sonar
-        backed_cells = cells_of(i) if cells_of else None
         for row_i, col_i, r, c in zip(rows, cols, rho(rows), theta(cols)):
             backed = True if backed_cells is None else (int(row_i)*g['AzimuthBins'] + int(col_i)) in backed_cells
             n = max(int(np.ceil(r*alpha/step)) + 1, 2)
@@ -147,7 +159,7 @@ def analyse(run_dir):
            'voxel_m': voxel, 'band_m': band, 'range_resolution_m': (g['RangeMax'] - g['RangeMin'])/g['RangeBins'],
            'echoes': int(len(echo_rho)), 'echo_fraction_outside': float(np.mean(echo_thick > 0)),
            'echo_outside_nearest_face_z_fraction': float(np.mean(echo_z[echo_thick > 0])) if (echo_thick > 0).any() else None,
-           'hit_cells_available': cells_of is not None,
+           'hit_cells_available': cells_of is not None, 'isolated_filter': iso, 'dropped_echoes': dropped,
            'noise_only_echoes': int((~echo_backed).sum()),
            'noise_only_echo_fraction_outside': float(np.mean(echo_thick[~echo_backed] > 0)) if (~echo_backed).any() else None,
            'per_echo': summarise(echo_rho, echo_thick, alpha, voxel, band),

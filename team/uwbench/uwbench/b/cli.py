@@ -31,7 +31,7 @@ from uwbench.b.occupancy import map_ratios
 
 DEFAULTS = {'resolution_m': 0.10, 'stereo_pixel_stride': 4, 'max_stereo_range_m': 6.0, 'sonar_stride': 5, 'veto': False,
             'sonar_threshold': 0.25, 'roi_margin_m': {'x': 3.0, 'y_behind_props': 1.0, 'y_vehicle': 0.5, 'z': 1.5},
-            'b2c': {'hit': 0.85, 'miss': -0.4}}
+            'b2c': {'hit': 0.85, 'miss': -0.4}, 'sonar_isolated': {'enabled': False, 'bins': 1}}
 
 
 def merge(base, override):
@@ -93,13 +93,15 @@ def route_roi(ds, cfg, boxes):
 
 
 def chunked_images(folder, prefix='sonar', chunk=200):
-    """image(i) over <prefix>_XXXX.npy chunk files (chunk frames each), keeping one chunk memory-mapped at a time."""
+    """image(i) over <prefix>_XXXX.npy chunk files (chunk frames each), keeping two chunks memory-mapped (adjacent-frame
+    reads across a chunk boundary)."""
     cache = {}
 
     def image(i):
         c = i//chunk
         if c not in cache:
-            cache.clear()
+            for k in [k for k in cache if abs(k - c) > 1]:
+                del cache[k]
             cache[c] = np.load(Path(folder)/f'{prefix}_{c:04d}.npy', mmap_mode='r')
         return np.asarray(cache[c][i % chunk])
     return image
@@ -153,7 +155,9 @@ def map_main(argv):
     sonar = None
     if args.method != 'b0':
         g = ds.sonar_geometry
-        kw = cfg['b2c'] if args.method == 'b2c' else {}
+        kw = dict(cfg['b2c']) if args.method == 'b2c' else {}
+        if cfg['sonar_isolated']['enabled']:
+            kw['isolated_bins'] = int(cfg['sonar_isolated']['bins'])
         sonar = SonarUpdater(grid, g, np.radians(g['Elevation']), cfg['sonar_threshold'], args.method, **kw)
         image, sonar_source = sonar_images(ds)
         events += [(float(t), 'sonar', i) for i, t in enumerate(ds.sonar_t) if i % cfg['sonar_stride'] == 0]
@@ -195,7 +199,10 @@ def map_main(argv):
             Ks[0, 0] /= s; Ks[1, 1] /= s; Ks[0, 2] = (cx + 0.5)/s - 0.5; Ks[1, 2] = (cy + 0.5)/s - 0.5
             grid.integrate_depth(T, ds.T_imu_cam0, Ks, depth, valid, t, cfg['max_stereo_range_m'])
         else:
-            sonar.update(image(i), T @ ds.T_imu_sonar, t)
+            nb = None
+            if sonar.isolated_bins is not None:
+                nb = [image(j) if 0 <= j < len(ds.sonar_t) else None for j in (i - 1, i + 1)]
+            sonar.update(image(i), T @ ds.T_imu_sonar, t, neighbours=nb)
     args.out.mkdir(parents=True)
     if deferred is not None:
         with (args.out/'deferred.csv').open('w') as f:

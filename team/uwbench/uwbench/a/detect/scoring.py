@@ -1,4 +1,12 @@
-"""Leave-one-run-out operating points and miss / false-alarm / misattribution scoring of every detector."""
+"""Leave-one-run-out operating points and miss / false-alarm / misattribution scoring of every detector.
+
+H-A2 unit (method spec v2.5 M3.2, runbook R4): single-axis exceedance samples, where one axis exceeds and every other
+axis that the reference detector sources (cfg ha2_reference, DET-DIR: x, z, heading) is within tolerance. The same
+sample set is used for every detector. On it: single_missed_<a> (axis a exceeds alone and that axis does not alarm) and
+single_offaxis_alarm_<b> (axis b is within tolerance while another sourced axis exceeds alone, and b alarms). Samples
+where two or more sourced axes exceed are counted apart (multi_exceed) and are only reported. Durations are sample
+counts times the run's median label period.
+"""
 from collections import namedtuple
 
 import numpy as np
@@ -75,7 +83,15 @@ def comparable(false_alarm, target, tolerance):
 Channel = namedtuple('Channel', 'train test axis fraction')  # training normals, test values, axis (None = global), pilot fraction
 
 
-def score_detector(test, name, chans, target, allocation, grace, tol_rel):
+def single_axis_masks(exceed, scored, axes):
+    """{axis index: samples where that axis exceeds and no other axis of `axes` does} and the multi-axis mask."""
+    sub = exceed[:, list(axes)]
+    n_ex = sub.sum(axis=1)
+    single = {a: scored & exceed[:, a] & (n_ex == 1) for a in axes}
+    return single, scored & (n_ex >= 2)
+
+
+def score_detector(test, name, chans, target, allocation, grace, tol_rel, single_axes=None):
     """One per-run row for a detector given as channels; the alarm on an axis is the union of its channels there."""
     thr = union_thresholds([c.train for c in chans], target, allocation, [c.fraction for c in chans])
     train_fa = union_false_alarm([c.train for c in chans], thr)
@@ -103,6 +119,23 @@ def score_detector(test, name, chans, target, allocation, grace, tol_rel):
         # per-axis detector buys in exchange for its per-axis misses
         row[f'offaxis_base_{axis}'] = int((failing & ~ex).sum())
         row[f'offaxis_alarm_{axis}'] = int((failing & ~ex & alarm[:, a]).sum())
+    if single_axes:
+        single, multi = single_axis_masks(test['exceed'], test['scored'], single_axes)
+        dt = float(np.median(np.diff(test['t']))) if n > 1 else 0.0
+        row['label_period_s'] = dt
+        row['multi_exceed'] = int(multi.sum())
+        other_single = {b: np.zeros(n, bool) for b in range(4)}
+        for a, m in single.items():
+            for b in range(4):
+                if b != a:
+                    other_single[b] |= m
+        for a, axis in enumerate(AXES):
+            m = single.get(a, np.zeros(n, bool))
+            row[f'single_{axis}'] = int(m.sum())
+            row[f'single_missed_{axis}'] = int((m & ~alarm[:, a]).sum())
+            base = other_single[a] & ~test['exceed'][:, a]
+            row[f'single_offaxis_base_{axis}'] = int(base.sum())
+            row[f'single_offaxis_alarm_{axis}'] = int((base & alarm[:, a]).sum())
     return row
 
 
@@ -127,6 +160,7 @@ def evaluate(runs, cfg=CONFIG):
     still be formed.
     """
     allocation = cfg.get('threshold_allocation', 'union')
+    single_axes = SOURCE_AXES[CUMULATIVE[cfg.get('ha2_reference', 'DET-DIR')]]
     tol_rel = cfg.get('comparable_tolerance', 0.5)
     results = []
     for grace, target in [(g, f) for g in cfg['early_warning_s'] for f in cfg['false_alarm_targets']]:
@@ -158,7 +192,7 @@ def evaluate(runs, cfg=CONFIG):
             if 'DIR-cumconflict' in channels:
                 channels['DIR-gap+cumconflict'] = axis_channels('tau', range(4), per_axis/2) + channels['DIR-cumconflict']
             for name, chans in channels.items():
-                results.append(score_detector(test, name, chans, target, allocation, grace, tol_rel))
+                results.append(score_detector(test, name, chans, target, allocation, grace, tol_rel, single_axes))
     return results
 
 
@@ -170,7 +204,11 @@ def pooled(results, comparable_tolerance=0.5):
                                    'detector': row['detector'], 'normal': 0, 'false': 0.0, 'runs': 0, 'runs_comparable': 0,
                                    'normal_unscorable': 0, **{f'exceed_{a}': 0 for a in AXES},
                                    **{f'unscorable_{a}': 0 for a in AXES}, **{f'missed_{a}': 0 for a in AXES},
-                                   **{f'offaxis_base_{a}': 0 for a in AXES}, **{f'offaxis_alarm_{a}': 0 for a in AXES}})
+                                   **{f'offaxis_base_{a}': 0 for a in AXES}, **{f'offaxis_alarm_{a}': 0 for a in AXES},
+                                   'multi_exceed_s': 0.0,
+                                   **{f'{k}_{a}': 0 for k in ('single', 'single_missed', 'single_offaxis_base',
+                                                              'single_offaxis_alarm') for a in AXES},
+                                   **{f'single_s_{a}': 0.0 for a in AXES}})
         if row['false_alarm_fraction'] is not None:
             t['normal'] += row['normal_samples']
             t['false'] += row['false_alarm_fraction']*row['normal_samples']
@@ -183,6 +221,10 @@ def pooled(results, comparable_tolerance=0.5):
             t[f'missed_{a}'] += row[f'missed_{a}']
             t[f'offaxis_base_{a}'] += row.get(f'offaxis_base_{a}', 0)
             t[f'offaxis_alarm_{a}'] += row.get(f'offaxis_alarm_{a}', 0)
+            for k in ('single', 'single_missed', 'single_offaxis_base', 'single_offaxis_alarm'):
+                t[f'{k}_{a}'] += row.get(f'{k}_{a}', 0)
+            t[f'single_s_{a}'] += row.get(f'single_{a}', 0)*row.get('label_period_s', 0.0)
+        t['multi_exceed_s'] += row.get('multi_exceed', 0)*row.get('label_period_s', 0.0)
     out = []
     for t in table.values():
         fa = t['false']/t['normal'] if t['normal'] else None
@@ -197,5 +239,11 @@ def pooled(results, comparable_tolerance=0.5):
             entry[f'r_unscorable_{a}'] = un/ex if ex else None
             base = t[f'offaxis_base_{a}']
             entry[f'r_offaxis_{a}'] = t[f'offaxis_alarm_{a}']/base if base else None  # misattribution while another axis fails
+            # H-A2 unit: single-axis exceedance samples (module docstring)
+            entry[f'single_s_{a}'] = t[f'single_s_{a}']
+            sm, sb = t[f'single_{a}'], t[f'single_offaxis_base_{a}']
+            entry[f'r_single_miss_{a}'] = t[f'single_missed_{a}']/sm if sm else None
+            entry[f'r_single_offaxis_{a}'] = t[f'single_offaxis_alarm_{a}']/sb if sb else None
+        entry['multi_exceed_s'] = t['multi_exceed_s']
         out.append(entry)
     return out

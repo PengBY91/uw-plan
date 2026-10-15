@@ -7,7 +7,8 @@ from scipy.spatial.transform import Rotation
 
 from uwbench.a.detect.config import ATMOSPHERE_PA, CONFIG, G, RHO
 from uwbench.a.detect.inputs import parse_diag
-from uwbench.a.detect.scoring import comparable, evaluate, pooled, threshold, union_false_alarm, union_thresholds
+from uwbench.a.detect.scoring import (Channel, comparable, evaluate, pooled, score_detector, threshold, union_false_alarm,
+                                     union_thresholds)
 from uwbench.a.detect.signals import budget_horizon_s, drift_budget_deg, information_gap, rereference
 from uwbench.a.detect.sonar import (fit_line, footprint_correct, sonar_conflict, sonar_conflict_map, sonar_conflict_multi,
                                     sonar_echo_thickness, sonar_first_returns, sonar_lines)
@@ -361,6 +362,33 @@ class DetectTest(unittest.TestCase):
         self.assertAlmostEqual(out[est_t >= 12, 0][0], 0.02*12, delta=1e-6)  # the cumulative value resumes in full
         multi, _ = sonar_conflict_multi(est_t, (est_t, R, p), lines, np.eye(4), 3.0, 0.15, hold_s=1.0)
         self.assertTrue(np.isnan(multi[gap]).all())
+
+    def test_single_axis_intervals_are_the_ha2_unit(self):
+        """z alone exceeds over 10-20 s, x and z together over 30-40 s, y (no DET-DIR source) alone over 50-60 s."""
+        t = np.arange(0, 70, 0.1)
+        ex = np.zeros((len(t), 4), bool)
+        ex[(t >= 10) & (t < 20), 2] = True
+        ex[(t >= 30) & (t < 40), 0] = ex[(t >= 30) & (t < 40), 2] = True
+        ex[(t >= 50) & (t < 60), 1] = True
+        test = {'t': t, 'name': 'r', 'scored': np.ones(len(t), bool), 'exceed': ex, 'normal': ~ex.any(axis=1)}
+        sig = ex.any(axis=1).astype(float)              # a global statistic that rises whenever anything exceeds
+        per_axis = ex.astype(float)
+        train = np.zeros(200)
+        rows = {}
+        rows['scalar'] = score_detector(test, 'S', [Channel(train, sig, None, 0.01)], 0.01, 'union', 0.0, 0.5, (0, 2, 3))
+        rows['dir'] = score_detector(test, 'D', [Channel(train, per_axis[:, a], a, 0.01) for a in (0, 2, 3)], 0.01, 'union',
+                                     0.0, 0.5, (0, 2, 3))
+        for r in rows.values():
+            self.assertEqual((r['single_x'], r['single_y'], r['single_z'], r['single_yaw']), (0, 0, 100, 0))   # y has no DET-DIR source: not a unit
+            self.assertEqual(r['multi_exceed'], 100)    # x and z together: reported only
+        self.assertEqual(rows['scalar']['single_missed_z'], 0)
+        self.assertEqual(rows['scalar']['single_offaxis_alarm_x'], rows['scalar']['single_offaxis_base_x'])
+        self.assertEqual(rows['dir']['single_offaxis_alarm_x'], 0)
+        table = {e['detector']: e for e in pooled(list(rows.values()))}
+        self.assertAlmostEqual(table['D']['single_s_z'], 10.0)
+        self.assertAlmostEqual(table['S']['r_single_offaxis_yaw'], 1.0)
+        self.assertAlmostEqual(table['D']['r_single_offaxis_yaw'], 0.0)
+        self.assertAlmostEqual(table['D']['multi_exceed_s'], 10.0)
 
     def test_threshold_and_scoring_leave_out_unscorable_samples(self):
         self.assertEqual(threshold([np.nan, 1.0, 2.0, 3.0], 0.0), 3.0)
